@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  airlineticket-api:
+    image: airlineticket-backend:latest
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    ports:
+      - "80:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Chuỗi kết nối tới Database Production bên ngoài hoặc qua Docker Network
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=AirlineTicketDb;User Id=sa;Password=Admin@123;TrustServerCertificate=True;
+    depends_on:
+      - sqlserver
+    restart: unless-stopped
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: Admin@123
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data-prod:/var/opt/mssql
+    restart: unless-stopped
+
+volumes:
+  sqlserver-data-prod:

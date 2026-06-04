@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks\AirlineTicket.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\AirlineTicket.Modules.Bookings.Application\AirlineTicket.Modules.Bookings.Application.csproj" />
+    <ProjectReference Include="..\AirlineTicket.Modules.Bookings.Infrastructure\AirlineTicket.Modules.Bookings.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+  </ItemGroup>
+</Project>

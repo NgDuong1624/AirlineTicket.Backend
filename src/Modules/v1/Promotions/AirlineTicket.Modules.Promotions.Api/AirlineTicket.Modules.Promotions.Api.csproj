@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AirlineTicket.Modules.Promotions.Application\AirlineTicket.Modules.Promotions.Application.csproj" />
+    <ProjectReference Include="..\AirlineTicket.Modules.Promotions.Infrastructure\AirlineTicket.Modules.Promotions.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>

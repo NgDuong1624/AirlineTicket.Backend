@@ -1,0 +1,76 @@
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.userprefs
+*.sln.iml
+*.suo
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+packages/
+.nuget/packages/
+*.nuspec
+
+# Local environment variables
+.env
+.env.local
+.env.*.local
+
+# Application settings
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
+!appsettings.json
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node (if using any frontend tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+logs/
+
+# IDE specific files
+.vscode/
+.vs/
+*.code-workspace
+
+# Test coverage
+coverage/
+*.coveragexml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker
+.dockerignore

@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.8">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.14.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Api\AirlineTicket.Modules.Flights.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Api\AirlineTicket.Modules.Bookings.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Api\AirlineTicket.Modules.Users.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Infrastructure\AirlineTicket.Modules.Flights.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Infrastructure\AirlineTicket.Modules.Bookings.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Infrastructure\AirlineTicket.Modules.Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Promotions\AirlineTicket.Modules.Promotions.Api\AirlineTicket.Modules.Promotions.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Promotions\AirlineTicket.Modules.Promotions.Infrastructure\AirlineTicket.Modules.Promotions.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>
