@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Scalar.AspNetCore;
+using AirlineTicket.BuildingBlocks.Behaviors;
+using AirlineTicket.Api;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,23 +46,28 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 builder.Services.AddAuthorization();
 
-// 1. Quét tìm tất cả các Assemblies thuộc hệ thống AirlineTicket
-var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+// 1. Quét tìm tất cả các Assemblies thuộc hệ thống AirlineTicket (cho endpoints & validator)
+var runtimeAssemblies = AppDomain.CurrentDomain.GetAssemblies()
     .Where(a => a.FullName != null && a.FullName.StartsWith("AirlineTicket"))
     .ToArray();
+
+// Các assemblies chứa handlers của ứng dụng
+var applicationAssemblies = ModuleRegistration.ApplicationAssemblies;
 
 // 2. Đăng ký MediatR cho toàn bộ các Modules
 builder.Services.AddMediatR(cfg => 
 {
-    cfg.RegisterServicesFromAssemblies(assemblies);
-    // (Sau này sẽ thêm config Pipeline Behavior cho Validation/Logging ở đây)
+    cfg.RegisterServicesFromAssemblies(applicationAssemblies);
+    // Pipeline Behaviors: thực thi theo thứ tự đăng ký
+    cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
 
 // 3. Đăng ký FluentValidation quét tất cả Validator trong các Modules
-builder.Services.AddValidatorsFromAssemblies(assemblies);
+builder.Services.AddValidatorsFromAssemblies(applicationAssemblies);
 
 // 4. Đăng ký Minimal API Endpoints
-builder.Services.AddEndpoints(assemblies);
+builder.Services.AddEndpoints(runtimeAssemblies);
 
 var app = builder.Build();
 

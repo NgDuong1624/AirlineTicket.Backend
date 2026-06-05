@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.Modules.Promotions.Domain.Entities;
 
 namespace AirlineTicket.Modules.Promotions.Application.Contracts;
 
@@ -21,6 +22,9 @@ public class PromotionDto
 public interface IPromotionRepository
 {
     Task<PromotionDto?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+    Task<List<Campaign>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default);
+    Task<List<Campaign>> GetAllCampaignsAsync(CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(PromotionDto promotion, CancellationToken cancellationToken = default);
     Task UpdateAsync(PromotionDto promotion, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

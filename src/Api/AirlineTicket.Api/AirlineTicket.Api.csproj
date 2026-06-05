@@ -22,6 +22,10 @@
     <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Api\AirlineTicket.Modules.Flights.Api.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Api\AirlineTicket.Modules.Bookings.Api.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Api\AirlineTicket.Modules.Users.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Application\AirlineTicket.Modules.Flights.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Application\AirlineTicket.Modules.Bookings.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Application\AirlineTicket.Modules.Users.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Promotions\AirlineTicket.Modules.Promotions.Application\AirlineTicket.Modules.Promotions.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Infrastructure\AirlineTicket.Modules.Flights.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Infrastructure\AirlineTicket.Modules.Bookings.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Infrastructure\AirlineTicket.Modules.Users.Infrastructure.csproj" />

@@ -30,7 +30,7 @@ public class ApplyPromotionCommandHandler : IRequestHandler<ApplyPromotionComman
         {
             discountAmount = request.OriginalAmount * (promo.DiscountValue / 100);
         }
-        else if (promo.DiscountType == "Fixed")
+        else if (promo.DiscountType == "FixedAmount")
         {
             discountAmount = promo.DiscountValue;
         }

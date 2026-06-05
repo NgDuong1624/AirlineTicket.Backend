@@ -17,6 +17,8 @@ public static class DependencyInjection
         // Register repositories
         services.AddScoped<IFlightRepository, FlightRepository>();
         services.AddScoped<IAirportRepository, AirportRepository>();
+        services.AddScoped<IRouteRepository, RouteRepository>();
+        services.AddScoped<IFlightSeatRepository, FlightSeatRepository>();
         
         return services;
     }

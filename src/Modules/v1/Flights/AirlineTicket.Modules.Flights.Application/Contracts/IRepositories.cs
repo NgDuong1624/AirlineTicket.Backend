@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.Modules.Flights.Domain.Entities;
 
 namespace AirlineTicket.Modules.Flights.Application.Contracts;
 
@@ -23,6 +24,17 @@ public interface IFlightRepository
 
 public interface IAirportRepository
 {
-    Task<object?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<List<object>> SearchAsync(string? search, CancellationToken cancellationToken = default);
+    Task<Airport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<List<Airport>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<Airport>> SearchAsync(string? search, CancellationToken cancellationToken = default);
+}
+
+public interface IRouteRepository
+{
+    Task<List<Route>> GetAllAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IFlightSeatRepository
+{
+    Task<List<FlightSeat>> GetByFlightIdAsync(Guid flightId, CancellationToken cancellationToken = default);
 }
