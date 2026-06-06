@@ -1,64 +1,93 @@
 -- =====================================================
--- AIRLINE TICKET SYSTEM - DATABASE INITIALIZATION V1
+-- AIRLINE TICKET SYSTEM - COMPLETE DATABASE DESIGN (v2)
+-- Designed by GitHub Copilot
 -- =====================================================
 
--- =====================================================
--- 1. CREATE SCHEMAS
--- =====================================================
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'flights')
-    EXEC sp_executesql N'CREATE SCHEMA flights'
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'bookings')
-    EXEC sp_executesql N'CREATE SCHEMA bookings'
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'users')
-    EXEC sp_executesql N'CREATE SCHEMA users'
-GO
-
-IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'promotions')
-    EXEC sp_executesql N'CREATE SCHEMA promotions'
+USE [master]
 GO
 
 -- =====================================================
--- 2. FLIGHTS SCHEMA - TABLES
+-- 1. CREATE SCHEMAS (Modular Monolith Approach)
 -- =====================================================
-
--- Airports (Sân bay)
-IF OBJECT_ID('[flights].[Airports]', 'U') IS NOT NULL 
-    DROP TABLE [flights].[Airports]
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'identity') EXEC sp_executesql N'CREATE SCHEMA identity'
+GO
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'flights') EXEC sp_executesql N'CREATE SCHEMA flights'
+GO
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'bookings') EXEC sp_executesql N'CREATE SCHEMA bookings'
+GO
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'promotions') EXEC sp_executesql N'CREATE SCHEMA promotions'
+GO
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'interactions') EXEC sp_executesql N'CREATE SCHEMA interactions'
+GO
+IF NOT EXISTS (SELECT * FROM sys.schemas WHERE name = 'cms') EXEC sp_executesql N'CREATE SCHEMA cms'
 GO
 
-CREATE TABLE [flights].[Airports] (
+-- =====================================================
+-- 2. IDENTITY SCHEMA - Authentication & Authorization
+-- =====================================================
+
+CREATE TABLE [identity].[Roles] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    [IataCode] NVARCHAR(10) NOT NULL UNIQUE,
-    [Name] NVARCHAR(255) NOT NULL,
-    [City] NVARCHAR(100) NOT NULL,
-    [Country] NVARCHAR(100) NOT NULL,
-    [Timezone] NVARCHAR(50) NOT NULL,
+    [Name] NVARCHAR(50) NOT NULL UNIQUE,
+    [Description] NVARCHAR(255) NULL
+)
+GO
+
+CREATE TABLE [identity].[Users] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [Email] NVARCHAR(255) NOT NULL UNIQUE,
+    [EmailConfirmed] BIT NOT NULL DEFAULT 0,
+    [PasswordHash] NVARCHAR(MAX) NOT NULL,
+    [FullName] NVARCHAR(255) NOT NULL,
+    [PhoneNumber] NVARCHAR(20) NULL,
+    [AvatarUrl] NVARCHAR(500) NULL,
+    [LanguagePreference] NVARCHAR(10) DEFAULT 'vi',
+    [LastLoginAt] DATETIME2 NULL,
+    [IsActive] BIT NOT NULL DEFAULT 1,
     [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
     [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE()
 )
 GO
 
--- Airlines (Hãng bay)
-IF OBJECT_ID('[flights].[Airlines]', 'U') IS NOT NULL 
-    DROP TABLE [flights].[Airlines]
+CREATE TABLE [identity].[UserRoles] (
+    [UserId] UNIQUEIDENTIFIER NOT NULL,
+    [RoleId] UNIQUEIDENTIFIER NOT NULL,
+    PRIMARY KEY ([UserId], [RoleId]),
+    CONSTRAINT [FK_UserRoles_Users] FOREIGN KEY ([UserId]) REFERENCES [identity].[Users]([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_UserRoles_Roles] FOREIGN KEY ([RoleId]) REFERENCES [identity].[Roles]([Id]) ON DELETE CASCADE
+)
 GO
+
+-- =====================================================
+-- 3. FLIGHTS SCHEMA - Core Domain
+-- =====================================================
 
 CREATE TABLE [flights].[Airlines] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [IataCode] NVARCHAR(10) NOT NULL UNIQUE,
     [Name] NVARCHAR(255) NOT NULL,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE()
+    [LogoUrl] NVARCHAR(500) NULL,
+    [BaseCountry] NVARCHAR(100) NULL,
+    [ApiEndpoint] NVARCHAR(500) NULL, -- B2B Partner Integration Endpoint
+    [ApiKey] NVARCHAR(255) NULL,
+    [IsActive] BIT NOT NULL DEFAULT 1,
+    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE()
 )
 GO
 
--- Airplanes (Máy bay)
-IF OBJECT_ID('[flights].[Airplanes]', 'U') IS NOT NULL 
-    DROP TABLE [flights].[Airplanes]
+CREATE TABLE [flights].[Airports] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [IataCode] NVARCHAR(10) NOT NULL UNIQUE,
+    [NameEn] NVARCHAR(255) NOT NULL,
+    [NameVi] NVARCHAR(255) NOT NULL,
+    [CityEn] NVARCHAR(100) NOT NULL,
+    [CityVi] NVARCHAR(100) NOT NULL,
+    [CountryCode] NVARCHAR(10) NOT NULL,
+    [Timezone] NVARCHAR(50) NOT NULL,
+    [Latitude] DECIMAL(9, 6) NULL,
+    [Longitude] DECIMAL(9, 6) NULL,
+    [IsActive] BIT NOT NULL DEFAULT 1
+)
 GO
 
 CREATE TABLE [flights].[Airplanes] (
@@ -67,33 +96,8 @@ CREATE TABLE [flights].[Airplanes] (
     [Model] NVARCHAR(100) NOT NULL,
     [RegistrationNumber] NVARCHAR(50) NOT NULL UNIQUE,
     [TotalCapacity] INT NOT NULL,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
     CONSTRAINT [FK_Airplanes_Airlines] FOREIGN KEY ([AirlineId]) REFERENCES [flights].[Airlines]([Id])
 )
-GO
-
--- AirplaneSeats (Cấu hình ghế mẫu)
-IF OBJECT_ID('[flights].[AirplaneSeats]', 'U') IS NOT NULL 
-    DROP TABLE [flights].[AirplaneSeats]
-GO
-
-CREATE TABLE [flights].[AirplaneSeats] (
-    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    [AirplaneId] UNIQUEIDENTIFIER NOT NULL,
-    [SeatNumber] NVARCHAR(10) NOT NULL,
-    [SeatClass] INT NOT NULL, -- 0: Economy, 1: Business, 2: First
-    [PriceMultiplier] DECIMAL(10, 2) NOT NULL DEFAULT 1.0,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    CONSTRAINT [FK_AirplaneSeats_Airplanes] FOREIGN KEY ([AirplaneId]) REFERENCES [flights].[Airplanes]([Id]),
-    CONSTRAINT [UC_AirplaneSeats_SeatNumber] UNIQUE ([AirplaneId], [SeatNumber])
-)
-GO
-
--- Routes (Tuyến bay)
-IF OBJECT_ID('[flights].[Routes]', 'U') IS NOT NULL 
-    DROP TABLE [flights].[Routes]
 GO
 
 CREATE TABLE [flights].[Routes] (
@@ -101,17 +105,12 @@ CREATE TABLE [flights].[Routes] (
     [AirlineId] UNIQUEIDENTIFIER NOT NULL,
     [OriginAirportId] UNIQUEIDENTIFIER NOT NULL,
     [DestinationAirportId] UNIQUEIDENTIFIER NOT NULL,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
+    [DistanceKm] DECIMAL(10, 2) NULL,
+    [EstimatedDurationMinutes] INT NULL,
     CONSTRAINT [FK_Routes_Airlines] FOREIGN KEY ([AirlineId]) REFERENCES [flights].[Airlines]([Id]),
-    CONSTRAINT [FK_Routes_OriginAirport] FOREIGN KEY ([OriginAirportId]) REFERENCES [flights].[Airports]([Id]),
-    CONSTRAINT [FK_Routes_DestinationAirport] FOREIGN KEY ([DestinationAirportId]) REFERENCES [flights].[Airports]([Id])
+    CONSTRAINT [FK_Routes_Origin] FOREIGN KEY ([OriginAirportId]) REFERENCES [flights].[Airports]([Id]),
+    CONSTRAINT [FK_Routes_Destination] FOREIGN KEY ([DestinationAirportId]) REFERENCES [flights].[Airports]([Id])
 )
-GO
-
--- Flights (Chuyến bay thực tế)
-IF OBJECT_ID('[flights].[Flights]', 'U') IS NOT NULL 
-    DROP TABLE [flights].[Flights]
 GO
 
 CREATE TABLE [flights].[Flights] (
@@ -119,12 +118,12 @@ CREATE TABLE [flights].[Flights] (
     [RouteId] UNIQUEIDENTIFIER NOT NULL,
     [AirplaneId] UNIQUEIDENTIFIER NOT NULL,
     [FlightNumber] NVARCHAR(20) NOT NULL,
-    [BasePrice] DECIMAL(15, 2) NOT NULL,
-    [ScheduledDeparture] DATETIME2 NOT NULL,
-    [ScheduledArrival] DATETIME2 NOT NULL,
-    [ActualDeparture] DATETIME2 NULL,
-    [ActualArrival] DATETIME2 NULL,
+    [DepartureTime] DATETIME2 NOT NULL,
+    [ArrivalTime] DATETIME2 NOT NULL,
+    [BasePrice] DECIMAL(18, 2) NOT NULL,
+    [Currency] NVARCHAR(3) DEFAULT 'USD',
     [Status] INT NOT NULL DEFAULT 0, -- 0: Scheduled, 1: Delayed, 2: Boarding, 3: InAir, 4: Landed, 5: Cancelled
+    [ExternalId] NVARCHAR(100) NULL,
     [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
     [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
     CONSTRAINT [FK_Flights_Routes] FOREIGN KEY ([RouteId]) REFERENCES [flights].[Routes]([Id]),
@@ -132,71 +131,37 @@ CREATE TABLE [flights].[Flights] (
 )
 GO
 
--- FlightSeats (Ghế của chuyến bay cụ thể)
-IF OBJECT_ID('[flights].[FlightSeats]', 'U') IS NOT NULL 
-    DROP TABLE [flights].[FlightSeats]
-GO
-
 CREATE TABLE [flights].[FlightSeats] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [FlightId] UNIQUEIDENTIFIER NOT NULL,
     [SeatNumber] NVARCHAR(10) NOT NULL,
-    [SeatClass] INT NOT NULL, -- 0: Economy, 1: Business, 2: First
-    [Price] DECIMAL(15, 2) NOT NULL,
+    [SeatClass] INT NOT NULL, -- 0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass
+    [PriceOverride] DECIMAL(18, 2) NULL,
     [IsAvailable] BIT NOT NULL DEFAULT 1,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
+    [IsExtraLegroom] BIT NOT NULL DEFAULT 0,
     CONSTRAINT [FK_FlightSeats_Flights] FOREIGN KEY ([FlightId]) REFERENCES [flights].[Flights]([Id]),
-    CONSTRAINT [UC_FlightSeats_SeatNumber] UNIQUE ([FlightId], [SeatNumber])
+    CONSTRAINT [UC_FlightSeat] UNIQUE ([FlightId], [SeatNumber])
 )
 GO
 
 -- =====================================================
--- 3. USERS SCHEMA - TABLES
+-- 4. BOOKINGS SCHEMA - Transactional Data
 -- =====================================================
-
--- Users (Người dùng)
-IF OBJECT_ID('[users].[Users]', 'U') IS NOT NULL 
-    DROP TABLE [users].[Users]
-GO
-
-CREATE TABLE [users].[Users] (
-    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    [Email] NVARCHAR(255) NOT NULL UNIQUE,
-    [PasswordHash] NVARCHAR(MAX) NOT NULL,
-    [FullName] NVARCHAR(255) NOT NULL,
-    [Phone] NVARCHAR(20) NULL,
-    [Role] INT NOT NULL DEFAULT 0, -- 0: Customer, 1: Admin, 2: Staff
-    [IsActive] BIT NOT NULL DEFAULT 1,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE()
-)
-GO
-
--- =====================================================
--- 4. BOOKINGS SCHEMA - TABLES
--- =====================================================
-
--- Bookings (Đơn đặt chỗ)
-IF OBJECT_ID('[bookings].[Bookings]', 'U') IS NOT NULL 
-    DROP TABLE [bookings].[Bookings]
-GO
 
 CREATE TABLE [bookings].[Bookings] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [UserId] UNIQUEIDENTIFIER NOT NULL,
-    [PnrCode] NVARCHAR(20) NOT NULL UNIQUE,
-    [TotalPrice] DECIMAL(15, 2) NOT NULL,
-    [Status] INT NOT NULL DEFAULT 0, -- 0: Pending, 1: Confirmed, 2: Cancelled, 3: Refunded
+    [PnrCode] NVARCHAR(10) NOT NULL UNIQUE,
+    [TotalPrice] DECIMAL(18, 2) NOT NULL,
+    [Currency] NVARCHAR(3) DEFAULT 'USD',
+    [Status] INT NOT NULL DEFAULT 0, -- 0: Pending, 1: Paid, 2: Confirmed, 3: Cancelled, 4: Refunded
+    [ContactEmail] NVARCHAR(255) NOT NULL,
+    [ContactPhone] NVARCHAR(20) NOT NULL,
+    [SpecialRequests] NVARCHAR(MAX) NULL,
     [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
     [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    CONSTRAINT [FK_Bookings_Users] FOREIGN KEY ([UserId]) REFERENCES [users].[Users]([Id])
+    CONSTRAINT [FK_Bookings_Users] FOREIGN KEY ([UserId]) REFERENCES [identity].[Users]([Id])
 )
-GO
-
--- Passengers (Hành khách)
-IF OBJECT_ID('[bookings].[Passengers]', 'U') IS NOT NULL 
-    DROP TABLE [bookings].[Passengers]
 GO
 
 CREATE TABLE [bookings].[Passengers] (
@@ -204,284 +169,152 @@ CREATE TABLE [bookings].[Passengers] (
     [BookingId] UNIQUEIDENTIFIER NOT NULL,
     [FirstName] NVARCHAR(100) NOT NULL,
     [LastName] NVARCHAR(100) NOT NULL,
+    [Gender] INT NULL, -- 0: Male, 1: Female, 2: Other
     [DateOfBirth] DATE NOT NULL,
+    [Nationality] NVARCHAR(100) NULL,
     [PassportNumber] NVARCHAR(50) NOT NULL,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    CONSTRAINT [FK_Passengers_Bookings] FOREIGN KEY ([BookingId]) REFERENCES [bookings].[Bookings]([Id])
+    [PassportExpiryDate] DATE NOT NULL,
+    CONSTRAINT [FK_Passengers_Bookings] FOREIGN KEY ([BookingId]) REFERENCES [bookings].[Bookings]([Id]) ON DELETE CASCADE
 )
-GO
-
--- Tickets (Vé điện tử)
-IF OBJECT_ID('[bookings].[Tickets]', 'U') IS NOT NULL 
-    DROP TABLE [bookings].[Tickets]
 GO
 
 CREATE TABLE [bookings].[Tickets] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [BookingId] UNIQUEIDENTIFIER NOT NULL,
-    [FlightId] UNIQUEIDENTIFIER NOT NULL,
     [PassengerId] UNIQUEIDENTIFIER NOT NULL,
+    [FlightId] UNIQUEIDENTIFIER NOT NULL,
     [SeatId] UNIQUEIDENTIFIER NOT NULL,
     [TicketNumber] NVARCHAR(50) NOT NULL UNIQUE,
-    [Status] INT NOT NULL DEFAULT 0, -- 0: Issued, 1: Used, 2: Cancelled
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
+    [Gate] NVARCHAR(20) NULL,
+    [BoardingTime] DATETIME2 NULL,
+    [Status] INT NOT NULL DEFAULT 0, -- 0: Valid, 1: CheckedIn, 2: Used, 3: Cancelled
     CONSTRAINT [FK_Tickets_Bookings] FOREIGN KEY ([BookingId]) REFERENCES [bookings].[Bookings]([Id]),
-    CONSTRAINT [FK_Tickets_Flights] FOREIGN KEY ([FlightId]) REFERENCES [flights].[Flights]([Id]),
     CONSTRAINT [FK_Tickets_Passengers] FOREIGN KEY ([PassengerId]) REFERENCES [bookings].[Passengers]([Id]),
-    CONSTRAINT [FK_Tickets_FlightSeats] FOREIGN KEY ([SeatId]) REFERENCES [flights].[FlightSeats]([Id])
+    CONSTRAINT [FK_Tickets_Flights] FOREIGN KEY ([FlightId]) REFERENCES [flights].[Flights]([Id]),
+    CONSTRAINT [FK_Tickets_Seats] FOREIGN KEY ([SeatId]) REFERENCES [flights].[FlightSeats]([Id])
 )
-GO
-
--- Payments (Thanh toán)
-IF OBJECT_ID('[bookings].[Payments]', 'U') IS NOT NULL 
-    DROP TABLE [bookings].[Payments]
 GO
 
 CREATE TABLE [bookings].[Payments] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [BookingId] UNIQUEIDENTIFIER NOT NULL,
-    [Amount] DECIMAL(15, 2) NOT NULL,
+    [TransactionId] NVARCHAR(100) NOT NULL UNIQUE,
+    [Amount] DECIMAL(18, 2) NOT NULL,
     [PaymentMethod] NVARCHAR(50) NOT NULL,
-    [Status] INT NOT NULL DEFAULT 0, -- 0: Pending, 1: Completed, 2: Failed
-    [TransactionId] NVARCHAR(100) NULL,
+    [ProviderStatus] NVARCHAR(50) NULL,
+    [IsSuccessful] BIT NOT NULL DEFAULT 0,
+    [RawResponse] NVARCHAR(MAX) NULL,
     [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
     CONSTRAINT [FK_Payments_Bookings] FOREIGN KEY ([BookingId]) REFERENCES [bookings].[Bookings]([Id])
 )
 GO
 
 -- =====================================================
--- 5. PROMOTIONS SCHEMA - TABLES
+-- 5. PROMOTIONS SCHEMA
 -- =====================================================
-
--- Campaigns (Chiến dịch giảm giá)
-IF OBJECT_ID('[promotions].[Campaigns]', 'U') IS NOT NULL 
-    DROP TABLE [promotions].[Campaigns]
-GO
-
-CREATE TABLE [promotions].[Campaigns] (
-    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    [Name] NVARCHAR(255) NOT NULL,
-    [Description] NVARCHAR(MAX) NULL,
-    [StartDate] DATETIME2 NOT NULL,
-    [EndDate] DATETIME2 NOT NULL,
-    [DiscountType] INT NOT NULL, -- 0: Percentage, 1: FixedAmount
-    [DiscountValue] DECIMAL(15, 2) NOT NULL,
-    [TargetAirlineId] UNIQUEIDENTIFIER NULL,
-    [TargetFlightId] UNIQUEIDENTIFIER NULL,
-    [IsActive] BIT NOT NULL DEFAULT 1,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    CONSTRAINT [FK_Campaigns_Airlines] FOREIGN KEY ([TargetAirlineId]) REFERENCES [flights].[Airlines]([Id]),
-    CONSTRAINT [FK_Campaigns_Flights] FOREIGN KEY ([TargetFlightId]) REFERENCES [flights].[Flights]([Id])
-)
-GO
-
--- Coupons (Mã giảm giá)
-IF OBJECT_ID('[promotions].[Coupons]', 'U') IS NOT NULL 
-    DROP TABLE [promotions].[Coupons]
-GO
 
 CREATE TABLE [promotions].[Coupons] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [Code] NVARCHAR(50) NOT NULL UNIQUE,
+    [Description] NVARCHAR(500) NULL,
     [DiscountType] INT NOT NULL, -- 0: Percentage, 1: FixedAmount
-    [DiscountValue] DECIMAL(15, 2) NOT NULL,
-    [MaxDiscountAmount] DECIMAL(15, 2) NULL,
-    [MaxUsages] INT NULL,
-    [CurrentUsages] INT DEFAULT 0,
-    [ValidFrom] DATETIME2 NOT NULL,
-    [ValidTo] DATETIME2 NOT NULL,
-    [IsActive] BIT NOT NULL DEFAULT 1,
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE()
+    [DiscountValue] DECIMAL(18, 2) NOT NULL,
+    [MinOrderValue] DECIMAL(18, 2) NULL,
+    [MaxDiscountAmount] DECIMAL(18, 2) NULL,
+    [StartDate] DATETIME2 NOT NULL,
+    [EndDate] DATETIME2 NOT NULL,
+    [UsageLimit] INT NULL,
+    [UsageCount] INT DEFAULT 0,
+    [IsActive] BIT DEFAULT 1
+)
+GO
+
+CREATE TABLE [promotions].[Campaigns] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [Title] NVARCHAR(255) NOT NULL,
+    [BannerUrl] NVARCHAR(500) NULL,
+    [Content] NVARCHAR(MAX) NULL,
+    [StartDate] DATETIME2 NOT NULL,
+    [EndDate] DATETIME2 NOT NULL,
+    [IsFeatured] BIT DEFAULT 0
 )
 GO
 
 -- =====================================================
--- 6. CREATE INDEXES
+-- 6. INTERACTIONS SCHEMA (Reviews & Feedback)
 -- =====================================================
 
--- Airports
-CREATE NONCLUSTERED INDEX [IX_Airports_IataCode] ON [flights].[Airports]([IataCode])
-GO
-
--- Airlines
-CREATE NONCLUSTERED INDEX [IX_Airlines_IataCode] ON [flights].[Airlines]([IataCode])
-GO
-
--- Flights
-CREATE NONCLUSTERED INDEX [IX_Flights_RouteId] ON [flights].[Flights]([RouteId])
-GO
-
-CREATE NONCLUSTERED INDEX [IX_Flights_Status] ON [flights].[Flights]([Status])
-GO
-
-CREATE NONCLUSTERED INDEX [IX_Flights_ScheduledDeparture] ON [flights].[Flights]([ScheduledDeparture])
-GO
-
--- FlightSeats
-CREATE NONCLUSTERED INDEX [IX_FlightSeats_FlightId] ON [flights].[FlightSeats]([FlightId])
-GO
-
-CREATE NONCLUSTERED INDEX [IX_FlightSeats_IsAvailable] ON [flights].[FlightSeats]([IsAvailable])
-GO
-
--- Users
-CREATE NONCLUSTERED INDEX [IX_Users_Email] ON [users].[Users]([Email])
-GO
-
--- Bookings
-CREATE NONCLUSTERED INDEX [IX_Bookings_UserId] ON [bookings].[Bookings]([UserId])
-GO
-
-CREATE NONCLUSTERED INDEX [IX_Bookings_Status] ON [bookings].[Bookings]([Status])
-GO
-
--- Tickets
-CREATE NONCLUSTERED INDEX [IX_Tickets_BookingId] ON [bookings].[Tickets]([BookingId])
-GO
-
-CREATE NONCLUSTERED INDEX [IX_Tickets_PassengerId] ON [bookings].[Tickets]([PassengerId])
-GO
-
--- Passengers
-CREATE NONCLUSTERED INDEX [IX_Passengers_BookingId] ON [bookings].[Passengers]([BookingId])
-GO
-
--- Payments
-CREATE NONCLUSTERED INDEX [IX_Payments_BookingId] ON [bookings].[Payments]([BookingId])
-GO
-
-CREATE NONCLUSTERED INDEX [IX_Payments_Status] ON [bookings].[Payments]([Status])
-GO
-
--- Campaigns
-CREATE NONCLUSTERED INDEX [IX_Campaigns_IsActive] ON [promotions].[Campaigns]([IsActive])
-GO
-
--- Coupons
-CREATE NONCLUSTERED INDEX [IX_Coupons_Code] ON [promotions].[Coupons]([Code])
-GO
-
-CREATE NONCLUSTERED INDEX [IX_Coupons_IsActive] ON [promotions].[Coupons]([IsActive])
+CREATE TABLE [interactions].[Reviews] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [UserId] UNIQUEIDENTIFIER NOT NULL,
+    [AirlineId] UNIQUEIDENTIFIER NULL,
+    [FlightId] UNIQUEIDENTIFIER NULL,
+    [Rating] INT NOT NULL CHECK ([Rating] >= 1 AND [Rating] <= 5),
+    [Comment] NVARCHAR(MAX) NULL,
+    [IsVerifiedPurchase] BIT DEFAULT 0,
+    [IsHidden] BIT DEFAULT 0,
+    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
+    CONSTRAINT [FK_Reviews_Users] FOREIGN KEY ([UserId]) REFERENCES [identity].[Users]([Id]),
+    CONSTRAINT [FK_Reviews_Airlines] FOREIGN KEY ([AirlineId]) REFERENCES [flights].[Airlines]([Id]),
+    CONSTRAINT [FK_Reviews_Flights] FOREIGN KEY ([FlightId]) REFERENCES [flights].[Flights]([Id])
+)
 GO
 
 -- =====================================================
--- 7. SEED DATA
+-- 7. CMS SCHEMA (Articles & Content)
 -- =====================================================
 
--- Insert sample airports
-INSERT INTO [flights].[Airports] ([IataCode], [Name], [City], [Country], [Timezone])
-VALUES
-    ('SGN', 'Tan Son Nhat International Airport', 'Ho Chi Minh City', 'Vietnam', 'UTC+7'),
-    ('HAN', 'Noi Bai International Airport', 'Hanoi', 'Vietnam', 'UTC+7'),
-    ('DAD', 'Da Nang International Airport', 'Da Nang', 'Vietnam', 'UTC+7'),
-    ('NRT', 'Narita International Airport', 'Tokyo', 'Japan', 'UTC+9'),
-    ('ICN', 'Incheon International Airport', 'Seoul', 'South Korea', 'UTC+9')
+CREATE TABLE [cms].[Categories] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [Name] NVARCHAR(100) NOT NULL,
+    [Slug] NVARCHAR(100) NOT NULL UNIQUE
+)
 GO
 
--- Insert sample airlines
-INSERT INTO [flights].[Airlines] ([IataCode], [Name])
-VALUES
-    ('VN', 'Vietnam Airlines'),
-    ('VJ', 'VietJet Air'),
-    ('BL', 'Bamboo Airways')
+CREATE TABLE [cms].[Articles] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [CategoryId] UNIQUEIDENTIFIER NOT NULL,
+    [AuthorId] UNIQUEIDENTIFIER NOT NULL,
+    [Title] NVARCHAR(255) NOT NULL,
+    [Slug] NVARCHAR(255) NOT NULL UNIQUE,
+    [Summary] NVARCHAR(500) NULL,
+    [Content] NVARCHAR(MAX) NOT NULL,
+    [ThumbnailUrl] NVARCHAR(500) NULL,
+    [PublishedAt] DATETIME2 NULL,
+    [Status] INT NOT NULL DEFAULT 0, -- 0: Draft, 1: Published, 2: Archived
+    [ViewCount] INT DEFAULT 0,
+    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
+    CONSTRAINT [FK_Articles_Categories] FOREIGN KEY ([CategoryId]) REFERENCES [cms].[Categories]([Id]),
+    CONSTRAINT [FK_Articles_Users] FOREIGN KEY ([AuthorId]) REFERENCES [identity].[Users]([Id])
+)
 GO
 
--- Insert sample airplanes
-DECLARE @airlineId UNIQUEIDENTIFIER
-SELECT TOP 1 @airlineId = [Id] FROM [flights].[Airlines] WHERE [IataCode] = 'VN'
-
-INSERT INTO [flights].[Airplanes] ([AirlineId], [Model], [RegistrationNumber], [TotalCapacity])
-VALUES
-    (@airlineId, 'Boeing 787', 'VN-A123', 242),
-    (@airlineId, 'Airbus A350', 'VN-A456', 325)
+-- =====================================================
+-- 8. INDEXES FOR PERFORMANCE
+-- =====================================================
+CREATE INDEX [IX_Flights_Departure] ON [flights].[Flights]([DepartureTime])
+CREATE INDEX [IX_Flights_Route] ON [flights].[Flights]([RouteId])
+CREATE INDEX [IX_Bookings_Pnr] ON [bookings].[Bookings]([PnrCode])
+CREATE INDEX [IX_Bookings_User] ON [bookings].[Bookings]([UserId])
+CREATE INDEX [IX_Tickets_Number] ON [bookings].[Tickets]([TicketNumber])
 GO
 
--- Insert sample seats for first airplane
-DECLARE @airplaneId UNIQUEIDENTIFIER
-SELECT TOP 1 @airplaneId = [Id] FROM [flights].[Airplanes]
-
--- Economy seats (1.0x multiplier)
-INSERT INTO [flights].[AirplaneSeats] ([AirplaneId], [SeatNumber], [SeatClass], [PriceMultiplier])
-SELECT @airplaneId, CHAR(ASCII('A') + seq.seq - 1) + CAST(row_num.row_num AS VARCHAR), 0, 1.0
-FROM (
-    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS seq
-    FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6) AS t1
-) seq
-CROSS JOIN (
-    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS row_num
-    FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION 
-          SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10 UNION
-          SELECT 11 UNION SELECT 12 UNION SELECT 13 UNION SELECT 14 UNION SELECT 15 UNION
-          SELECT 16 UNION SELECT 17 UNION SELECT 18 UNION SELECT 19 UNION SELECT 20 UNION
-          SELECT 21 UNION SELECT 22 UNION SELECT 23 UNION SELECT 24 UNION SELECT 25 UNION
-          SELECT 26 UNION SELECT 27 UNION SELECT 28 UNION SELECT 29 UNION SELECT 30) AS t2
-) row_num
-WHERE seq.seq <= 6 AND row_num.row_num <= 30
-
--- Business seats (1.5x multiplier)
-INSERT INTO [flights].[AirplaneSeats] ([AirplaneId], [SeatNumber], [SeatClass], [PriceMultiplier])
-SELECT @airplaneId, CHAR(ASCII('A') + seq.seq - 1) + CAST(row_num.row_num AS VARCHAR), 1, 1.5
-FROM (
-    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS seq
-    FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4) AS t1
-) seq
-CROSS JOIN (
-    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS row_num
-    FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION 
-          SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10) AS t2
-) row_num
-WHERE seq.seq <= 4 AND row_num.row_num <= 10
-
--- First class seats (3.0x multiplier)
-INSERT INTO [flights].[AirplaneSeats] ([AirplaneId], [SeatNumber], [SeatClass], [PriceMultiplier])
-SELECT @airplaneId, CHAR(ASCII('A') + seq.seq - 1) + CAST(row_num.row_num AS VARCHAR), 2, 3.0
-FROM (
-    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS seq
-    FROM (SELECT 1 UNION SELECT 2) AS t1
-) seq
-CROSS JOIN (
-    SELECT ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS row_num
-    FROM (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) AS t2
-) row_num
-WHERE seq.seq <= 2 AND row_num.row_num <= 5
+-- =====================================================
+-- 9. SEED INITIAL DATA
+-- =====================================================
+INSERT INTO [identity].[Roles] ([Name], [Description]) VALUES 
+('Admin', 'System Administrator'),
+('Partner', 'Airline Partner Staff'),
+('Customer', 'Regular Passenger')
 GO
 
--- Insert sample routes
-DECLARE @airlineId UNIQUEIDENTIFIER, @sgn UNIQUEIDENTIFIER, @han UNIQUEIDENTIFIER
-
-SELECT TOP 1 @airlineId = [Id] FROM [flights].[Airlines] WHERE [IataCode] = 'VN'
-SELECT TOP 1 @sgn = [Id] FROM [flights].[Airports] WHERE [IataCode] = 'SGN'
-SELECT TOP 1 @han = [Id] FROM [flights].[Airports] WHERE [IataCode] = 'HAN'
-
-INSERT INTO [flights].[Routes] ([AirlineId], [OriginAirportId], [DestinationAirportId])
-VALUES
-    (@airlineId, @sgn, @han),
-    (@airlineId, @han, @sgn)
+-- Sample Admin
+INSERT INTO [identity].[Users] ([Email], [PasswordHash], [FullName], [IsActive]) 
+VALUES ('admin@airticket.com', 'AQAAAAEAACcQAAAAEP...', 'System Admin', 1)
 GO
 
--- Insert sample admin user
-INSERT INTO [users].[Users] ([Email], [PasswordHash], [FullName], [Phone], [Role], [IsActive])
-VALUES
-    ('admin@airlineticket.com', 'hashed_password_here', 'Administrator', '0901234567', 1, 1)
+-- Assign Admin Role
+DECLARE @AdminId UNIQUEIDENTIFIER = (SELECT Id FROM [identity].[Users] WHERE Email = 'admin@airticket.com')
+DECLARE @RoleId UNIQUEIDENTIFIER = (SELECT Id FROM [identity].[Roles] WHERE Name = 'Admin')
+INSERT INTO [identity].[UserRoles] (UserId, RoleId) VALUES (@AdminId, @RoleId)
 GO
-
--- Insert sample customer users
-INSERT INTO [users].[Users] ([Email], [PasswordHash], [FullName], [Phone], [Role], [IsActive])
-VALUES
-    ('customer1@example.com', 'hashed_password_here', 'John Doe', '0912345678', 0, 1),
-    ('customer2@example.com', 'hashed_password_here', 'Jane Smith', '0923456789', 0, 1)
-GO
-
--- Insert sample coupons
-INSERT INTO [promotions].[Coupons] ([Code], [DiscountType], [DiscountValue], [MaxDiscountAmount], [MaxUsages], [ValidFrom], [ValidTo], [IsActive])
-VALUES
-    ('SUMMER20', 0, 20, 500000, 1000, GETUTCDATE(), DATEADD(DAY, 90, GETUTCDATE()), 1),
-    ('FIXED100K', 1, 100000, NULL, 500, GETUTCDATE(), DATEADD(DAY, 30, GETUTCDATE()), 1)
-GO
-
-PRINT 'Database initialization completed successfully!'
