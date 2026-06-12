@@ -1,4 +1,4 @@
-<Solution>
+﻿<Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/BuildingBlock/">
     <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks/AirlineTicket.BuildingBlocks.csproj" />
@@ -31,5 +31,32 @@
     <Project Path="src/Modules/v1/Users/AirlineTicket.Modules.Users.Application/AirlineTicket.Modules.Users.Application.csproj" />
     <Project Path="src/Modules/v1/Users/AirlineTicket.Modules.Users.Domain/AirlineTicket.Modules.Users.Domain.csproj" />
     <Project Path="src/Modules/v1/Users/AirlineTicket.Modules.Users.Infrastructure/AirlineTicket.Modules.Users.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/IntegrationTest/" />
+  <Folder Name="/tests/IntegrationTest/Bookings/">
+    <Project Path="tests/IntegrationTest/Modules/v1/Bookings/AirlineTicket.Modules.Bookings.Api.IntegrationTests/AirlineTicket.Modules.Bookings.Api.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/IntegrationTest/Flights/">
+    <Project Path="tests/IntegrationTest/Modules/v1/Flights/AirlineTicket.Modules.Flights.Api.IntegrationTests/AirlineTicket.Modules.Flights.Api.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/IntegrationTest/Promotions/">
+    <Project Path="tests/IntegrationTest/Modules/v1/Promotions/AirlineTicket.Modules.Promotions.Api.IntegrationTests/AirlineTicket.Modules.Promotions.Api.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/IntegrationTest/Users/">
+    <Project Path="tests/IntegrationTest/Modules/v1/Users/AirlineTicket.Modules.Users.Api.IntegrationTests/AirlineTicket.Modules.Users.Api.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTest/" />
+  <Folder Name="/tests/UnitTest/Bookings/">
+    <Project Path="tests/UnitTest/Modules/v1/Bookings/AirlineTicket.Modules.Bookings.Application.UnitTests/AirlineTicket.Modules.Bookings.Application.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTest/Flights/">
+    <Project Path="tests/UnitTest/Modules/v1/Flights/AirlineTicket.Modules.Flights.Application.UnitTests/AirlineTicket.Modules.Flights.Application.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTest/Promotions/">
+    <Project Path="tests/UnitTest/Modules/v1/Promotions/AirlineTicket.Modules.Promotions.Application.UnitTests/AirlineTicket.Modules.Promotions.Application.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTest/Users/">
+    <Project Path="tests/UnitTest/Modules/v1/Users/AirlineTicket.Modules.Users.Application.UnitTests/AirlineTicket.Modules.Users.Application.UnitTests.csproj" />
   </Folder>
 </Solution>

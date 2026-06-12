@@ -74,3 +74,6 @@ coverage/
 
 # Docker
 .dockerignore
+
+# PR_DESCRIPTION
+PR_DESCRIPTION.md
