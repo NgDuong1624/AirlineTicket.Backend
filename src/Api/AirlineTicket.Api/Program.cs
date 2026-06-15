@@ -1,6 +1,6 @@
 using FluentValidation;
 using System.Reflection;
-using AirlineTicket.BuildingBlocks.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Flights.Infrastructure;
 using AirlineTicket.Modules.Flights.Application.Features.Airports;
 using AirlineTicket.Modules.Bookings.Infrastructure;
@@ -9,6 +9,10 @@ using AirlineTicket.Modules.Users.Infrastructure;
 using AirlineTicket.Modules.Users.Application.Features.Users;
 using AirlineTicket.Modules.Promotions.Infrastructure;
 using AirlineTicket.Modules.Promotions.Application.Features.Admin;
+using AirlineTicket.Modules.CMS.Infrastructure;
+using AirlineTicket.Modules.Interactions.Infrastructure;
+using AirlineTicket.Modules.Notifications.Infrastructure;
+using AirlineTicket.Modules.Logs.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -27,6 +31,10 @@ builder.Services.AddFlightsInfrastructure(builder.Configuration);
 builder.Services.AddBookingsInfrastructure(builder.Configuration);
 builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddPromotionsInfrastructure(builder.Configuration);
+builder.Services.AddInteractionsInfrastructure(builder.Configuration);
+builder.Services.AddCMSInfrastructure(builder.Configuration);
+builder.Services.AddNotificationsInfrastructure(builder.Configuration);
+builder.Services.AddLogsInfrastructure(builder.Configuration);
 
 // Cấu hình JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!";

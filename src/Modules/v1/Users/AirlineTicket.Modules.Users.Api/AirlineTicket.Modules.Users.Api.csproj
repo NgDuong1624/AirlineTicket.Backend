@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AirlineTicket.Modules.Users.Application\AirlineTicket.Modules.Users.Application.csproj" />
+    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Api\AirlineTicket.BuildingBlocks.Api.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

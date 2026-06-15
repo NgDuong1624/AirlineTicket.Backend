@@ -47,7 +47,7 @@ public class GetUserProfileQueryHandlerTests
             Email = "test@example.com",
             FullName = "Test User",
             Phone = "123456789",
-            Role = Domain.Enums.UserRole.Passenger
+            Role = Domain.Enums.UserRole.Customer
         };
         var query = new GetUserProfileQuery(userId);
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync(query.UserId, It.IsAny<CancellationToken>()))
@@ -61,6 +61,6 @@ public class GetUserProfileQueryHandlerTests
         result!.Id.Should().Be(userId);
         result.Email.Should().Be("test@example.com");
         result.FullName.Should().Be("Test User");
-        result.Role.Should().Be("Passenger");
+        result.Role.Should().Be("Customer");
     }
 }

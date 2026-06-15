@@ -10,7 +10,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks\AirlineTicket.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Api\AirlineTicket.BuildingBlocks.Api.csproj" />
     <ProjectReference Include="..\AirlineTicket.Modules.Bookings.Application\AirlineTicket.Modules.Bookings.Application.csproj" />
     <ProjectReference Include="..\AirlineTicket.Modules.Bookings.Infrastructure\AirlineTicket.Modules.Bookings.Infrastructure.csproj" />
   </ItemGroup>

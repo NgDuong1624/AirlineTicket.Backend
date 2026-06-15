@@ -31,6 +31,18 @@
     <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Infrastructure\AirlineTicket.Modules.Users.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Promotions\AirlineTicket.Modules.Promotions.Api\AirlineTicket.Modules.Promotions.Api.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Promotions\AirlineTicket.Modules.Promotions.Infrastructure\AirlineTicket.Modules.Promotions.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Interactions\AirlineTicket.Modules.Interactions.Api\AirlineTicket.Modules.Interactions.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Interactions\AirlineTicket.Modules.Interactions.Application\AirlineTicket.Modules.Interactions.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Interactions\AirlineTicket.Modules.Interactions.Infrastructure\AirlineTicket.Modules.Interactions.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\CMS\AirlineTicket.Modules.CMS.Api\AirlineTicket.Modules.CMS.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\CMS\AirlineTicket.Modules.CMS.Application\AirlineTicket.Modules.CMS.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\CMS\AirlineTicket.Modules.CMS.Infrastructure\AirlineTicket.Modules.CMS.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Notifications\AirlineTicket.Modules.Notifications.Api\AirlineTicket.Modules.Notifications.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Notifications\AirlineTicket.Modules.Notifications.Application\AirlineTicket.Modules.Notifications.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Notifications\AirlineTicket.Modules.Notifications.Infrastructure\AirlineTicket.Modules.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Api\AirlineTicket.Modules.Logs.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Application\AirlineTicket.Modules.Logs.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Infrastructure\AirlineTicket.Modules.Logs.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

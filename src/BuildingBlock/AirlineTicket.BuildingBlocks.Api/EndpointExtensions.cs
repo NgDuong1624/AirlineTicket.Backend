@@ -2,7 +2,7 @@ using System.Reflection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AirlineTicket.BuildingBlocks.Endpoints;
+namespace AirlineTicket.BuildingBlocks.Api.Endpoints;
 
 public static class EndpointExtensions
 {
