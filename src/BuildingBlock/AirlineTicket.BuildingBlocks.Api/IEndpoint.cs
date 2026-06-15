@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Routing;
 
-namespace AirlineTicket.BuildingBlocks.Endpoints;
+namespace AirlineTicket.BuildingBlocks.Api.Endpoints;
 
 public interface IEndpoint
 {

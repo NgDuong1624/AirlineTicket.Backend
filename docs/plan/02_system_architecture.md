@@ -11,8 +11,10 @@ Hệ thống được thiết kế theo kiến trúc Modular Monolith nhằm đ�
 - **Module Users (Quản lý người dùng):** Quản lý tài khoản, xác thực, phân quyền.
 - **Module Reviews (Đánh giá):** Quản lý phản hồi, xếp hạng hãng hàng không từ hành khách.
 - **Module Articles/CMS (Nội dung):** Quản lý và phân phối các bài báo, tin tức về hàng không và du lịch.
+- **Module Notifications (Thông báo):** Xử lý gửi email xác nhận đặt vé thành công, vé điện tử và thông báo thay đổi trạng thái chuyến bay (Real-time qua SignalR/Email).
+- **Module Logs (Nhật ký hệ thống):** Thu thập và lưu trữ thông tin log tập trung (`logs.SystemLogs`), phục vụ phân tích lỗi và giám sát hành vi người dùng/quản trị viên.
 
 ## 3. Cơ sở hạ tầng
-- Cơ sở dữ liệu: Hệ quản trị CSDL quan hệ (PostgreSQL/SQL Server) được phân chia theo từng module để đảm bảo tính độc lập dữ liệu.
+- Cơ sở dữ liệu: Hệ quản trị CSDL quan hệ SQL Server được phân chia logical theo từng schema/module để đảm bảo tính độc lập dữ liệu.
 - Entity Framework Core cho truy cập dữ liệu.
 - Docker để đóng gói ứng dụng, dễ dàng triển khai đa môi trường (dev, prod).

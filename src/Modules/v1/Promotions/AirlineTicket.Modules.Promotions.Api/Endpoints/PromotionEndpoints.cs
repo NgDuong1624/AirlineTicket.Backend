@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using AirlineTicket.BuildingBlocks.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Promotions.Application.Features.Admin;
 using AirlineTicket.Modules.Promotions.Application.Features.Public;
 using MediatR;

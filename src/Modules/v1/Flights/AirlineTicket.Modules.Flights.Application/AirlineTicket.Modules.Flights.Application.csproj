@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks\AirlineTicket.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Application\AirlineTicket.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\AirlineTicket.Modules.Flights.Domain\AirlineTicket.Modules.Flights.Domain.csproj" />
   </ItemGroup>
 

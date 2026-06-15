@@ -1,7 +1,7 @@
 using System;
 using System.Security.Claims;
 using System.Threading;
-using AirlineTicket.BuildingBlocks.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Features.Admin;
 using MediatR;

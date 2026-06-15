@@ -1,7 +1,10 @@
 ﻿<Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/BuildingBlock/">
-    <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks/AirlineTicket.BuildingBlocks.csproj" />
+    <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks.Api/AirlineTicket.BuildingBlocks.Api.csproj" />
+    <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks.Application/AirlineTicket.BuildingBlocks.Application.csproj" />
+    <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks.Domain/AirlineTicket.BuildingBlocks.Domain.csproj" />
+    <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks.Infrastructure/AirlineTicket.BuildingBlocks.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Api/">
     <Project Path="src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj" />
@@ -31,6 +34,30 @@
     <Project Path="src/Modules/v1/Users/AirlineTicket.Modules.Users.Application/AirlineTicket.Modules.Users.Application.csproj" />
     <Project Path="src/Modules/v1/Users/AirlineTicket.Modules.Users.Domain/AirlineTicket.Modules.Users.Domain.csproj" />
     <Project Path="src/Modules/v1/Users/AirlineTicket.Modules.Users.Infrastructure/AirlineTicket.Modules.Users.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/v1/Interactions/">
+    <Project Path="src/Modules/v1/Interactions/AirlineTicket.Modules.Interactions.Api/AirlineTicket.Modules.Interactions.Api.csproj" />
+    <Project Path="src/Modules/v1/Interactions/AirlineTicket.Modules.Interactions.Application/AirlineTicket.Modules.Interactions.Application.csproj" />
+    <Project Path="src/Modules/v1/Interactions/AirlineTicket.Modules.Interactions.Domain/AirlineTicket.Modules.Interactions.Domain.csproj" />
+    <Project Path="src/Modules/v1/Interactions/AirlineTicket.Modules.Interactions.Infrastructure/AirlineTicket.Modules.Interactions.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/v1/CMS/">
+    <Project Path="src/Modules/v1/CMS/AirlineTicket.Modules.CMS.Api/AirlineTicket.Modules.CMS.Api.csproj" />
+    <Project Path="src/Modules/v1/CMS/AirlineTicket.Modules.CMS.Application/AirlineTicket.Modules.CMS.Application.csproj" />
+    <Project Path="src/Modules/v1/CMS/AirlineTicket.Modules.CMS.Domain/AirlineTicket.Modules.CMS.Domain.csproj" />
+    <Project Path="src/Modules/v1/CMS/AirlineTicket.Modules.CMS.Infrastructure/AirlineTicket.Modules.CMS.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/v1/Notifications/">
+    <Project Path="src/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api/AirlineTicket.Modules.Notifications.Api.csproj" />
+    <Project Path="src/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Application/AirlineTicket.Modules.Notifications.Application.csproj" />
+    <Project Path="src/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Domain/AirlineTicket.Modules.Notifications.Domain.csproj" />
+    <Project Path="src/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Infrastructure/AirlineTicket.Modules.Notifications.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/v1/Logs/">
+    <Project Path="src/Modules/v1/Logs/AirlineTicket.Modules.Logs.Api/AirlineTicket.Modules.Logs.Api.csproj" />
+    <Project Path="src/Modules/v1/Logs/AirlineTicket.Modules.Logs.Application/AirlineTicket.Modules.Logs.Application.csproj" />
+    <Project Path="src/Modules/v1/Logs/AirlineTicket.Modules.Logs.Domain/AirlineTicket.Modules.Logs.Domain.csproj" />
+    <Project Path="src/Modules/v1/Logs/AirlineTicket.Modules.Logs.Infrastructure/AirlineTicket.Modules.Logs.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/IntegrationTest/" />

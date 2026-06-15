@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using AirlineTicket.BuildingBlocks.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Flights.Application.Features.Airports;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
 using AirlineTicket.Modules.Flights.Application.Features.Routes;

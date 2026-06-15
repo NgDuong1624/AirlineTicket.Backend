@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AirlineTicket.Modules.Promotions.Application\AirlineTicket.Modules.Promotions.Application.csproj" />
     <ProjectReference Include="..\AirlineTicket.Modules.Promotions.Infrastructure\AirlineTicket.Modules.Promotions.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Api\AirlineTicket.BuildingBlocks.Api.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

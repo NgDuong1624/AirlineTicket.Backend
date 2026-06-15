@@ -11,6 +11,11 @@ erDiagram
     %% IDENTITY SCHEMA
     identity_Users ||--o{ identity_UserRoles : "has"
     identity_Roles ||--o{ identity_UserRoles : "has"
+    identity_Roles ||--o{ identity_RolePermissions : "has"
+    identity_Permissions ||--o{ identity_RolePermissions : "defines"
+    identity_Users ||--o{ identity_UserPermissionScopes : "has"
+    identity_Permissions ||--o{ identity_UserPermissionScopes : "scoped_by"
+    flights_Airlines ||--o{ identity_UserPermissionScopes : "restricts"
     
     %% FLIGHTS SCHEMA
     flights_Airlines ||--o{ flights_Airplanes : "owns"
@@ -70,9 +75,19 @@ Danh sách vai trò hệ thống.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất vai trò |
+| `Id` | INT | PRIMARY KEY | Định danh duy nhất vai trò |
 | `Name` | NVARCHAR(50) | UNIQUE, NOT NULL | Tên vai trò (Admin, Partner, Customer) |
 | `Description` | NVARCHAR(255) | NULL | Mô tả chi tiết vai trò |
+
+#### Bảng `identity.Permissions`
+Danh mục các chức năng/quyền hạn trong hệ thống.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `Id` | INT | PRIMARY KEY, IDENTITY | Định danh quyền |
+| `Code` | NVARCHAR(50) | UNIQUE, NOT NULL | Mã quyền (Ví dụ: 'SELL_TICKET') |
+| `Name` | NVARCHAR(100) | NOT NULL | Tên quyền hiển thị |
+| `Description` | NVARCHAR(255) | NULL | Mô tả chi tiết quyền |
 
 #### Bảng `identity.UserRoles`
 Bảng trung gian liên kết người dùng và vai trò.
@@ -80,7 +95,29 @@ Bảng trung gian liên kết người dùng và vai trò.
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
 | `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Users(Id) | Liên kết người dùng |
-| `RoleId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Roles(Id) | Liên kết vai trò |
+| `RoleId` | INT | FOREIGN KEY -> Roles(Id) | Liên kết vai trò |
+
+#### Bảng `identity.RolePermissions`
+Cấu hình quyền mặc định thuộc về từng Role.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `RoleId` | INT | FOREIGN KEY -> Roles(Id) | Liên kết vai trò |
+| `PermissionId` | INT | FOREIGN KEY -> Permissions(Id) | Liên kết quyền |
+
+#### Bảng `identity.UserPermissionScopes`
+Phân quyền chi tiết theo Trạm bay hoặc Hạn mức/Giới hạn số lượng.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh scope |
+| `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Users(Id) | Áp dụng cho tài khoản cụ thể |
+| `PermissionId` | INT | FOREIGN KEY -> Permissions(Id) | Đi kèm với hành động/quyền nào |
+| `AirlineId` | UNIQUEIDENTIFIER | NULL, FOREIGN KEY | Giới hạn theo hãng bay |
+| `AirportCode` | VARCHAR(10) | NULL | Giới hạn theo trạm/sân bay (VD: 'SGN') |
+| `MaxLimitValue` | INT | NULL | Số lượng tối đa được phép thực hiện |
+| `ScopeDescription` | NVARCHAR(255) | NULL | Mô tả phạm vi |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian khởi tạo |
 
 ---
 
@@ -327,3 +364,23 @@ Lưu trữ thông tin chi tiết các bài báo của trang quản trị nội d
 | `Status` | INT | DEFAULT 0, NOT NULL | Trạng thái bài viết (0: Nháp, 1: Đã duyệt, 2: Lưu trữ) |
 | `ViewCount` | INT | DEFAULT 0 | Tổng lượt xem bài viết |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời điểm tạo bài viết |
+
+---
+
+### 2.7. Phân hệ Nhật ký Hệ thống (`logs`)
+Ghi log hoạt động hệ thống.
+
+#### Bảng `logs.SystemLogs`
+Lưu trữ log hệ thống và lỗi runtime.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh log |
+| `Level` | NVARCHAR(50) | NOT NULL | Cấp độ log (Info, Warning, Error, Critical) |
+| `Message` | NVARCHAR(MAX) | NOT NULL | Nội dung log |
+| `Source` | NVARCHAR(255) | NULL | Nguồn ghi log (Application, Module...) |
+| `Exception` | NVARCHAR(MAX) | NULL | Chi tiết ngoại lệ |
+| `UserId` | UNIQUEIDENTIFIER | NULL | ID người dùng thực hiện (nếu có) |
+| `AirlineId` | UNIQUEIDENTIFIER | NULL | ID hãng bay liên quan (nếu có) |
+| `IpAddress` | NVARCHAR(50) | NULL | Địa chỉ IP |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian ghi log |

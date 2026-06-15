@@ -2,7 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AirlineTicket.Modules.Promotions.Domain\AirlineTicket.Modules.Promotions.Domain.csproj" />
-    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks\AirlineTicket.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Application\AirlineTicket.BuildingBlocks.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

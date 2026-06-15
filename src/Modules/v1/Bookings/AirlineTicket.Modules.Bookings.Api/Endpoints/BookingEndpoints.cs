@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
-using AirlineTicket.BuildingBlocks.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using AirlineTicket.Modules.Bookings.Application.Features.Payments;
 using AirlineTicket.Modules.Bookings.Application.Features.Tickets;
