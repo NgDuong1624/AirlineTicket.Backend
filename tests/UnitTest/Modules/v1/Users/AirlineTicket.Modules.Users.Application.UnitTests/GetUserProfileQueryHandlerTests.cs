@@ -61,6 +61,6 @@ public class GetUserProfileQueryHandlerTests
         result!.Id.Should().Be(userId);
         result.Email.Should().Be("test@example.com");
         result.FullName.Should().Be("Test User");
-        result.Role.Should().Be("Passenger");
+        result.Role.Should().Be("Customer");
     }
 }
