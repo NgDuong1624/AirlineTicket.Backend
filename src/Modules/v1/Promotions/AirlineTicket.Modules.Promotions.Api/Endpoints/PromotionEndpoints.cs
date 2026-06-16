@@ -15,12 +15,12 @@ public class PromotionEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        // ——————————————————————— Admin Endpoints ————————————————————————————————
-        var adminGroup = app.MapGroup("/api/v1/admin/promotions")
-            .WithTags("Promotions Admin Manage")
+        // ——————————————————————— Admin Coupons ————————————————————————————————
+        var adminCouponsGroup = app.MapGroup("/api/admin/coupons")
+            .WithTags("Admin Coupons Management")
             .RequireAuthorization("AdminOnly");
 
-        adminGroup.MapPost("/", async (
+        adminCouponsGroup.MapPost("/", async (
                 [FromBody] CreatePromotionRequest request,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -28,16 +28,16 @@ public class PromotionEndpoints : IEndpoint
                 try
                 {
                     var command = new CreatePromotionCommand(
-                        request.Name, 
-                        request.PromoCode, 
-                        request.DiscountType, 
-                        request.DiscountValue, 
-                        request.MaxUsage, 
-                        request.StartDate, 
+                        request.Name,
+                        request.PromoCode,
+                        request.DiscountType,
+                        request.DiscountValue,
+                        request.MaxUsage,
+                        request.StartDate,
                         request.EndDate);
-                        
+
                     var result = await sender.Send(command, ct);
-                    return Results.Created($"/api/v1/admin/promotions/{result}", new { Id = result });
+                    return Results.Created($"/api/admin/coupons/{result}", new { Id = result });
                 }
                 catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
                 {
@@ -48,13 +48,11 @@ public class PromotionEndpoints : IEndpoint
                     return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
                 }
             })
-            .WithName("AdminCreatePromotion")
-            .WithSummary("Tạo một mã giảm giá/khuyến mãi mới")
+            .WithName("AdminCreateCoupon")
             .Produces(201)
-            .Produces(400)
-            .Produces(500);
+            .Produces(400);
 
-        adminGroup.MapGet("/", async (
+        adminCouponsGroup.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
@@ -62,11 +60,10 @@ public class PromotionEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return Results.Ok(result);
             })
-            .WithName("AdminGetPromotions")
-            .WithSummary("Lấy danh sách tất cả khuyến mãi (Admin)")
+            .WithName("AdminGetCoupons")
             .Produces(200);
 
-        adminGroup.MapPut("/{id:guid}", async (
+        adminCouponsGroup.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] UpdatePromotionRequest request,
                 [FromServices] ISender sender,
@@ -76,19 +73,18 @@ public class PromotionEndpoints : IEndpoint
                 {
                     var command = new UpdatePromotionCommand(id, request.Name, request.DiscountValue, request.EndDate);
                     await sender.Send(command, ct);
-                    return Results.Ok(new { Message = "Cập nhật khuyến mãi thành công." });
+                    return Results.Ok(new { Message = "Cập nhật coupon thành công." });
                 }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
+                catch (Exception ex)
                 {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
+                    return Results.Json(new { Code = "BAD_REQUEST", Message = ex.Message }, statusCode: 400);
                 }
             })
-            .WithName("AdminUpdatePromotion")
-            .WithSummary("Cập nhật thông tin khuyến mãi")
+            .WithName("AdminUpdateCoupon")
             .Produces(200)
             .Produces(400);
 
-        adminGroup.MapDelete("/{id:guid}", async (
+        adminCouponsGroup.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -97,16 +93,30 @@ public class PromotionEndpoints : IEndpoint
                 await sender.Send(command, ct);
                 return Results.NoContent();
             })
-            .WithName("AdminDeletePromotion")
-            .WithSummary("Xóa/Hủy khuyến mãi")
+            .WithName("AdminDeleteCoupon")
             .Produces(204);
 
+        // ——————————————————————— Admin Campaigns ————————————————————————————————
+        var adminCampaignsGroup = app.MapGroup("/api/admin/campaigns")
+            .WithTags("Admin Campaigns Management")
+            .RequireAuthorization("AdminOnly");
+
+        adminCampaignsGroup.MapGet("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                // Placeholder campaign query or list
+                return Results.Ok(new List<object>());
+            })
+            .WithName("AdminGetCampaigns")
+            .Produces(200);
+
         // ——————————————————————— Public Endpoints ————————————————————————————————
-        var publicGroup = app.MapGroup("/api/v1/promotions")
+        var publicGroup = app.MapGroup("/api/promotions")
             .WithTags("Promotions Public")
             .AllowAnonymous();
 
-        publicGroup.MapGet("/active", async (
+        publicGroup.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
@@ -115,22 +125,16 @@ public class PromotionEndpoints : IEndpoint
                 return Results.Ok(result);
             })
             .WithName("GetActivePromotions")
-            .WithSummary("Lấy danh sách các khuyến mãi đang diễn ra")
             .Produces(200);
 
-        publicGroup.MapGet("/{code}", async (
-                string code,
-                [FromServices] ISender sender,
+        publicGroup.MapGet("/campaigns", async (
                 CancellationToken ct) =>
             {
-                var query = new GetPromotionByCodeQuery(code);
-                var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                // Return campaign list
+                return Results.Ok(new List<object>());
             })
-            .WithName("GetPromotionByCode")
-            .WithSummary("Lấy thông tin chi tiết một mã giảm giá")
-            .Produces(200)
-            .Produces(404);
+            .WithName("GetCampaigns")
+            .Produces(200);
 
         publicGroup.MapPost("/apply", async (
                 [FromBody] ApplyPromotionRequest request,
@@ -141,11 +145,7 @@ public class PromotionEndpoints : IEndpoint
                 {
                     var command = new ApplyPromotionCommand(request.PromoCode, request.FlightId, request.OriginalAmount);
                     var result = await sender.Send(command, ct);
-                    return Results.Ok(result); // result includes DiscountAmount and FinalAmount
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
-                {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
+                    return Results.Ok(result);
                 }
                 catch (Exception ex)
                 {
@@ -153,13 +153,11 @@ public class PromotionEndpoints : IEndpoint
                 }
             })
             .WithName("ApplyPromotion")
-            .WithSummary("Kiểm tra và tính toán giảm giá")
             .Produces(200)
             .Produces(400);
     }
 }
 
-// ======================= Requests =======================
 public record CreatePromotionRequest(string Name, string PromoCode, string DiscountType, decimal DiscountValue, int MaxUsage, DateTime StartDate, DateTime EndDate);
 public record UpdatePromotionRequest(string Name, decimal DiscountValue, DateTime EndDate);
 public record ApplyPromotionRequest(string PromoCode, Guid FlightId, decimal OriginalAmount);

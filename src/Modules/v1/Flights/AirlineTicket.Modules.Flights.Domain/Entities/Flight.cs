@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using AirlineTicket.Modules.Flights.Domain.Enums;
 
 namespace AirlineTicket.Modules.Flights.Domain.Entities;
@@ -8,14 +10,18 @@ public class Flight
     public Guid RouteId { get; set; }
     public Guid AirplaneId { get; set; }
     public string FlightNumber { get; set; } = string.Empty;
+    public DateTime DepartureTime { get; set; }
+    public DateTime ArrivalTime { get; set; }
     public decimal BasePrice { get; set; }
-    public DateTime ScheduledDeparture { get; set; }
-    public DateTime ScheduledArrival { get; set; }
-    public DateTime? ActualDeparture { get; set; }
-    public DateTime? ActualArrival { get; set; }
-    public FlightStatus Status { get; set; }
+    public string Currency { get; set; } = "USD";
+    public FlightStatus Status { get; set; } = FlightStatus.Scheduled;
+    public string? ExternalId { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public Route Route { get; set; } = null!;
-    public Airplane Airplane { get; set; } = null!;
-    public ICollection<FlightSeat> FlightSeats { get; set; } = new List<FlightSeat>();
+    // Navigation properties
+    public virtual Route Route { get; set; } = null!;
+    public virtual Airplane Airplane { get; set; } = null!;
+    public virtual ICollection<FlightSeat> FlightSeats { get; set; } = new List<FlightSeat>();
 }

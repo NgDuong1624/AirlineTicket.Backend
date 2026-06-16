@@ -18,20 +18,19 @@ public class BookingEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/v1")
+        var group = app.MapGroup("/api/bookings")
             .WithTags("Bookings Module")
             .WithOpenApi();
 
         // ——————————————————————— Bookings ————————————————————————————————
-        group.MapPost("/bookings", async (
-                [FromBody] CreateBookingRequest request, 
+        group.MapPost("/", async (
+                [FromBody] CreateBookingRequest request,
                 [FromServices] ISender sender,
                 ClaimsPrincipal user,
                 CancellationToken ct) =>
             {
                 try
                 {
-                    // Optional: Get UserId if logged in
                     var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     Guid? userId = null;
                     if (Guid.TryParse(userIdClaim, out var parsedId))
@@ -60,9 +59,22 @@ public class BookingEndpoints : IEndpoint
             .Produces(500)
             .AllowAnonymous();
 
-        group.MapGet("/bookings/{id:guid}", async (
-                Guid id, 
-                [FromServices] ISender sender, 
+        group.MapGet("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new GetAllBookingsQuery();
+                var result = await sender.Send(query, ct);
+                return Results.Ok(result);
+            })
+            .WithName("GetAllBookings")
+            .WithSummary("Lấy danh sách tất cả đặt vé")
+            .Produces(200)
+            .RequireAuthorization("AdminOrStaff");
+
+        group.MapGet("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 var query = new GetBookingByIdQuery(id);
@@ -75,8 +87,8 @@ public class BookingEndpoints : IEndpoint
             .Produces(404)
             .AllowAnonymous();
 
-        group.MapGet("/bookings/my-bookings", async (
-                [FromServices] ISender sender, 
+        group.MapGet("/my-bookings", async (
+                [FromServices] ISender sender,
                 ClaimsPrincipal user,
                 CancellationToken ct) =>
             {
@@ -96,9 +108,37 @@ public class BookingEndpoints : IEndpoint
             .Produces(401)
             .RequireAuthorization();
 
-        group.MapDelete("/bookings/{id:guid}", async (
-                Guid id, 
-                [FromServices] ISender sender, 
+        group.MapPut("/{id:guid}", async (
+                Guid id,
+                [FromBody] UpdateBookingRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                try
+                {
+                    var passengers = request.Passengers?.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
+                    var command = new UpdateBookingCommand(id, passengers, request.ContactEmail, request.ContactPhone);
+                    await sender.Send(command, ct);
+                    return Results.Ok(new { Message = "Cập nhật đặt chỗ thành công." });
+                }
+                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
+                {
+                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
+                }
+                catch (Exception ex)
+                {
+                    return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
+                }
+            })
+            .WithName("UpdateBooking")
+            .WithSummary("Cập nhật thông tin đặt vé")
+            .Produces(200)
+            .Produces(400)
+            .Produces(500);
+
+        group.MapDelete("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 var command = new CancelBookingCommand(id);
@@ -111,10 +151,10 @@ public class BookingEndpoints : IEndpoint
             .Produces(400);
 
         // ——————————————————————— Payments & Tickets ————————————————————————————————
-        group.MapPost("/bookings/{id:guid}/pay", async (
-                Guid id, 
-                [FromBody] PayBookingRequest request, 
-                [FromServices] ISender sender, 
+        group.MapPost("/{id:guid}/pay", async (
+                Guid id,
+                [FromBody] PayBookingRequest request,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 try
@@ -138,15 +178,16 @@ public class BookingEndpoints : IEndpoint
             .Produces(400)
             .AllowAnonymous();
 
-        group.MapGet("/tickets/{id:guid}", async (
-                Guid id, 
-                [FromServices] ISender sender, 
+        app.MapGet("/api/tickets/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 var query = new GetTicketByIdQuery(id);
                 var result = await sender.Send(query, ct);
                 return result != null ? Results.Ok(result) : Results.NotFound();
             })
+            .WithTags("Tickets Module")
             .WithName("GetTicketById")
             .WithSummary("Lấy thông tin vé điện tử")
             .Produces(200)
@@ -158,4 +199,5 @@ public class BookingEndpoints : IEndpoint
 // ======================= Requests =======================
 public record CreateBookingRequest(Guid FlightId, List<PassengerDto> Passengers);
 public record PassengerDto(string FirstName, string LastName, string IdentityCard, string SeatNumber);
+public record UpdateBookingRequest(List<PassengerDto>? Passengers, string? ContactEmail, string? ContactPhone);
 public record PayBookingRequest(string PaymentMethod, decimal Amount);

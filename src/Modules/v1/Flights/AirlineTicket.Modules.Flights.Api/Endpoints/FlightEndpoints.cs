@@ -16,63 +16,65 @@ public class FlightEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/v1")
-            .WithTags("Flights Module")
-            .WithOpenApi();
-
         // ——————————————————————— Airports ————————————————————————————————
-        group.MapGet("/airports", async (
-                [FromQuery] string? search,
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                var query = new GetAirportsQuery(search);
-                var result = await sender.Send(query, ct);
-                return Results.Ok(result);
-            })
+        app.MapGroup("/api/airports")
+            .WithTags("Airports Module")
+            .WithOpenApi()
+            .MapGet("/", async (
+                    [FromQuery] string? search,
+                    [FromServices] ISender sender,
+                    CancellationToken ct) =>
+                {
+                    var query = new GetAirportsQuery(search);
+                    var result = await sender.Send(query, ct);
+                    return Results.Ok(result);
+                })
             .WithName("GetAirports")
-            .WithSummary("Lấy danh sách sân bay")
+            .WithSummary("Lấy danh sách sân bay hoặc tìm kiếm theo từ khóa")
             .Produces(200)
-            .AllowAnonymous();
-
-        group.MapGet("/airports/{id:guid}", async (
-                Guid id,
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                var query = new GetAirportByIdQuery(id);
-                var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
-            })
-            .WithName("GetAirportById")
-            .WithSummary("Lấy chi tiết sân bay")
-            .Produces(200)
-            .Produces(404)
             .AllowAnonymous();
 
         // ——————————————————————— Routes ————————————————————————————————
-        group.MapGet("/routes", async (
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                var query = new GetRoutesQuery();
-                var result = await sender.Send(query, ct);
-                return Results.Ok(result);
-            })
+        app.MapGroup("/api/routes")
+            .WithTags("Routes Module")
+            .WithOpenApi()
+            .MapGet("/", async (
+                    [FromServices] ISender sender,
+                    CancellationToken ct) =>
+                {
+                    var query = new GetRoutesQuery();
+                    var result = await sender.Send(query, ct);
+                    return Results.Ok(result);
+                })
             .WithName("GetRoutes")
             .WithSummary("Lấy danh sách tuyến bay")
             .Produces(200)
             .AllowAnonymous();
 
         // ——————————————————————— Flights ————————————————————————————————
-        group.MapGet("/flights/search", async (
-                [AsParameters] FlightSearchRequest request,
+        var flightsGroup = app.MapGroup("/api/flights")
+            .WithTags("Flights Module")
+            .WithOpenApi();
+
+        // POST /api/flights — Search flights
+        flightsGroup.MapPost("/", async (
+                [FromBody] FlightSearchRequest request,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 try
                 {
-                    var query = new SearchFlightsQuery(request.OriginCode, request.DestinationCode, request.Date);
+                    var query = new SearchFlightsQuery(
+                        request.OriginCode,
+                        request.DestinationCode,
+                        request.DepartDate,
+                        request.CabinClass,
+                        request.Airlines,
+                        request.PriceRangeMin,
+                        request.PriceRangeMax,
+                        request.MaxStops,
+                        request.SortBy,
+                        request.Currency);
                     var result = await sender.Send(query, ct);
                     return Results.Ok(result);
                 }
@@ -86,13 +88,14 @@ public class FlightEndpoints : IEndpoint
                 }
             })
             .WithName("SearchFlights")
-            .WithSummary("Tìm kiếm chuyến bay")
+            .WithSummary("Tìm kiếm chuyến bay theo bộ lọc")
             .Produces(200)
             .Produces(400)
             .Produces(500)
             .AllowAnonymous();
 
-        group.MapGet("/flights/{id:guid}", async (
+        // GET /api/flights/{id}
+        flightsGroup.MapGet("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -102,12 +105,27 @@ public class FlightEndpoints : IEndpoint
                 return result != null ? Results.Ok(result) : Results.NotFound();
             })
             .WithName("GetFlightById")
-            .WithSummary("Xem chi tiết một chuyến bay")
+            .WithSummary("Lấy chi tiết chuyến bay theo ID")
             .Produces(200)
             .Produces(404)
             .AllowAnonymous();
 
-        group.MapGet("/flights/{id:guid}/seats", async (
+        // GET /api/flights/trending
+        flightsGroup.MapGet("/trending", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new GetTrendingFlightsQuery();
+                var result = await sender.Send(query, ct);
+                return Results.Ok(result);
+            })
+            .WithName("GetTrendingFlights")
+            .WithSummary("Lấy danh sách các chuyến bay/tuyến đường phổ biến")
+            .Produces(200)
+            .AllowAnonymous();
+
+        // GET /api/flights/{id}/seats
+        flightsGroup.MapGet("/{id:guid}/seats", async (
                 Guid id,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -122,7 +140,8 @@ public class FlightEndpoints : IEndpoint
             .Produces(404)
             .AllowAnonymous();
 
-        group.MapPost("/flights", async (
+        // POST /api/flights (Admin create)
+        flightsGroup.MapPost("/admin", async (
                 [FromBody] CreateFlightRequest request,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -130,15 +149,15 @@ public class FlightEndpoints : IEndpoint
                 try
                 {
                     var command = new CreateFlightCommand(
-                        request.RouteId, 
-                        request.AirplaneId, 
-                        request.FlightNumber, 
-                        request.BasePrice, 
-                        request.ScheduledDeparture, 
+                        request.RouteId,
+                        request.AirplaneId,
+                        request.FlightNumber,
+                        request.BasePrice,
+                        request.ScheduledDeparture,
                         request.ScheduledArrival);
-                    
+
                     var result = await sender.Send(command, ct);
-                    return Results.Created($"/api/v1/flights/{result}", new { Id = result });
+                    return Results.Created($"/api/flights/{result}", new { Id = result });
                 }
                 catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
                 {
@@ -159,5 +178,22 @@ public class FlightEndpoints : IEndpoint
 }
 
 // ======================= Requests =======================
-public record FlightSearchRequest(string OriginCode, string DestinationCode, DateTime Date);
-public record CreateFlightRequest(Guid RouteId, Guid AirplaneId, string FlightNumber, decimal BasePrice, DateTime ScheduledDeparture, DateTime ScheduledArrival);
+public record FlightSearchRequest(
+    string OriginCode,
+    string DestinationCode,
+    DateTime DepartDate,
+    string? CabinClass = null,
+    List<string>? Airlines = null,
+    decimal? PriceRangeMin = null,
+    decimal? PriceRangeMax = null,
+    int? MaxStops = null,
+    string? SortBy = null,
+    string Currency = "VND");
+
+public record CreateFlightRequest(
+    Guid RouteId,
+    Guid AirplaneId,
+    string FlightNumber,
+    decimal BasePrice,
+    DateTime ScheduledDeparture,
+    DateTime ScheduledArrival);

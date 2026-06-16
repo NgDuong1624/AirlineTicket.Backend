@@ -31,7 +31,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, G
             PasswordHash = _passwordHasher.HashPassword(request.Password),
             FullName = request.FullName,
             Phone = request.Phone,
-            Role = UserRole.Customer
+            Role = AirlineTicket.Modules.Users.Domain.Enums.UserRole.Customer
         };
 
         await _userRepository.AddAsync(user, cancellationToken);

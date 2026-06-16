@@ -22,19 +22,19 @@ public class PromotionRepository : IPromotionRepository
     {
         var coupon = await _context.Coupons
             .FirstOrDefaultAsync(c => c.Code == code && c.IsActive, cancellationToken);
-            
+
         if (coupon == null) return null;
-        
+
         return new PromotionDto
         {
             Id = coupon.Id,
             PromoCode = coupon.Code,
             DiscountType = coupon.DiscountType.ToString(),
             DiscountValue = coupon.DiscountValue,
-            MaxUsage = coupon.MaxUsages,
-            CurrentUsage = coupon.CurrentUsages,
-            StartDate = coupon.ValidFrom,
-            EndDate = coupon.ValidTo
+            MaxUsage = coupon.UsageLimit ?? 0,
+            CurrentUsage = coupon.UsageCount,
+            StartDate = coupon.StartDate,
+            EndDate = coupon.EndDate
         };
     }
 
@@ -42,7 +42,7 @@ public class PromotionRepository : IPromotionRepository
     {
         var now = DateTime.UtcNow;
         return await _context.Campaigns
-            .Where(c => c.IsActive && c.StartDate <= now && c.EndDate >= now)
+            .Where(c => c.IsFeatured && c.StartDate <= now && c.EndDate >= now)
             .ToListAsync(cancellationToken);
     }
 
@@ -61,13 +61,13 @@ public class PromotionRepository : IPromotionRepository
             Code = promotion.PromoCode,
             DiscountType = Enum.Parse<AirlineTicket.Modules.Promotions.Domain.Enums.DiscountType>(promotion.DiscountType),
             DiscountValue = promotion.DiscountValue,
-            MaxUsages = promotion.MaxUsage,
-            CurrentUsages = 0,
-            ValidFrom = promotion.StartDate,
-            ValidTo = promotion.EndDate,
+            UsageLimit = promotion.MaxUsage,
+            UsageCount = 0,
+            StartDate = promotion.StartDate,
+            EndDate = promotion.EndDate,
             IsActive = true
         };
-        
+
         _context.Coupons.Add(coupon);
         await _context.SaveChangesAsync(cancellationToken);
         return coupon.Id;
@@ -77,11 +77,11 @@ public class PromotionRepository : IPromotionRepository
     {
         var coupon = await _context.Coupons
             .FirstOrDefaultAsync(c => c.Id == promotion.Id, cancellationToken);
-            
+
         if (coupon != null)
         {
             coupon.DiscountValue = promotion.DiscountValue;
-            coupon.ValidTo = promotion.EndDate;
+            coupon.EndDate = promotion.EndDate;
             if (!string.IsNullOrEmpty(promotion.Name))
                 coupon.Code = promotion.Name;
             await _context.SaveChangesAsync(cancellationToken);
@@ -92,7 +92,7 @@ public class PromotionRepository : IPromotionRepository
     {
         var coupon = await _context.Coupons
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-            
+
         if (coupon != null)
         {
             // Soft delete - mark inactive instead of removing

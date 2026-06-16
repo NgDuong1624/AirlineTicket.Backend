@@ -18,8 +18,20 @@ public class FlightDto
 public interface IFlightRepository
 {
     Task<FlightDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<List<FlightDto>> SearchAsync(string origin, string destination, DateTime date, CancellationToken cancellationToken = default);
+    Task<List<FlightDto>> SearchAsync(
+        string origin,
+        string destination,
+        DateTime date,
+        string? cabinClass = null,
+        List<string>? airlines = null,
+        decimal? priceRangeMin = null,
+        decimal? priceRangeMax = null,
+        int? maxStops = null,
+        string? sortBy = null,
+        string currency = "VND",
+        CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(FlightDto flight, CancellationToken cancellationToken = default);
+    Task<List<FlightDto>> GetTrendingAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IAirportRepository

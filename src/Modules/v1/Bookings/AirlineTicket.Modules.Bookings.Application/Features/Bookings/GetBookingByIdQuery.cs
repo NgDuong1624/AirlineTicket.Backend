@@ -6,9 +6,9 @@ using MediatR;
 
 namespace AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 
-public record GetBookingByIdQuery(Guid Id) : IRequest<object>;
+public record GetBookingByIdQuery(Guid Id) : IRequest<BookingDto?>;
 
-public class GetBookingByIdQueryHandler : IRequestHandler<GetBookingByIdQuery, object?>
+public class GetBookingByIdQueryHandler : IRequestHandler<GetBookingByIdQuery, BookingDto?>
 {
     private readonly IBookingRepository _bookingRepository;
 
@@ -17,7 +17,7 @@ public class GetBookingByIdQueryHandler : IRequestHandler<GetBookingByIdQuery, o
         _bookingRepository = bookingRepository;
     }
 
-    public async Task<object?> Handle(GetBookingByIdQuery request, CancellationToken cancellationToken)
+    public async Task<BookingDto?> Handle(GetBookingByIdQuery request, CancellationToken cancellationToken)
     {
         return await _bookingRepository.GetByIdAsync(request.Id, cancellationToken);
     }

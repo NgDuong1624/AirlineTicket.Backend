@@ -25,7 +25,7 @@ public class AdminUpdateUserCommandHandler : IRequestHandler<AdminUpdateUserComm
         user.FullName = request.FullName;
         user.Phone = request.Phone;
 
-        if (Enum.TryParse<UserRole>(request.Role, true, out var roleEnum))
+        if (Enum.TryParse<AirlineTicket.Modules.Users.Domain.Enums.UserRole>(request.Role, true, out var roleEnum))
         {
             user.Role = roleEnum;
         }
