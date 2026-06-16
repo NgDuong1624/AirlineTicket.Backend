@@ -9,8 +9,8 @@ public class FlightSeatConfiguration : IEntityTypeConfiguration<FlightSeat>
     public void Configure(EntityTypeBuilder<FlightSeat> builder)
     {
         builder.HasKey(x => x.Id);
-        
-        builder.Property(x => x.Price)
+
+        builder.Property(x => x.PriceOverride)
             .HasPrecision(18, 2);
     }
 }

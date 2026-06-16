@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
+using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicket.Modules.Bookings.Infrastructure.Data.Repositories;
 
@@ -22,6 +23,12 @@ public class BookingRepository : IBookingRepository
     }
 
     public async Task<List<BookingDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        // TODO: Implement when entities are properly set up
+        return await Task.FromResult(new List<BookingDto>());
+    }
+
+    public async Task<List<BookingDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         // TODO: Implement when entities are properly set up
         return await Task.FromResult(new List<BookingDto>());

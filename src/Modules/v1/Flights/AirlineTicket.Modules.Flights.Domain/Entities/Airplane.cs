@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace AirlineTicket.Modules.Flights.Domain.Entities;
 
 public class Airplane
@@ -7,7 +10,10 @@ public class Airplane
     public string Model { get; set; } = string.Empty;
     public string RegistrationNumber { get; set; } = string.Empty;
     public int TotalCapacity { get; set; }
+    public bool IsDeleted { get; set; }
 
-    public Airline Airline { get; set; } = null!;
-    public ICollection<AirplaneSeat> Seats { get; set; } = new List<AirplaneSeat>();
+    // Navigation properties
+    public virtual Airline Airline { get; set; } = null!;
+    public virtual ICollection<AirplaneSeat> AirplaneSeats { get; set; } = new List<AirplaneSeat>();
+    public virtual ICollection<Flight> Flights { get; set; } = new List<Flight>();
 }
