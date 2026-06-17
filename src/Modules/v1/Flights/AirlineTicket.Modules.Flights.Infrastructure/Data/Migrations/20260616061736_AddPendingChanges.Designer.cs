@@ -4,6 +4,7 @@ using AirlineTicket.Modules.Flights.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AirlineTicket.Modules.Flights.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(FlightDbContext))]
-    partial class FlightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260616061736_AddPendingChanges")]
+    partial class AddPendingChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -336,7 +339,7 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Data.Migrations
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Airline", "Airline")
                         .WithMany("Airplanes")
                         .HasForeignKey("AirlineId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Airline");
@@ -347,7 +350,7 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Data.Migrations
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Airplane", "Airplane")
                         .WithMany("AirplaneSeats")
                         .HasForeignKey("AirplaneId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Airplane");
@@ -385,7 +388,7 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Data.Migrations
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Flight", "Flight")
                         .WithMany("FlightSeats")
                         .HasForeignKey("FlightId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Flight");
@@ -396,7 +399,7 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Data.Migrations
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Airline", "Airline")
                         .WithMany("Routes")
                         .HasForeignKey("AirlineId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Airport", null)

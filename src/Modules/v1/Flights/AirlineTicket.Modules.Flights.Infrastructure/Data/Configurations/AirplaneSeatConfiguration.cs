@@ -9,8 +9,13 @@ public class AirplaneSeatConfiguration : IEntityTypeConfiguration<AirplaneSeat>
     public void Configure(EntityTypeBuilder<AirplaneSeat> builder)
     {
         builder.HasKey(x => x.Id);
-        
+
         builder.Property(x => x.PriceMultiplier)
             .HasPrecision(18, 2);
+
+        builder.HasOne(x => x.Airplane)
+            .WithMany(a => a.AirplaneSeats)
+            .HasForeignKey(x => x.AirplaneId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
