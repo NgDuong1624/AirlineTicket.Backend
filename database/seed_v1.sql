@@ -3,7 +3,7 @@
 -- Designed by GitHub Copilot
 -- =====================================================
 
-USE [master]
+USE [AirlineTicketDb]
 GO
 
 -- =====================================================
@@ -11,7 +11,7 @@ GO
 -- =====================================================
 
 -- Khởi tạo danh sách Roles cố định với mã dịch i18n
-INSERT INTO [identity].[Roles] ([Id], [Name], [Description]) VALUES
+INSERT INTO [users].[Roles] ([Id], [Name], [Description]) VALUES
 (0, N'role.system_admin.name', N'role.system_admin.desc'),
 (1, N'role.airline_admin.name', N'role.airline_admin.desc'),
 (2, N'role.airline_staff.name', N'role.airline_staff.desc'),
@@ -19,7 +19,7 @@ INSERT INTO [identity].[Roles] ([Id], [Name], [Description]) VALUES
 GO
 
 -- Khởi tạo một số Permissions mẫu với mã dịch i18n
-INSERT INTO [identity].[Permissions] ([Code], [Name], [Description]) VALUES
+INSERT INTO [users].[Permissions] ([Code], [Name], [Description]) VALUES
 ('CREATE_FLIGHT', N'permission.create_flight.name', N'permission.create_flight.desc'),
 ('SELL_TICKET', N'permission.sell_ticket.name', N'permission.sell_ticket.desc'),
 ('MANAGE_AIRLINE_STAFF', N'permission.manage_airline_staff.name', N'permission.manage_airline_staff.desc'),
@@ -33,7 +33,7 @@ GO
 
 -- Khởi tạo danh sách Users mẫu (Admin và Client)
 -- Mật khẩu mặc định có mã băm tương ứng
-INSERT INTO [identity].[Users] ([Id], [Email], [EmailConfirmed], [PasswordHash], [FullName], [PhoneNumber], [IsActive]) VALUES
+INSERT INTO [users].[Users] ([Id], [Email], [EmailConfirmed], [PasswordHash], [FullName], [PhoneNumber], [IsActive]) VALUES
 ('D4B0F2A8-9B2F-4A9B-89E3-4E80D77BC901', 'admin@airlineticket.com', 1, 'AQAAAAIAAYagAAAAEJxP/m949pUoM3Q0Z4Kj89wT0o6a9yKx3J1b582L9q0e8v6z2==', N'Hệ Thống Admin', '0123456789', 1),
 ('E2E3F4C5-1A2B-3C4D-5E6F-7A8B9C0D1E2F', 'client@gmail.com', 1, 'AQAAAAIAAYagAAAAEJxP/m949pUoM3Q0Z4Kj89wT0o6a9yKx3J1b582L9q0e8v6z2==', N'Nguyễn Văn A', '0987654321', 1),
 ('A1F3E2D4-BCDE-4F01-2345-6789ABCDEF91', 'admin.vna@airlineticket.com', 1, 'AQAAAAIAAYagAAAAEJxP/m949pUoM3Q0Z4Kj89wT0o6a9yKx3J1b582L9q0e8v6z2==', N'Admin VNA', '0111111111', 1),
@@ -42,7 +42,7 @@ INSERT INTO [identity].[Users] ([Id], [Email], [EmailConfirmed], [PasswordHash],
 GO
 
 -- Liên kết User và Roles (Admin và Client)
-INSERT INTO [identity].[UserRoles] ([UserId], [RoleId]) VALUES
+INSERT INTO [users].[UserRoles] ([UserId], [RoleId]) VALUES
 ('D4B0F2A8-9B2F-4A9B-89E3-4E80D77BC901', 0), -- System Admin
 ('E2E3F4C5-1A2B-3C4D-5E6F-7A8B9C0D1E2F', 3), -- User (Client)
 ('A1F3E2D4-BCDE-4F01-2345-6789ABCDEF91', 1), -- Airline Admin (VNA)
@@ -51,7 +51,7 @@ INSERT INTO [identity].[UserRoles] ([UserId], [RoleId]) VALUES
 GO
 
 -- Phân quyền quản trị cho các Airline Admin
-INSERT INTO [identity].[UserPermissionScopes] ([UserId], [PermissionId], [AirlineId], [ScopeDescription]) VALUES
+INSERT INTO [users].[UserPermissionScopes] ([UserId], [PermissionId], [AirlineId], [ScopeDescription]) VALUES
 ('A1F3E2D4-BCDE-4F01-2345-6789ABCDEF91', 3, 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', N'Vietnam Airlines Administration'),
 ('A1F3E2D4-BCDE-4F01-2345-6789ABCDEF91', 5, 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', N'VNA Flight Administration'),
 ('B2F3E2D4-BCDE-4F01-2345-6789ABCDEF92', 3, 'B2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', N'VietJet Air Administration'),

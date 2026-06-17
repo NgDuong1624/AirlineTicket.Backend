@@ -1,14 +1,12 @@
-# PR Title: feat(users): implement RBAC system
+# PR Title: feat(promotions,notifications): add migrations and endpoint configurations
 
 ## Description
-This pull request introduces a Role-Based Access Control (RBAC) system for the user module, enabling fine-grained permission management for airline ticket operations.
+This pull request introduces EF Core configurations, migrations, and API endpoint routing setups for Promotions and Notifications modules.
 
 ## Changes Made
-- Implemented RBAC entities: `Permission`, `Role`, `UserRole`, `RolePermission`, `UserPermissionScope`.
-- Added EF Core configurations for all RBAC entities.
-- Created migrations for RBAC tables and soft-delete triggers.
-- Configured `UserDbContext` to support the new RBAC structure.
-- Added `UserDbContextFactory` for design-time migration support.
+- Configured mappings and soft-delete triggers for `Promotions` module database context.
+- Generated DB snapshot updates and SQL trigger migrations.
+- Configured route mapping mapping extensions for `Notifications` endpoints.
 
 ## Type of Change
 - [ ] Bug fix
