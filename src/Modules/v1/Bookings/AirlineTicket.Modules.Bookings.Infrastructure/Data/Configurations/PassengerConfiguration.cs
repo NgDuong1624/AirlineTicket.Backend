@@ -4,17 +4,14 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AirlineTicket.Modules.Bookings.Infrastructure.Data.Configurations;
 
-public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
+public class PassengerConfiguration : IEntityTypeConfiguration<Passenger>
 {
-    public void Configure(EntityTypeBuilder<Payment> builder)
+    public void Configure(EntityTypeBuilder<Passenger> builder)
     {
         builder.HasKey(x => x.Id);
 
-        builder.Property(x => x.Amount)
-            .HasPrecision(18, 2);
-
         builder.HasOne(x => x.Booking)
-            .WithMany()
+            .WithMany(b => b.Passengers)
             .HasForeignKey(x => x.BookingId)
             .OnDelete(DeleteBehavior.Restrict);
     }
