@@ -12,5 +12,10 @@ public class FlightSeatConfiguration : IEntityTypeConfiguration<FlightSeat>
 
         builder.Property(x => x.PriceOverride)
             .HasPrecision(18, 2);
+
+        builder.HasOne(x => x.Flight)
+            .WithMany(f => f.FlightSeats)
+            .HasForeignKey(x => x.FlightId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

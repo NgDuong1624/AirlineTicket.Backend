@@ -19,8 +19,7 @@ public class FlightEndpoints : IEndpoint
         // ——————————————————————— Airports ————————————————————————————————
         app.MapGroup("/api/airports")
             .WithTags("Airports Module")
-            .WithOpenApi()
-            .MapGet("/", async (
+                        .MapGet("/", async (
                     [FromQuery] string? search,
                     [FromServices] ISender sender,
                     CancellationToken ct) =>
@@ -37,8 +36,7 @@ public class FlightEndpoints : IEndpoint
         // ——————————————————————— Routes ————————————————————————————————
         app.MapGroup("/api/routes")
             .WithTags("Routes Module")
-            .WithOpenApi()
-            .MapGet("/", async (
+                        .MapGet("/", async (
                     [FromServices] ISender sender,
                     CancellationToken ct) =>
                 {
@@ -53,8 +51,7 @@ public class FlightEndpoints : IEndpoint
 
         // ——————————————————————— Flights ————————————————————————————————
         var flightsGroup = app.MapGroup("/api/flights")
-            .WithTags("Flights Module")
-            .WithOpenApi();
+            .WithTags("Flights Module");
 
         // POST /api/flights — Search flights
         flightsGroup.MapPost("/", async (
