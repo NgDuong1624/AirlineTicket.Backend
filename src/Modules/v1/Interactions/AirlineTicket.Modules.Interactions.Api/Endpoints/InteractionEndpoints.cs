@@ -10,8 +10,7 @@ public class InteractionEndpoints : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/interactions")
-            .WithTags("Interactions Module")
-            .WithOpenApi();
+            .WithTags("Interactions Module");
 
         group.MapGet("/", () => Results.Ok("Interactions Module OK"))
             .WithName("GetInteractionsStatus");
