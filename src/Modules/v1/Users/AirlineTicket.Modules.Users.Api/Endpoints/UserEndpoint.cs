@@ -2,6 +2,7 @@ using System;
 using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Exceptions;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Features.Admin;
 using MediatR;
@@ -50,6 +51,13 @@ public class UserEndpoint : IEndpoint
                     var command = new RegisterUserCommand(request.Email, request.Password, request.FullName, request.Phone);
                     var result = await sender.Send(command, ct);
                     return Results.Ok(new { UserId = result });
+                }
+                catch (ValidationException ex)
+                {
+                    // Trả về chi tiết từng field bị lỗi thay vì thông báo chung chung
+                    return Results.Json(
+                        new { Code = "BAD_REQUEST", Message = ex.Message, Errors = ex.Errors },
+                        statusCode: 400);
                 }
                 catch (Exception ex)
                 {
