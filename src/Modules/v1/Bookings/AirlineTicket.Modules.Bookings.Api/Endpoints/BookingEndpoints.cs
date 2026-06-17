@@ -19,8 +19,7 @@ public class BookingEndpoints : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/bookings")
-            .WithTags("Bookings Module")
-            .WithOpenApi();
+            .WithTags("Bookings Module");
 
         // ——————————————————————— Bookings ————————————————————————————————
         group.MapPost("/", async (
