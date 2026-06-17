@@ -8,6 +8,10 @@ Hệ thống được chia thành 4 Module chính biệt lập, giúp dễ dàng
 2. **Bookings**: Quản lý đặt vé, thanh toán, hành khách và phát hành vé.
 3. **Users**: Quản lý tài khoản người dùng, phân quyền hệ thống.
 4. **Promotions**: Quản lý các chiến dịch giảm giá (Campaigns) và mã giảm giá (Coupons), định giá động (Dynamic Pricing).
+5. **Interactions**: Cung cấp hệ thống Q&A thông minh, xử lý các thắc mắc của khách hàng về vé và thủ tục bay sử dụng AI Model Store.
+6. **CMS**: Quản lý nội dung bài viết, tin tức và trang tĩnh.
+7. **Notifications**: Xử lý gửi Email/SMS và thông báo đẩy.
+8. **Logs**: Hệ thống ghi nhật ký tập trung và kiểm soát hoạt động.
 
 Mỗi Module tuân thủ chặt chẽ nguyên lý Clean Architecture gồm 4 tầng:
 * `Api`: Cung cấp các RESTful Endpoints (Controllers / Minimal APIs).
@@ -22,6 +26,9 @@ Hệ thống sử dụng **SQL Server** làm cơ sở dữ liệu chính.
 * Schema `bookings`
 * Schema `users`
 * Schema `promotions`
+* Schema `CMS`
+* Schema `Notifications`
+* Schema `Logs`
 
 ## Hướng dẫn cài đặt (Setup Instructions)
 
@@ -36,14 +43,27 @@ Hệ thống sử dụng **SQL Server** làm cơ sở dữ liệu chính.
 ### 2. Cấu hình Connection String
 Mở file `src/Api/AirlineTicket.Api/appsettings.json` và cập nhật chuỗi kết nối Database phù hợp với môi trường của bạn (Ví dụ IP Server, SQL Authentication với User Id/Password).
 
-### 3. Cập nhật Cơ sở dữ liệu (Migrations)
+### 3. Cấu hình Secret Keys
+Ứng dụng yêu cầu hai loại cấu hình bảo mật chính thông qua User Secrets hoặc Biến môi trường:
+
+#### A. MediatR License Key (Lucky Penny)
+Bắt buộc cho môi trường Production để sử dụng MediatR.
+- Key: `LuckyPenny:MediatR:LicenseKey`
+- CLI: `dotnet user-secrets set "LuckyPenny:MediatR:LicenseKey" "your-key"`
+
+#### B. AI Service API Key (Model Store)
+Dùng để xác thực dịch vụ AI trong tính năng Q&A (`/api/v1/qa/ask`).
+- Key: `AiService:ModelStore:ApiKey`
+- CLI: `dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-ai-api-key"`
+
+### 4. Cập nhật Cơ sở dữ liệu (Migrations)
 Để tiện lợi, dự án đã có sẵn script tự động chạy các lệnh EF Core. Bạn chỉ cần chạy script sau tại thư mục gốc của Backend:
 ```bash
 ./run_ef.sh
 ```
-*(Script này sẽ tự động chạy lệnh tạo Migration và Update Database cho toàn bộ 3 modules).*
+*(Script này sẽ tự động chạy lệnh tạo Migration và Update Database cho toàn bộ modules).*
 
-### 4. Chạy dự án
+### 5. Chạy dự án
 Dự án có thể mở trên các IDE (Visual Studio, Rider) thông qua file `AirlineTicket.Backend.sln`.
 Hoặc chạy trực tiếp bằng lệnh:
 ```bash

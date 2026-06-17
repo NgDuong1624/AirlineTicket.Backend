@@ -23,10 +23,45 @@ using AirlineTicket.Api;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        var securityScheme = new Microsoft.OpenApi.OpenApiSecurityScheme
+        {
+            Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+            Name = "Bearer",
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = Microsoft.OpenApi.ParameterLocation.Header,
+            Description = "JWT Authorization header using the Bearer scheme."
+        };
+
+        if (document.Components is null)
+        {
+            document.Components = new Microsoft.OpenApi.OpenApiComponents();
+        }
+        
+        if (document.Components.SecuritySchemes is null)
+        {
+            document.Components.SecuritySchemes = new Dictionary<string, Microsoft.OpenApi.IOpenApiSecurityScheme>();
+        }
+
+        document.Components.SecuritySchemes.Add("Bearer", securityScheme);
+
+        document.Security ??= [];
+        document.Security.Add(new Microsoft.OpenApi.OpenApiSecurityRequirement
+        {
+            [new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
+
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddControllers(); // Hỗ trợ Controllers từ các Module
 
 // Cấu hình Database & Infrastructure cho từng Module
+// (AiService:ModelStore được bind bên trong AddInteractionsInfrastructure)
 builder.Services.AddFlightsInfrastructure(builder.Configuration);
 builder.Services.AddBookingsInfrastructure(builder.Configuration);
 builder.Services.AddUsersInfrastructure(builder.Configuration);
@@ -52,7 +87,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
         };
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // JWT phát hành claim tùy chỉnh "Role" (xem JwtService), không phải ClaimTypes.Role
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireClaim("Role", AirlineTicket.Modules.Users.Domain.Enums.UserRole.Admin.ToString()));
+});
 
 // 1. Quét tìm tất cả các Assemblies thuộc hệ thống AirlineTicket (cho endpoints & validator)
 var runtimeAssemblies = AppDomain.CurrentDomain.GetAssemblies()
@@ -63,8 +103,15 @@ var runtimeAssemblies = AppDomain.CurrentDomain.GetAssemblies()
 var applicationAssemblies = ModuleRegistration.ApplicationAssemblies;
 
 // 2. Đăng ký MediatR cho toàn bộ các Modules
-builder.Services.AddMediatR(cfg => 
+builder.Services.AddMediatR(cfg =>
 {
+    // Khóa license MediatR (Lucky Penny Software) - bắt buộc cho môi trường production
+    var mediatRLicenseKey = builder.Configuration["LuckyPenny:MediatR:LicenseKey"];
+    if (!string.IsNullOrWhiteSpace(mediatRLicenseKey))
+    {
+        cfg.LicenseKey = mediatRLicenseKey;
+    }
+
     cfg.RegisterServicesFromAssemblies(applicationAssemblies);
     // Pipeline Behaviors: thực thi theo thứ tự đăng ký
     cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
@@ -83,14 +130,23 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("Airline Ticket API")
+               .AddPreferredSecuritySchemes("Bearer");
+    });
 }
 
-app.UseHttpsRedirection();
+// Turn on HttpsRedirection when not in Development environment.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapControllers();   // Định tuyến các Controller từ các Module (vd: QaController)
 app.MapEndpoints();
 
 app.Run();

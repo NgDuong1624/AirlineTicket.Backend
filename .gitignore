@@ -78,3 +78,6 @@ coverage/
 
 # PR_DESCRIPTION
 PR_DESCRIPTION.md
+
+# Python
+*.py
