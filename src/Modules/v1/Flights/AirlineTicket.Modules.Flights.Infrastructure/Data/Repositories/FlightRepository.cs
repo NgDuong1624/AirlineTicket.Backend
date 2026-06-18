@@ -111,6 +111,29 @@ public class FlightRepository : IFlightRepository
         };
 
         _context.Flights.Add(flight);
+
+        // Seed per-flight seats from the airplane's seat template so the seat map is
+        // immediately usable. No template seats → none seeded (seat map shows empty state).
+        var templateSeats = await _context.AirplaneSeats
+            .AsNoTracking()
+            .Where(s => s.AirplaneId == flight.AirplaneId)
+            .ToListAsync(cancellationToken);
+
+        foreach (var ts in templateSeats)
+        {
+            var multiplier = ts.PriceMultiplier <= 0 ? 1.0m : ts.PriceMultiplier;
+            _context.FlightSeats.Add(new FlightSeat
+            {
+                Id = Guid.NewGuid(),
+                FlightId = flight.Id,
+                SeatNumber = ts.SeatNumber,
+                SeatClass = Domain.Enums.SeatClass.Economy, // template carries no class; default Economy
+                PriceOverride = multiplier == 1.0m ? null : decimal.Round(flight.BasePrice * multiplier, 2),
+                IsAvailable = true,
+                IsExtraLegroom = ts.IsExtraLegroom
+            });
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
         return flight.Id;
     }
@@ -128,6 +151,41 @@ public class FlightRepository : IFlightRepository
                 AirplaneId = f.AirplaneId,
                 FlightNumber = f.FlightNumber,
                 BasePrice = f.BasePrice
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<StaffFlightListItemDto>> GetStaffFlightsAsync(string? search, CancellationToken cancellationToken = default)
+    {
+        var query = _context.Flights
+            .Include(f => f.Route).ThenInclude(r => r.OriginAirport)
+            .Include(f => f.Route).ThenInclude(r => r.DestinationAirport)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLower();
+            query = query.Where(f =>
+                f.FlightNumber.ToLower().Contains(s) ||
+                f.Route.OriginAirport.IataCode.ToLower().Contains(s) ||
+                f.Route.DestinationAirport.IataCode.ToLower().Contains(s));
+        }
+
+        return await query
+            .OrderBy(f => f.DepartureTime)
+            .Select(f => new StaffFlightListItemDto
+            {
+                Id = f.Id,
+                FlightNumber = f.FlightNumber,
+                OriginCode = f.Route.OriginAirport.IataCode,
+                DestinationCode = f.Route.DestinationAirport.IataCode,
+                DepartureTime = f.DepartureTime,
+                ArrivalTime = f.ArrivalTime,
+                BasePrice = f.BasePrice,
+                Currency = f.Currency,
+                Status = f.Status.ToString(),
+                TotalSeats = _context.FlightSeats.Count(fs => fs.FlightId == f.Id),
+                AvailableSeats = _context.FlightSeats.Count(fs => fs.FlightId == f.Id && fs.IsAvailable)
             })
             .ToListAsync(cancellationToken);
     }
