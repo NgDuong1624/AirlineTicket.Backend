@@ -19,8 +19,15 @@ using System.Text;
 using Scalar.AspNetCore;
 using AirlineTicket.BuildingBlocks.Behaviors;
 using AirlineTicket.Api;
+using AirlineTicket.Api.Realtime;
+using AirlineTicket.Modules.Bookings.Application.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// CORS origins for the web client (SignalR requires credentials + explicit origins).
+var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? new[] { "http://localhost:3000" };
+const string WebCorsPolicy = "WebClient";
 
 // Add services to the container.
 builder.Services.AddOpenApi(options =>
@@ -86,12 +93,46 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "AirlineTicketClient",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
         };
+
+        // SignalR (WebSockets) cannot send Authorization headers — read the token
+        // from the query string when connecting to the seat hub.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/seats"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 builder.Services.AddAuthorization(options =>
 {
+    var admin = AirlineTicket.Modules.Users.Domain.Enums.UserRole.Admin.ToString();
+    var staff = AirlineTicket.Modules.Users.Domain.Enums.UserRole.Staff.ToString();
+
     // JWT phát hành claim tùy chỉnh "Role" (xem JwtService), không phải ClaimTypes.Role
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireClaim("Role", AirlineTicket.Modules.Users.Domain.Enums.UserRole.Admin.ToString()));
+    options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Role", admin));
+    options.AddPolicy("StaffOnly", policy => policy.RequireClaim("Role", staff));
+    options.AddPolicy("AdminOrStaff", policy => policy.RequireClaim("Role", admin, staff));
+});
+
+// SignalR + cross-module seat reservation (host owns this glue; modules stay decoupled).
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IFlightSeatReservation, FlightSeatReservation>();
+builder.Services.AddScoped<IStaffSalesReader, StaffSalesReader>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(WebCorsPolicy, policy =>
+        policy.WithOrigins(corsOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials());
 });
 
 // 1. Quét tìm tất cả các Assemblies thuộc hệ thống AirlineTicket (cho endpoints & validator)
@@ -143,10 +184,13 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 
+app.UseCors(WebCorsPolicy);
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();   // Định tuyến các Controller từ các Module (vd: QaController)
 app.MapEndpoints();
+app.MapHub<SeatHub>("/hubs/seats");
 
 app.Run();

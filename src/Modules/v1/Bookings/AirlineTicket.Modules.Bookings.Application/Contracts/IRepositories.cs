@@ -25,6 +25,31 @@ public interface IBookingRepository
     Task<Guid> CreateAsync(BookingDto booking, CancellationToken cancellationToken = default);
     Task UpdateAsync(BookingDto booking, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Persists a full staff booking (booking + passengers + tickets) in one transaction.</summary>
+    Task CreateStaffBookingAsync(NewBooking booking, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Input model for persisting a complete staff booking graph.</summary>
+public class NewBooking
+{
+    public Guid Id { get; set; }
+    public Guid FlightId { get; set; }
+    public Guid? UserId { get; set; }
+    public string PnrCode { get; set; } = string.Empty;
+    public decimal TotalPrice { get; set; }
+    public string ContactEmail { get; set; } = string.Empty;
+    public string ContactPhone { get; set; } = string.Empty;
+    public List<NewTicket> Tickets { get; set; } = new();
+}
+
+public class NewTicket
+{
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string IdentityCard { get; set; } = string.Empty;
+    public string SeatNumber { get; set; } = string.Empty;
+    public Guid SeatId { get; set; }
 }
 
 public class TicketDto

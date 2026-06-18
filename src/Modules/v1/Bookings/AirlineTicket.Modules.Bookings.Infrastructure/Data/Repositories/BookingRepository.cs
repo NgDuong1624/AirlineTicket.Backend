@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
+using AirlineTicket.Modules.Bookings.Domain.Entities;
+using AirlineTicket.Modules.Bookings.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicket.Modules.Bookings.Infrastructure.Data.Repositories;
@@ -18,39 +21,136 @@ public class BookingRepository : IBookingRepository
 
     public async Task<BookingDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement when entities are properly set up
-        return await Task.FromResult<BookingDto?>(null);
+        var booking = await _context.Bookings
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+
+        return booking is null ? null : MapToDto(booking);
     }
 
     public async Task<List<BookingDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement when entities are properly set up
-        return await Task.FromResult(new List<BookingDto>());
+        return await _context.Bookings
+            .AsNoTracking()
+            .Where(b => b.UserId == userId)
+            .OrderByDescending(b => b.CreatedAt)
+            .Select(b => MapToDto(b))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<List<BookingDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        // TODO: Implement when entities are properly set up
-        return await Task.FromResult(new List<BookingDto>());
+        return await _context.Bookings
+            .AsNoTracking()
+            .OrderByDescending(b => b.CreatedAt)
+            .Select(b => MapToDto(b))
+            .ToListAsync(cancellationToken);
     }
 
-    public async Task<Guid> CreateAsync(BookingDto booking, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateAsync(BookingDto bookingDto, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement when entities are properly set up
-        return await Task.FromResult(Guid.NewGuid());
+        var booking = new Booking
+        {
+            Id = bookingDto.Id == Guid.Empty ? Guid.NewGuid() : bookingDto.Id,
+            UserId = bookingDto.UserId ?? Guid.Empty,
+            PnrCode = bookingDto.PnrCode,
+            TotalPrice = bookingDto.TotalPrice,
+            Status = ParseStatus(bookingDto.Status),
+            ContactEmail = bookingDto.ContactEmail,
+            ContactPhone = bookingDto.ContactPhone,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        _context.Bookings.Add(booking);
+        await _context.SaveChangesAsync(cancellationToken);
+        return booking.Id;
     }
 
-    public async Task UpdateAsync(BookingDto booking, CancellationToken cancellationToken = default)
+    public async Task UpdateAsync(BookingDto bookingDto, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement when entities are properly set up
-        await Task.CompletedTask;
+        var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == bookingDto.Id, cancellationToken);
+        if (booking is null) return;
+
+        booking.Status = ParseStatus(bookingDto.Status);
+        booking.ContactEmail = bookingDto.ContactEmail;
+        booking.ContactPhone = bookingDto.ContactPhone;
+        booking.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement when entities are properly set up
-        await Task.CompletedTask;
+        var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
+        if (booking is null) return;
+
+        booking.Status = BookingStatus.Cancelled;
+        booking.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task CreateStaffBookingAsync(NewBooking input, CancellationToken cancellationToken = default)
+    {
+        var booking = new Booking
+        {
+            Id = input.Id == Guid.Empty ? Guid.NewGuid() : input.Id,
+            UserId = input.UserId ?? Guid.Empty,
+            PnrCode = input.PnrCode,
+            TotalPrice = input.TotalPrice,
+            Currency = "USD",
+            // Staff booking on a call is treated as confirmed immediately.
+            Status = BookingStatus.Confirmed,
+            ContactEmail = input.ContactEmail,
+            ContactPhone = input.ContactPhone,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        foreach (var t in input.Tickets)
+        {
+            var passenger = new Passenger
+            {
+                Id = Guid.NewGuid(),
+                BookingId = booking.Id,
+                FirstName = t.FirstName,
+                LastName = t.LastName,
+                PassportNumber = t.IdentityCard
+            };
+            booking.Passengers.Add(passenger);
+
+            booking.Tickets.Add(new Ticket
+            {
+                Id = Guid.NewGuid(),
+                BookingId = booking.Id,
+                PassengerId = passenger.Id,
+                FlightId = input.FlightId,
+                SeatId = t.SeatId,
+                TicketNumber = $"TK-{booking.PnrCode}-{t.SeatNumber}",
+                Status = TicketStatus.Issued
+            });
+        }
+
+        _context.Bookings.Add(booking);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private static BookingDto MapToDto(Booking b) => new()
+    {
+        Id = b.Id,
+        FlightId = Guid.Empty, // flight is referenced per-ticket, not on the booking row
+        UserId = b.UserId == Guid.Empty ? null : b.UserId,
+        PnrCode = b.PnrCode,
+        TotalPrice = b.TotalPrice,
+        Status = b.Status.ToString(),
+        ContactEmail = b.ContactEmail,
+        ContactPhone = b.ContactPhone
+    };
+
+    private static BookingStatus ParseStatus(string status) =>
+        Enum.TryParse<BookingStatus>(status, ignoreCase: true, out var parsed)
+            ? parsed
+            : BookingStatus.Pending;
 }
 
 public class TicketRepository : ITicketRepository
@@ -64,13 +164,36 @@ public class TicketRepository : ITicketRepository
 
     public async Task<TicketDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement when entities are properly set up
-        return await Task.FromResult<TicketDto?>(null);
+        var ticket = await _context.Tickets
+            .AsNoTracking()
+            .Include(t => t.Passenger)
+            .FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+
+        if (ticket is null) return null;
+
+        return new TicketDto
+        {
+            TicketId = ticket.Id,
+            BookingId = ticket.BookingId,
+            PassengerName = ticket.Passenger is null
+                ? string.Empty
+                : $"{ticket.Passenger.FirstName} {ticket.Passenger.LastName}".Trim(),
+            SeatNumber = ticket.TicketNumber
+        };
     }
 
-    public async Task<Guid> CreateAsync(TicketDto ticket, CancellationToken cancellationToken = default)
+    public async Task<Guid> CreateAsync(TicketDto ticketDto, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement when entities are properly set up
-        return await Task.FromResult(Guid.NewGuid());
+        var ticket = new Ticket
+        {
+            Id = ticketDto.TicketId == Guid.Empty ? Guid.NewGuid() : ticketDto.TicketId,
+            BookingId = ticketDto.BookingId,
+            TicketNumber = ticketDto.SeatNumber,
+            Status = TicketStatus.Issued
+        };
+
+        _context.Tickets.Add(ticket);
+        await _context.SaveChangesAsync(cancellationToken);
+        return ticket.Id;
     }
 }

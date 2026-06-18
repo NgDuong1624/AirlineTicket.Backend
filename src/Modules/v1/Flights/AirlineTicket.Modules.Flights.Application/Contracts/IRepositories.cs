@@ -15,6 +15,21 @@ public class FlightDto
     public decimal BasePrice { get; set; }
 }
 
+public class StaffFlightListItemDto
+{
+    public Guid Id { get; set; }
+    public string FlightNumber { get; set; } = string.Empty;
+    public string OriginCode { get; set; } = string.Empty;
+    public string DestinationCode { get; set; } = string.Empty;
+    public DateTime DepartureTime { get; set; }
+    public DateTime ArrivalTime { get; set; }
+    public decimal BasePrice { get; set; }
+    public string Currency { get; set; } = "USD";
+    public string Status { get; set; } = string.Empty;
+    public int TotalSeats { get; set; }
+    public int AvailableSeats { get; set; }
+}
+
 public interface IFlightRepository
 {
     Task<FlightDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
@@ -32,6 +47,7 @@ public interface IFlightRepository
         CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(FlightDto flight, CancellationToken cancellationToken = default);
     Task<List<FlightDto>> GetTrendingAsync(CancellationToken cancellationToken = default);
+    Task<List<StaffFlightListItemDto>> GetStaffFlightsAsync(string? search, CancellationToken cancellationToken = default);
 }
 
 public interface IAirportRepository
