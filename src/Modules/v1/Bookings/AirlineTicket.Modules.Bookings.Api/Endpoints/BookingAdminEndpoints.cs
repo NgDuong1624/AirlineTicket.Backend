@@ -53,6 +53,29 @@ public class BookingAdminEndpoints : IEndpoint
             })
             .WithName("AdminUpdateBooking");
 
+        adminBookings.MapPut("/{id:guid}/status", async (
+                Guid id,
+                [FromBody] UpdateBookingStatusRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                try
+                {
+                    var command = new UpdateBookingStatusCommand(id, request.Status);
+                    await sender.Send(command, ct);
+                    return Results.Ok();
+                }
+                catch (ArgumentException ex)
+                {
+                    return Results.Json(new { Code = "BAD_REQUEST", Message = ex.Message }, statusCode: 400);
+                }
+                catch (KeyNotFoundException ex)
+                {
+                    return Results.Json(new { Code = "NOT_FOUND", Message = ex.Message }, statusCode: 404);
+                }
+            })
+            .WithName("AdminUpdateBookingStatus");
+
         adminBookings.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -65,3 +88,5 @@ public class BookingAdminEndpoints : IEndpoint
             .WithName("AdminDeleteBooking");
     }
 }
+
+public sealed record UpdateBookingStatusRequest(string Status);

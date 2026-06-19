@@ -20,6 +20,20 @@ public class CMSEndpoints : IEndpoint
         .RequireAuthorization("AdminOnly")
         .WithName("AdminGetDashboard");
 
+        // ——————————————————————— Partner Dashboard ————————————————————————————————
+        app.MapGet("/api/partner/dashboard", () => Results.Ok(new {
+            stats = new[] {
+                new { value = "0" },
+                new { value = "0" },
+                new { value = "0" }
+            },
+            recentFlights = new List<object>(),
+            recentBookings = new List<object>()
+        }))
+        .WithTags("Partner Dashboard")
+        .RequireAuthorization("PartnerOnly")
+        .WithName("PartnerGetDashboard");
+
         // ——————————————————————— Admin Settings ————————————————————————————————
         var adminSettings = app.MapGroup("/api/admin/settings")
             .WithTags("Admin Settings")

@@ -34,16 +34,40 @@ public interface IFlightRepository
     Task<List<FlightDto>> GetTrendingAsync(CancellationToken cancellationToken = default);
 }
 
+public interface IAirlineRepository
+{
+    Task<Airline?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<List<Airline>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync(Airline airline, CancellationToken cancellationToken = default);
+    Task UpdateAsync(Airline airline, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+}
+
 public interface IAirportRepository
 {
     Task<Airport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<Airport>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<List<Airport>> SearchAsync(string? search, CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync(Airport airport, CancellationToken cancellationToken = default);
+    Task UpdateAsync(Airport airport, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IRouteRepository
 {
     Task<List<Route>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<Route>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync(Route route, CancellationToken cancellationToken = default);
+    Task UpdateAsync(Route route, Guid airlineId, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
+}
+
+public interface IAirplaneRepository
+{
+    Task<List<Airplane>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync(Airplane airplane, CancellationToken cancellationToken = default);
+    Task UpdateAsync(Airplane airplane, Guid airlineId, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
 }
 
 public interface IFlightSeatRepository

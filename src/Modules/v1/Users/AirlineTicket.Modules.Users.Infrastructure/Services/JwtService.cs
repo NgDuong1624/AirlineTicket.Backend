@@ -23,13 +23,16 @@ public class JwtService : IJwtService
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim("Role", user.Role.ToString()),
             new Claim("FullName", user.FullName)
         };
+
+        if (user.AirlineId.HasValue)
+            claims.Add(new Claim("AirlineId", user.AirlineId.Value.ToString()));
 
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"] ?? "AirlineTicketApi",

@@ -27,4 +27,15 @@ public interface IPromotionRepository
     Task<Guid> CreateAsync(PromotionDto promotion, CancellationToken cancellationToken = default);
     Task UpdateAsync(PromotionDto promotion, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<Guid> CreateCampaignAsync(Campaign campaign, CancellationToken cancellationToken = default);
+    Task UpdateCampaignAsync(Campaign campaign, CancellationToken cancellationToken = default);
+    Task DeleteCampaignAsync(Guid id, CancellationToken cancellationToken = default);
+
+    // Airline-scoped (partner) promotions
+    Task<List<Coupon>> GetCouponsByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default);
+    Task<Guid> CreateCouponAsync(Coupon coupon, CancellationToken cancellationToken = default);
+    Task UpdateCouponAsync(Coupon coupon, Guid airlineId, CancellationToken cancellationToken = default);
+    Task DeleteCouponAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
+    Task<List<Campaign>> GetCampaignsByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default);
 }

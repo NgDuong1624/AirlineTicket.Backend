@@ -12,6 +12,7 @@ public class User
     public string FullName { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public Enums.UserRole Role { get; set; } = Enums.UserRole.Customer;
+    public Guid? AirlineId { get; set; }
     public string? AvatarUrl { get; set; }
     public string? LanguagePreference { get; set; } = "vi";
     public DateTime? LastLoginAt { get; set; }

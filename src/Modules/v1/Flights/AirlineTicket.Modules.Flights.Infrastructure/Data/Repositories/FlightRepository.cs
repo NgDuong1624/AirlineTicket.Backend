@@ -168,6 +168,41 @@ public class AirportRepository : IAirportRepository
 
         return await query.ToListAsync(cancellationToken);
     }
+
+    public async Task<Guid> CreateAsync(Airport airport, CancellationToken cancellationToken = default)
+    {
+        if (airport.Id == Guid.Empty)
+            airport.Id = Guid.NewGuid();
+
+        _context.Airports.Add(airport);
+        await _context.SaveChangesAsync(cancellationToken);
+        return airport.Id;
+    }
+
+    public async Task UpdateAsync(Airport airport, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.Airports.FirstOrDefaultAsync(a => a.Id == airport.Id, cancellationToken);
+        if (existing is null) return;
+
+        existing.IataCode = airport.IataCode;
+        existing.NameEn = airport.NameEn;
+        existing.NameVi = airport.NameVi;
+        existing.CityEn = airport.CityEn;
+        existing.CityVi = airport.CityVi;
+        existing.CountryCode = airport.CountryCode;
+        existing.Timezone = airport.Timezone;
+        existing.IsActive = airport.IsActive;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.Airports.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        if (existing is null) return;
+
+        existing.IsDeleted = true;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }
 
 public class RouteRepository : IRouteRepository
@@ -187,6 +222,97 @@ public class RouteRepository : IRouteRepository
             .Include(r => r.DestinationAirport)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<List<Route>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Routes
+            .Where(r => r.AirlineId == airlineId && !r.IsDeleted)
+            .Include(r => r.OriginAirport)
+            .Include(r => r.DestinationAirport)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Guid> CreateAsync(Route route, CancellationToken cancellationToken = default)
+    {
+        if (route.Id == Guid.Empty)
+            route.Id = Guid.NewGuid();
+
+        _context.Routes.Add(route);
+        await _context.SaveChangesAsync(cancellationToken);
+        return route.Id;
+    }
+
+    public async Task UpdateAsync(Route route, Guid airlineId, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.Routes
+            .FirstOrDefaultAsync(r => r.Id == route.Id && r.AirlineId == airlineId, cancellationToken);
+        if (existing is null) return;
+
+        existing.OriginAirportId = route.OriginAirportId;
+        existing.DestinationAirportId = route.DestinationAirportId;
+        existing.DistanceKm = route.DistanceKm;
+        existing.EstimatedDurationMinutes = route.EstimatedDurationMinutes;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.Routes
+            .FirstOrDefaultAsync(r => r.Id == id && r.AirlineId == airlineId, cancellationToken);
+        if (existing is null) return;
+
+        existing.IsDeleted = true;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public class AirplaneRepository : IAirplaneRepository
+{
+    private readonly FlightDbContext _context;
+
+    public AirplaneRepository(FlightDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<Airplane>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Airplanes
+            .Where(a => a.AirlineId == airlineId && !a.IsDeleted)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Guid> CreateAsync(Airplane airplane, CancellationToken cancellationToken = default)
+    {
+        if (airplane.Id == Guid.Empty)
+            airplane.Id = Guid.NewGuid();
+
+        _context.Airplanes.Add(airplane);
+        await _context.SaveChangesAsync(cancellationToken);
+        return airplane.Id;
+    }
+
+    public async Task UpdateAsync(Airplane airplane, Guid airlineId, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.Airplanes
+            .FirstOrDefaultAsync(a => a.Id == airplane.Id && a.AirlineId == airlineId, cancellationToken);
+        if (existing is null) return;
+
+        existing.Model = airplane.Model;
+        existing.RegistrationNumber = airplane.RegistrationNumber;
+        existing.TotalCapacity = airplane.TotalCapacity;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.Airplanes
+            .FirstOrDefaultAsync(a => a.Id == id && a.AirlineId == airlineId, cancellationToken);
+        if (existing is null) return;
+
+        existing.IsDeleted = true;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }
 
 public class FlightSeatRepository : IFlightSeatRepository
@@ -203,5 +329,59 @@ public class FlightSeatRepository : IFlightSeatRepository
         return await _context.FlightSeats
             .Where(fs => fs.FlightId == flightId)
             .ToListAsync(cancellationToken);
+    }
+}
+public class AirlineRepository : IAirlineRepository
+{
+    private readonly FlightDbContext _context;
+
+    public AirlineRepository(FlightDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<Airline?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Airlines.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+    }
+
+    public async Task<List<Airline>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Airlines.Where(a => !a.IsDeleted).ToListAsync(cancellationToken);
+    }
+
+    public async Task<Guid> CreateAsync(Airline airline, CancellationToken cancellationToken = default)
+    {
+        if (airline.Id == Guid.Empty)
+            airline.Id = Guid.NewGuid();
+
+        _context.Airlines.Add(airline);
+        await _context.SaveChangesAsync(cancellationToken);
+        return airline.Id;
+    }
+
+    public async Task UpdateAsync(Airline airline, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.Airlines.FirstOrDefaultAsync(a => a.Id == airline.Id, cancellationToken);
+        if (existing is null) return;
+
+        existing.IataCode = airline.IataCode;
+        existing.Name = airline.Name;
+        existing.LogoUrl = airline.LogoUrl;
+        existing.BaseCountry = airline.BaseCountry;
+        existing.Address = airline.Address;
+        existing.SupportEmail = airline.SupportEmail;
+        existing.SupportPhone = airline.SupportPhone;
+        existing.IsActive = airline.IsActive;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.Airlines.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        if (existing is null) return;
+
+        existing.IsDeleted = true;
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }
