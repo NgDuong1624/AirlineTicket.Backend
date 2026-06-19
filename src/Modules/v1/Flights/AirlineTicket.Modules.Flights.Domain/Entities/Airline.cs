@@ -12,6 +12,9 @@ public class Airline
     public string? BaseCountry { get; set; }
     public string? ApiEndpoint { get; set; }
     public string? ApiKey { get; set; }
+    public string? Address { get; set; }
+    public string? SupportEmail { get; set; }
+    public string? SupportPhone { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsDeleted { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

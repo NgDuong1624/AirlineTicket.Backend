@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Features.Airports;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
 using AirlineTicket.Modules.Flights.Application.Features.Routes;
@@ -30,6 +31,21 @@ public class FlightEndpoints : IEndpoint
                 })
             .WithName("GetAirports")
             .WithSummary("Lấy danh sách sân bay hoặc tìm kiếm theo từ khóa")
+            .Produces(200)
+            .AllowAnonymous();
+
+        // ——————————————————————— Airlines ————————————————————————————————
+        app.MapGroup("/api/airlines")
+            .WithTags("Airlines Module")
+            .MapGet("/", async (
+                    [FromServices] IAirlineRepository airlineRepository,
+                    CancellationToken ct) =>
+                {
+                    var result = await airlineRepository.GetAllAsync(ct);
+                    return Results.Ok(new { airlines = result });
+                })
+            .WithName("GetAirlines")
+            .WithSummary("Lấy danh sách hãng hàng không")
             .Produces(200)
             .AllowAnonymous();
 

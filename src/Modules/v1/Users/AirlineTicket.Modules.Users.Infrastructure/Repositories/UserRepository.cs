@@ -19,6 +19,13 @@ public class UserRepository : IUserRepository
         return await _context.Users.ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<User>> GetByAirlineIdAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Users
+            .Where(x => x.AirlineId == airlineId && !x.IsDeleted)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);

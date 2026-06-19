@@ -14,7 +14,14 @@ public class LogEndpoints : IEndpoint
             .WithTags("Admin Logs")
             .RequireAuthorization("AdminOnly");
 
-        adminLogs.MapGet("/", () => Results.Ok(new List<object>()))
+        adminLogs.MapGet("/", () => Results.Ok(new { items = new List<object>(), totalCount = 0 }))
             .WithName("AdminGetLogs");
+
+        var partnerLogs = app.MapGroup("/api/partner/logs")
+            .WithTags("Partner Logs")
+            .RequireAuthorization("PartnerOnly");
+
+        partnerLogs.MapGet("/", () => Results.Ok(new { items = new List<object>(), totalCount = 0 }))
+            .WithName("PartnerGetLogs");
     }
 }

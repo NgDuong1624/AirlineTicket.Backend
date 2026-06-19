@@ -21,4 +21,7 @@ public class Coupon
 
     public bool IsActive { get; set; } = true;
     public bool IsDeleted { get; set; }
+
+    /// <summary>Null = global (admin) coupon; set = airline-scoped (partner) coupon.</summary>
+    public Guid? AirlineId { get; set; }
 }

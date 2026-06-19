@@ -102,14 +102,65 @@ public class PromotionEndpoints : IEndpoint
             .RequireAuthorization("AdminOnly");
 
         adminCampaignsGroup.MapGet("/", async (
-                [FromServices] ISender sender,
+                [FromServices] AirlineTicket.Modules.Promotions.Application.Contracts.IPromotionRepository repo,
                 CancellationToken ct) =>
             {
-                // Placeholder campaign query or list
-                return Results.Ok(new List<object>());
+                var items = await repo.GetAllCampaignsAsync(ct);
+                return Results.Ok(new { items, totalCount = items.Count });
             })
             .WithName("AdminGetCampaigns")
             .Produces(200);
+
+        adminCampaignsGroup.MapPost("/", async (
+                [FromBody] AdminCampaignRequest request,
+                [FromServices] AirlineTicket.Modules.Promotions.Application.Contracts.IPromotionRepository repo,
+                CancellationToken ct) =>
+            {
+                var id = await repo.CreateCampaignAsync(new AirlineTicket.Modules.Promotions.Domain.Entities.Campaign
+                {
+                    Title = request.Title,
+                    BannerUrl = request.BannerUrl,
+                    Content = request.Content,
+                    StartDate = request.StartDate,
+                    EndDate = request.EndDate,
+                    IsFeatured = request.IsFeatured ?? false
+                }, ct);
+                return Results.Created($"/api/admin/campaigns/{id}", new { Id = id });
+            })
+            .WithName("AdminCreateCampaign")
+            .Produces(201);
+
+        adminCampaignsGroup.MapPut("/{id:guid}", async (
+                Guid id,
+                [FromBody] AdminCampaignRequest request,
+                [FromServices] AirlineTicket.Modules.Promotions.Application.Contracts.IPromotionRepository repo,
+                CancellationToken ct) =>
+            {
+                await repo.UpdateCampaignAsync(new AirlineTicket.Modules.Promotions.Domain.Entities.Campaign
+                {
+                    Id = id,
+                    Title = request.Title,
+                    BannerUrl = request.BannerUrl,
+                    Content = request.Content,
+                    StartDate = request.StartDate,
+                    EndDate = request.EndDate,
+                    IsFeatured = request.IsFeatured ?? false
+                }, ct);
+                return Results.Ok();
+            })
+            .WithName("AdminUpdateCampaign")
+            .Produces(200);
+
+        adminCampaignsGroup.MapDelete("/{id:guid}", async (
+                Guid id,
+                [FromServices] AirlineTicket.Modules.Promotions.Application.Contracts.IPromotionRepository repo,
+                CancellationToken ct) =>
+            {
+                await repo.DeleteCampaignAsync(id, ct);
+                return Results.NoContent();
+            })
+            .WithName("AdminDeleteCampaign")
+            .Produces(204);
 
         // ——————————————————————— Public Endpoints ————————————————————————————————
         var publicGroup = app.MapGroup("/api/promotions")
@@ -161,3 +212,4 @@ public class PromotionEndpoints : IEndpoint
 public record CreatePromotionRequest(string Name, string PromoCode, string DiscountType, decimal DiscountValue, int MaxUsage, DateTime StartDate, DateTime EndDate);
 public record UpdatePromotionRequest(string Name, decimal DiscountValue, DateTime EndDate);
 public record ApplyPromotionRequest(string PromoCode, Guid FlightId, decimal OriginalAmount);
+public record AdminCampaignRequest(string Title, string? BannerUrl, string? Content, DateTime StartDate, DateTime EndDate, bool? IsFeatured);
