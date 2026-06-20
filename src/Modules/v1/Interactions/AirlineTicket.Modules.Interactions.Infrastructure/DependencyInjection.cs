@@ -2,6 +2,8 @@ using System;
 using System.Net.Http.Headers;
 using AirlineTicket.Modules.Interactions.Application.Features.Qa;
 using AirlineTicket.Modules.Interactions.Infrastructure.Ai;
+using AirlineTicket.Modules.Interactions.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -14,6 +16,10 @@ public static class DependencyInjection
     {
         // Bind cấu hình AiService:ModelStore
         services.Configure<AiServiceOptions>(configuration.GetSection(AiServiceOptions.SectionName));
+
+        // Đăng ký DbContext
+        services.AddDbContext<InteractionDbContext>(options =>
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
         // Đăng ký AI client dưới dạng typed HttpClient (dùng IHttpClientFactory để quản lý connection pooling).
         services.AddHttpClient<IAirTicketAiClient, NvidiaModelStoreQaClient>((sp, client) =>

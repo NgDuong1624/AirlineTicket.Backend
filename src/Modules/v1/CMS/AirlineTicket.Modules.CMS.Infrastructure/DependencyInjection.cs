@@ -1,3 +1,5 @@
+using AirlineTicket.Modules.CMS.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -7,7 +9,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddCMSInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Add DbContext when configured
+        services.AddDbContext<CMSDbContext>(options =>
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
         return services;
     }
 }

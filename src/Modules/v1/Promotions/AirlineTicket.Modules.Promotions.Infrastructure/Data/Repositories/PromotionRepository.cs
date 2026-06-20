@@ -53,6 +53,14 @@ public class PromotionRepository : IPromotionRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<List<Coupon>> GetAllCouponsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Coupons
+            .Where(c => c.AirlineId == null && !c.IsDeleted)
+            .OrderByDescending(c => c.StartDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Guid> CreateAsync(PromotionDto promotion, CancellationToken cancellationToken = default)
     {
         var coupon = new Coupon

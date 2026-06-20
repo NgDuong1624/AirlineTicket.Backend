@@ -25,7 +25,9 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
             user.Email,
             user.FullName,
             user.Phone,
-            user.Role.ToString()
+            
+            user.Role.ToString(),
+            (int)user.Role
         )).ToList();
     }
 }
