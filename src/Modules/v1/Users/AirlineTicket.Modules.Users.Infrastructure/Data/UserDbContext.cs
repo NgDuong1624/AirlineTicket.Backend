@@ -21,7 +21,7 @@ public class UserDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         
         // Schema riêng cho Users
-        modelBuilder.HasDefaultSchema("users");
+        modelBuilder.HasDefaultSchema("dbo");
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserDbContext).Assembly);
     }

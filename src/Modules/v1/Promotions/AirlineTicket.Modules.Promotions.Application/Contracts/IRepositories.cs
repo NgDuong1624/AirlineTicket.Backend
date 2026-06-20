@@ -24,6 +24,7 @@ public interface IPromotionRepository
     Task<PromotionDto?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
     Task<List<Campaign>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default);
     Task<List<Campaign>> GetAllCampaignsAsync(CancellationToken cancellationToken = default);
+    Task<List<Coupon>> GetAllCouponsAsync(CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(PromotionDto promotion, CancellationToken cancellationToken = default);
     Task UpdateAsync(PromotionDto promotion, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);

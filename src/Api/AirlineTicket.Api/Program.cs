@@ -119,6 +119,9 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOnly", policy => policy.RequireClaim("Role", admin));
     options.AddPolicy("StaffOnly", policy => policy.RequireClaim("Role", staff));
     options.AddPolicy("AdminOrStaff", policy => policy.RequireClaim("Role", admin, staff));
+    options.AddPolicy("PartnerOnly", policy => 
+        policy.RequireClaim("Role", staff)
+              .RequireClaim("AirlineId"));
 });
 
 // SignalR + cross-module seat reservation (host owns this glue; modules stay decoupled).

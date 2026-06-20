@@ -25,7 +25,8 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, U
             user.Email,
             user.FullName,
             user.Phone,
-            user.Role.ToString()
+            user.Role.ToString(),
+            (int)user.Role
         );
     }
 }

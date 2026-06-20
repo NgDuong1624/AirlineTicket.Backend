@@ -25,7 +25,8 @@ public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto
             user.Email,
             user.FullName,
             user.Phone,
-            user.Role.ToString()
+            user.Role.ToString(),
+            (int)user.Role
         );
     }
 }

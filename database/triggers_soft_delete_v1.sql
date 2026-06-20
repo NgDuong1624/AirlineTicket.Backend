@@ -3,154 +3,154 @@
 -- FOR SOFT DELETE IMPLEMENTATION IN SQL SERVER
 -- =====================================================
 
-USE [master]
+USE [AirlineTicketDb]
 GO
 
--- 1. Triggers cho Schema identity
-CREATE TRIGGER [identity].[TR_Users_SoftDelete]
-ON [identity].[Users]
+-- 1. Triggers cho Schema Users (was identity)
+CREATE TRIGGER [dbo].[TR_Users_SoftDelete]
+ON [dbo].[Users]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [identity].[Users]
+    UPDATE [dbo].[Users]
     SET [IsActive] = 0, [IsDeleted] = 1, [UpdatedAt] = GETUTCDATE()
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
--- 2. Triggers cho Schema flights
-CREATE TRIGGER [flights].[TR_Airlines_SoftDelete]
-ON [flights].[Airlines]
+-- 2. Triggers cho Schema Flights
+CREATE TRIGGER [dbo].[TR_Airlines_SoftDelete]
+ON [dbo].[Airlines]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [flights].[Airlines]
+    UPDATE [dbo].[Airlines]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
-CREATE TRIGGER [flights].[TR_Airports_SoftDelete]
-ON [flights].[Airports]
+CREATE TRIGGER [dbo].[TR_Airports_SoftDelete]
+ON [dbo].[Airports]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [flights].[Airports]
+    UPDATE [dbo].[Airports]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
-CREATE TRIGGER [flights].[TR_Airplanes_SoftDelete]
-ON [flights].[Airplanes]
+CREATE TRIGGER [dbo].[TR_Airplanes_SoftDelete]
+ON [dbo].[Airplanes]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [flights].[Airplanes]
+    UPDATE [dbo].[Airplanes]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
-CREATE TRIGGER [flights].[TR_Routes_SoftDelete]
-ON [flights].[Routes]
+CREATE TRIGGER [dbo].[TR_Routes_SoftDelete]
+ON [dbo].[Routes]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [flights].[Routes]
+    UPDATE [dbo].[Routes]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
-CREATE TRIGGER [flights].[TR_Flights_SoftDelete]
-ON [flights].[Flights]
+CREATE TRIGGER [dbo].[TR_Flights_SoftDelete]
+ON [dbo].[Flights]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [flights].[Flights]
+    UPDATE [dbo].[Flights]
     SET [IsDeleted] = 1, [UpdatedAt] = GETUTCDATE()
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
--- 3. Triggers cho Schema bookings
-CREATE TRIGGER [bookings].[TR_Bookings_SoftDelete]
-ON [bookings].[Bookings]
+-- 3. Triggers cho Schema Bookings
+CREATE TRIGGER [dbo].[TR_Bookings_SoftDelete]
+ON [dbo].[Bookings]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [bookings].[Bookings]
+    UPDATE [dbo].[Bookings]
     SET [IsDeleted] = 1, [UpdatedAt] = GETUTCDATE()
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
--- 4. Triggers cho Schema promotions
-CREATE TRIGGER [promotions].[TR_Coupons_SoftDelete]
-ON [promotions].[Coupons]
+-- 4. Triggers cho Schema Promotions
+CREATE TRIGGER [dbo].[TR_Coupons_SoftDelete]
+ON [dbo].[Coupons]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [promotions].[Coupons]
+    UPDATE [dbo].[Coupons]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
-CREATE TRIGGER [promotions].[TR_Campaigns_SoftDelete]
-ON [promotions].[Campaigns]
+CREATE TRIGGER [dbo].[TR_Campaigns_SoftDelete]
+ON [dbo].[Campaigns]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [promotions].[Campaigns]
+    UPDATE [dbo].[Campaigns]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
--- 5. Triggers cho Schema interactions
-CREATE TRIGGER [interactions].[TR_Reviews_SoftDelete]
-ON [interactions].[Reviews]
+-- 5. Triggers cho Schema Interactions
+CREATE TRIGGER [dbo].[TR_Reviews_SoftDelete]
+ON [dbo].[Reviews]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [interactions].[Reviews]
+    UPDATE [dbo].[Reviews]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
--- 6. Triggers cho Schema cms
-CREATE TRIGGER [cms].[TR_Categories_SoftDelete]
-ON [cms].[Categories]
+-- 6. Triggers cho Schema CMS
+CREATE TRIGGER [dbo].[TR_Categories_SoftDelete]
+ON [dbo].[Categories]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [cms].[Categories]
+    UPDATE [dbo].[Categories]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END
 GO
 
-CREATE TRIGGER [cms].[TR_Articles_SoftDelete]
-ON [cms].[Articles]
+CREATE TRIGGER [dbo].[TR_Articles_SoftDelete]
+ON [dbo].[Articles]
 INSTEAD OF DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
-    UPDATE [cms].[Articles]
+    UPDATE [dbo].[Articles]
     SET [IsDeleted] = 1
     WHERE [Id] IN (SELECT [Id] FROM deleted);
 END

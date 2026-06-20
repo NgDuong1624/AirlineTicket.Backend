@@ -13,5 +13,5 @@ internal sealed class GetPromotionsAdminQueryHandler : IQueryHandler<GetPromotio
 {
     private readonly IPromotionRepository _promotionRepository;
     public GetPromotionsAdminQueryHandler(IPromotionRepository promotionRepository) => _promotionRepository = promotionRepository;
-    public async Task<object> Handle(GetPromotionsAdminQuery request, CancellationToken cancellationToken) => await _promotionRepository.GetAllCampaignsAsync(cancellationToken);
+    public async Task<object> Handle(GetPromotionsAdminQuery request, CancellationToken cancellationToken) => await _promotionRepository.GetAllCouponsAsync(cancellationToken);
 }

@@ -58,7 +58,7 @@ public class PromotionEndpoints : IEndpoint
             {
                 var query = new GetPromotionsAdminQuery();
                 var result = await sender.Send(query, ct);
-                return Results.Ok(result);
+                return Results.Ok(new { items = result, totalCount = (result as System.Collections.IList)?.Count ?? 0 });
             })
             .WithName("AdminGetCoupons")
             .Produces(200);
