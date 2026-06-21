@@ -173,45 +173,6 @@ public class UserEndpoint : IEndpoint
                 var items = await repo.GetAllAsync(ct);
                 return Results.Ok(new { items, totalCount = items.Count });
             });
-
-        permissionGroup.MapPost("/", async (
-                [FromBody] AdminPermissionRequest request,
-                [FromServices] IPermissionRepository repo,
-                CancellationToken ct) =>
-            {
-                var id = await repo.CreateAsync(new Permission
-                {
-                    Code = request.Code,
-                    Name = request.Name,
-                    Description = request.Description
-                }, ct);
-                return Results.Created($"/api/admin/permissions/{id}", new { Id = id });
-            });
-
-        permissionGroup.MapPut("/{id:int}", async (
-                int id,
-                [FromBody] AdminPermissionRequest request,
-                [FromServices] IPermissionRepository repo,
-                CancellationToken ct) =>
-            {
-                await repo.UpdateAsync(new Permission
-                {
-                    Id = id,
-                    Code = request.Code,
-                    Name = request.Name,
-                    Description = request.Description
-                }, ct);
-                return Results.Ok();
-            });
-
-        permissionGroup.MapDelete("/{id:int}", async (
-                int id,
-                [FromServices] IPermissionRepository repo,
-                CancellationToken ct) =>
-            {
-                await repo.DeleteAsync(id, ct);
-                return Results.NoContent();
-            });
     }
 }
 
