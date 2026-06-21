@@ -25,9 +25,12 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
             user.Email,
             user.FullName,
             user.Phone,
-            
+
             user.Role.ToString(),
-            (int)user.Role
+            (int)user.Role,
+            user.AirlineId,
+            user.IsActive,
+            user.CreatedAt.ToString("yyyy-MM-dd")
         )).ToList();
     }
 }
