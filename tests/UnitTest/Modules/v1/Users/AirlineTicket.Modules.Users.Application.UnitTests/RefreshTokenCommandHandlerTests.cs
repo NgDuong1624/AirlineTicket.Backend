@@ -1,3 +1,4 @@
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
@@ -25,7 +26,7 @@ public class RefreshTokenCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenUserNotFound()
+    public async Task Handle_ShouldReturnFailure_WhenUserNotFound()
     {
         // Arrange
         var command = new RefreshTokenCommand("old-refresh-token");
@@ -33,27 +34,29 @@ public class RefreshTokenCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid or expired refresh token.");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("INVALID_REFRESH_TOKEN");
     }
 
     [Fact]
-    public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenTokenIsExpired()
+    public async Task Handle_ShouldReturnFailure_WhenTokenIsExpired()
     {
         // Arrange
         var command = new RefreshTokenCommand("expired-refresh-token");
         var user = new User { RefreshToken = "expired-refresh-token", RefreshTokenExpiryTime = DateTime.UtcNow.AddMinutes(-10) };
-        
+
         _userRepositoryMock.Setup(repo => repo.GetByRefreshTokenAsync(command.RefreshToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid or expired refresh token.");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("INVALID_REFRESH_TOKEN");
     }
 
     [Fact]
@@ -66,7 +69,7 @@ public class RefreshTokenCommandHandlerTests
 
         _userRepositoryMock.Setup(repo => repo.GetByRefreshTokenAsync(command.RefreshToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-            
+
         _jwtServiceMock.Setup(s => s.GenerateToken(user))
             .Returns(expectedNewToken);
 
@@ -74,7 +77,8 @@ public class RefreshTokenCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedNewToken);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(expectedNewToken);
         _userRepositoryMock.Verify(repo => repo.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
         user.RefreshToken.Should().NotBeNullOrEmpty();
         user.RefreshToken.Should().NotBe("valid-refresh-token"); // It should be rotated

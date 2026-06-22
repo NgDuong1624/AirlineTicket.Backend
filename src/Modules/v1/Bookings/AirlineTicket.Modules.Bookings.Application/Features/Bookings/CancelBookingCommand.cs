@@ -1,14 +1,16 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using MediatR;
 
 namespace AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 
-public record CancelBookingCommand(Guid BookingId) : IRequest<Unit>;
+public record CancelBookingCommand(Guid BookingId) : ICommand<Result<Unit>>;
 
-public class CancelBookingCommandHandler : IRequestHandler<CancelBookingCommand, Unit>
+public class CancelBookingCommandHandler : ICommandHandler<CancelBookingCommand, Result<Unit>>
 {
     private readonly IBookingRepository _bookingRepository;
 
@@ -17,7 +19,7 @@ public class CancelBookingCommandHandler : IRequestHandler<CancelBookingCommand,
         _bookingRepository = bookingRepository;
     }
 
-    public async Task<Unit> Handle(CancelBookingCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(CancelBookingCommand request, CancellationToken cancellationToken)
     {
         var booking = await _bookingRepository.GetByIdAsync(request.BookingId, cancellationToken);
         if (booking != null)
@@ -25,6 +27,6 @@ public class CancelBookingCommandHandler : IRequestHandler<CancelBookingCommand,
             booking.Status = "Cancelled";
             await _bookingRepository.UpdateAsync(booking, cancellationToken);
         }
-        return Unit.Value;
+        return Result.Success(Unit.Value);
     }
 }

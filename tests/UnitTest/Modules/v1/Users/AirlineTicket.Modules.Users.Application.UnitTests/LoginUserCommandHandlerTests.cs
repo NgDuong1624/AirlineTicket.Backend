@@ -1,3 +1,4 @@
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
@@ -27,7 +28,7 @@ public class LoginUserCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenUserNotFound()
+    public async Task Handle_ShouldReturnFailure_WhenUserNotFound()
     {
         // Arrange
         var command = new LoginUserCommand("wrong@test.com", "password123");
@@ -35,30 +36,32 @@ public class LoginUserCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid email or password");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("UNAUTHORIZED");
     }
 
     [Fact]
-    public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenPasswordIsIncorrect()
+    public async Task Handle_ShouldReturnFailure_WhenPasswordIsIncorrect()
     {
         // Arrange
         var command = new LoginUserCommand("test@test.com", "wrong_password");
         var user = new User { Email = "test@test.com", PasswordHash = "correct_hash" };
-        
+
         _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-            
+
         _passwordHasherMock.Setup(hasher => hasher.VerifyPassword(command.Password, user.PasswordHash))
             .Returns(false);
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid email or password");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("UNAUTHORIZED");
     }
 
     [Fact]
@@ -68,13 +71,13 @@ public class LoginUserCommandHandlerTests
         var command = new LoginUserCommand("test@test.com", "correct_password");
         var user = new User { Email = "test@test.com", PasswordHash = "correct_hash" };
         var expectedToken = "jwt.token.string";
-        
+
         _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-            
+
         _passwordHasherMock.Setup(hasher => hasher.VerifyPassword(command.Password, user.PasswordHash))
             .Returns(true);
-            
+
         _jwtServiceMock.Setup(jwt => jwt.GenerateToken(user))
             .Returns(expectedToken);
 
@@ -82,6 +85,7 @@ public class LoginUserCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().Be(expectedToken);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(expectedToken);
     }
 }

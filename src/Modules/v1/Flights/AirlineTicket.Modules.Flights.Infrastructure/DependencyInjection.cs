@@ -1,6 +1,8 @@
+using AirlineTicket.BuildingBlocks.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Infrastructure.Data;
 using AirlineTicket.Modules.Flights.Infrastructure.Data.Repositories;
+using AirlineTicket.Modules.Flights.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +15,7 @@ public static class DependencyInjection
     {
         services.AddDbContext<FlightDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-        
+
         // Register repositories
         services.AddScoped<IFlightRepository, FlightRepository>();
         services.AddScoped<IAirportRepository, AirportRepository>();
@@ -21,7 +23,10 @@ public static class DependencyInjection
         services.AddScoped<IAirplaneRepository, AirplaneRepository>();
         services.AddScoped<IFlightSeatRepository, FlightSeatRepository>();
         services.AddScoped<IAirlineRepository, AirlineRepository>();
-        
+
+        // Register cross-module shared services
+        services.AddScoped<ISharedFlightSearchService, SharedFlightSearchService>();
+
         return services;
     }
 }

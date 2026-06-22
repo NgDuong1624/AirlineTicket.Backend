@@ -1,3 +1,5 @@
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using MediatR;
 using System;
@@ -6,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public class LogoutCommandHandler : IRequestHandler<LogoutCommand, bool>
+public class LogoutCommandHandler : ICommandHandler<LogoutCommand, Result<Unit>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -15,7 +17,7 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, bool>
         _userRepository = userRepository;
     }
 
-    public async Task<bool> Handle(LogoutCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(LogoutCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken);
         if (user != null)
@@ -26,6 +28,6 @@ public class LogoutCommandHandler : IRequestHandler<LogoutCommand, bool>
             await _userRepository.UpdateAsync(user, cancellationToken);
         }
 
-        return true;
+        return Result.Success(Unit.Value);
     }
 }

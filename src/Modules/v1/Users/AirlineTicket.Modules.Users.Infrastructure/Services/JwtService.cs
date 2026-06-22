@@ -1,3 +1,4 @@
+using AirlineTicket.BuildingBlocks.Auth;
 using AirlineTicket.Modules.Users.Application.Services;
 using AirlineTicket.Modules.Users.Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -27,12 +28,27 @@ public class JwtService : IJwtService
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("Role", user.Role.ToString()),
-            new Claim("FullName", user.FullName)
+            new Claim(AuthConstants.Claims.Role, user.Role.ToString()),
+            new Claim(AuthConstants.Claims.FullName, user.FullName)
         };
 
         if (user.AirlineId.HasValue)
-            claims.Add(new Claim("AirlineId", user.AirlineId.Value.ToString()));
+            claims.Add(new Claim(AuthConstants.Claims.AirlineId, user.AirlineId.Value.ToString()));
+
+        // Inject user permissions as claims so dynamic permission policies can evaluate them
+        // without a separate database round-trip on every request.
+        if (user.UserPermissionScopes is { Count: > 0 })
+        {
+            var uniqueCodes = user.UserPermissionScopes
+                .Where(s => s.Permission != null)
+                .Select(s => s.Permission.Code)
+                .Distinct();
+
+            foreach (var code in uniqueCodes)
+            {
+                claims.Add(new Claim(AuthConstants.Claims.Permission, code));
+            }
+        }
 
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"] ?? "AirlineTicketApi",

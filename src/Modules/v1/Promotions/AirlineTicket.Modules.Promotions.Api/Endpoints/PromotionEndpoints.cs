@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Promotions.Application.Features.Admin;
 using AirlineTicket.Modules.Promotions.Application.Features.Public;
 using MediatR;
@@ -25,28 +27,20 @@ public class PromotionEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var command = new CreatePromotionCommand(
-                        request.Name,
-                        request.PromoCode,
-                        request.DiscountType,
-                        request.DiscountValue,
-                        request.MaxUsage,
-                        request.StartDate,
-                        request.EndDate);
+                var command = new CreatePromotionCommand(
+                    request.Name,
+                    request.PromoCode,
+                    request.DiscountType,
+                    request.DiscountValue,
+                    request.MaxUsage,
+                    request.StartDate,
+                    request.EndDate);
 
-                    var result = await sender.Send(command, ct);
-                    return Results.Created($"/api/admin/coupons/{result}", new { Id = result });
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
-                {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
-                }
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Created($"/api/admin/coupons/{result.Value}", new { Id = result.Value });
             })
             .WithName("AdminCreateCoupon")
             .Produces(201)
@@ -58,7 +52,10 @@ public class PromotionEndpoints : IEndpoint
             {
                 var query = new GetPromotionsAdminQuery();
                 var result = await sender.Send(query, ct);
-                return Results.Ok(new { items = result, totalCount = (result as System.Collections.IList)?.Count ?? 0 });
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(new { items = result.Value, totalCount = result.Value.Count });
             })
             .WithName("AdminGetCoupons")
             .Produces(200);
@@ -69,16 +66,12 @@ public class PromotionEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var command = new UpdatePromotionCommand(id, request.Name, request.DiscountValue, request.EndDate);
-                    await sender.Send(command, ct);
-                    return Results.Ok(new { Message = "Cập nhật coupon thành công." });
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "BAD_REQUEST", Message = ex.Message }, statusCode: 400);
-                }
+                var command = new UpdatePromotionCommand(id, request.Name, request.DiscountValue, request.EndDate);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(new { Message = "Cập nhật coupon thành công." });
             })
             .WithName("AdminUpdateCoupon")
             .Produces(200)
@@ -90,7 +83,10 @@ public class PromotionEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var command = new DeletePromotionCommand(id);
-                await sender.Send(command, ct);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
                 return Results.NoContent();
             })
             .WithName("AdminDeleteCoupon")
@@ -102,30 +98,30 @@ public class PromotionEndpoints : IEndpoint
             .RequireAuthorization("AdminOnly");
 
         adminCampaignsGroup.MapGet("/", async (
-                [FromServices] AirlineTicket.Modules.Promotions.Application.Contracts.IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var items = await repo.GetAllCampaignsAsync(ct);
-                return Results.Ok(new { items, totalCount = items.Count });
+                var query = new GetCampaignsAdminQuery();
+                var result = await sender.Send(query, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(new { items = result.Value, totalCount = result.Value.Count });
             })
             .WithName("AdminGetCampaigns")
             .Produces(200);
 
         adminCampaignsGroup.MapPost("/", async (
                 [FromBody] AdminCampaignRequest request,
-                [FromServices] AirlineTicket.Modules.Promotions.Application.Contracts.IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var id = await repo.CreateCampaignAsync(new AirlineTicket.Modules.Promotions.Domain.Entities.Campaign
-                {
-                    Title = request.Title,
-                    BannerUrl = request.BannerUrl,
-                    Content = request.Content,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
-                    IsFeatured = request.IsFeatured ?? false
-                }, ct);
-                return Results.Created($"/api/admin/campaigns/{id}", new { Id = id });
+                var command = new CreateCampaignAdminCommand(request.Title, request.BannerUrl, request.Content, request.StartDate, request.EndDate, request.IsFeatured);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Created($"/api/admin/campaigns/{result.Value}", new { Id = result.Value });
             })
             .WithName("AdminCreateCampaign")
             .Produces(201);
@@ -133,19 +129,14 @@ public class PromotionEndpoints : IEndpoint
         adminCampaignsGroup.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] AdminCampaignRequest request,
-                [FromServices] AirlineTicket.Modules.Promotions.Application.Contracts.IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                await repo.UpdateCampaignAsync(new AirlineTicket.Modules.Promotions.Domain.Entities.Campaign
-                {
-                    Id = id,
-                    Title = request.Title,
-                    BannerUrl = request.BannerUrl,
-                    Content = request.Content,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
-                    IsFeatured = request.IsFeatured ?? false
-                }, ct);
+                var command = new UpdateCampaignAdminCommand(id, request.Title, request.BannerUrl, request.Content, request.StartDate, request.EndDate, request.IsFeatured);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
                 return Results.Ok();
             })
             .WithName("AdminUpdateCampaign")
@@ -153,10 +144,14 @@ public class PromotionEndpoints : IEndpoint
 
         adminCampaignsGroup.MapDelete("/{id:guid}", async (
                 Guid id,
-                [FromServices] AirlineTicket.Modules.Promotions.Application.Contracts.IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                await repo.DeleteCampaignAsync(id, ct);
+                var command = new DeleteCampaignAdminCommand(id);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
                 return Results.NoContent();
             })
             .WithName("AdminDeleteCampaign")
@@ -173,7 +168,10 @@ public class PromotionEndpoints : IEndpoint
             {
                 var query = new GetActivePromotionsQuery();
                 var result = await sender.Send(query, ct);
-                return Results.Ok(result);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(result.Value);
             })
             .WithName("GetActivePromotions")
             .Produces(200);
@@ -192,16 +190,12 @@ public class PromotionEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var command = new ApplyPromotionCommand(request.PromoCode, request.FlightId, request.OriginalAmount);
-                    var result = await sender.Send(command, ct);
-                    return Results.Ok(result);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "BAD_REQUEST", Message = ex.Message }, statusCode: 400);
-                }
+                var command = new ApplyPromotionCommand(request.PromoCode, request.FlightId, request.OriginalAmount);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(result.Value);
             })
             .WithName("ApplyPromotion")
             .Produces(200)

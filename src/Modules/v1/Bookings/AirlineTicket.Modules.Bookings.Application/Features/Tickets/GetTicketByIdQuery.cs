@@ -1,14 +1,15 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
-using MediatR;
 
 namespace AirlineTicket.Modules.Bookings.Application.Features.Tickets;
 
-public record GetTicketByIdQuery(Guid TicketId) : IRequest<object>;
+public record GetTicketByIdQuery(Guid TicketId) : IQuery<Result<object>>;
 
-public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, object?>
+public class GetTicketByIdQueryHandler : IQueryHandler<GetTicketByIdQuery, Result<object>>
 {
     private readonly ITicketRepository _ticketRepository;
 
@@ -17,8 +18,9 @@ public class GetTicketByIdQueryHandler : IRequestHandler<GetTicketByIdQuery, obj
         _ticketRepository = ticketRepository;
     }
 
-    public async Task<object?> Handle(GetTicketByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<object>> Handle(GetTicketByIdQuery request, CancellationToken cancellationToken)
     {
-        return await _ticketRepository.GetByIdAsync(request.TicketId, cancellationToken);
+        var ticket = await _ticketRepository.GetByIdAsync(request.TicketId, cancellationToken);
+        return ticket != null ? Result.Success<object>(ticket) : Result.Failure<object>(new Error("NOT_FOUND", "Ticket not found"));
     }
 }

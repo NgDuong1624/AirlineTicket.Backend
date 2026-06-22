@@ -1,3 +1,5 @@
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using MediatR;
 using System.Collections.Generic;
@@ -7,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Admin;
 
-public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>>
+public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<List<UserDto>>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -16,21 +18,22 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, List<UserDto>
         _userRepository = userRepository;
     }
 
-    public async Task<List<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<UserDto>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
         var users = await _userRepository.GetAllAsync(cancellationToken);
-        
-        return users.Select(user => new UserDto(
+
+        var userDtos = users.Select(user => new UserDto(
             user.Id,
             user.Email,
             user.FullName,
             user.Phone,
-
             user.Role.ToString(),
             (int)user.Role,
             user.AirlineId,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         )).ToList();
+
+        return Result.Success(userDtos);
     }
 }

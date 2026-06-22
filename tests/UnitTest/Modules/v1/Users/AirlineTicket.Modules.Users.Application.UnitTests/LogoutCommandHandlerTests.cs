@@ -1,3 +1,4 @@
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Domain.Entities;
@@ -22,7 +23,7 @@ public class LogoutCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnTrueAndDoNothing_WhenUserNotFound()
+    public async Task Handle_ShouldReturnSuccessAndDoNothing_WhenUserNotFound()
     {
         // Arrange
         var command = new LogoutCommand("non-existent-token");
@@ -33,17 +34,17 @@ public class LogoutCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         _userRepositoryMock.Verify(repo => repo.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task Handle_ShouldRevokeRefreshTokenAndReturnTrue_WhenUserFound()
+    public async Task Handle_ShouldRevokeRefreshTokenAndReturnSuccess_WhenUserFound()
     {
         // Arrange
         var command = new LogoutCommand("valid-token");
         var user = new User { RefreshToken = "valid-token", RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1) };
-        
+
         _userRepositoryMock.Setup(repo => repo.GetByRefreshTokenAsync(command.RefreshToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -51,7 +52,7 @@ public class LogoutCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         user.RefreshToken.Should().BeNull();
         user.RefreshTokenExpiryTime.Should().BeNull();
         _userRepositoryMock.Verify(repo => repo.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
-using AirlineTicket.Modules.Promotions.Application.Contracts;
-using AirlineTicket.Modules.Promotions.Domain.Entities;
-using AirlineTicket.Modules.Promotions.Domain.Enums;
+using AirlineTicket.BuildingBlocks.Responses;
+using AirlineTicket.Modules.Promotions.Application.Features.Partner;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,47 +24,88 @@ public class PartnerPromotionEndpoints : IEndpoint
 
         coupons.MapGet("/", async (
                 ClaimsPrincipal principal,
-                [FromServices] IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var items = await repo.GetCouponsByAirlineAsync(airlineId, ct);
-                return Results.Ok(new { items, totalCount = items.Count });
+
+                var query = new GetCouponsPartnerQuery(airlineId);
+                var result = await sender.Send(query, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(new { items = result.Value, totalCount = result.Value.Count });
             });
 
         coupons.MapPost("/", async (
                 [FromBody] PartnerCouponRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var id = await repo.CreateCouponAsync(MapCoupon(request, airlineId), ct);
-                return Results.Created($"/api/partner/coupons/{id}", new { Id = id });
+
+                var command = new CreateCouponPartnerCommand(
+                    request.Code,
+                    request.Description,
+                    request.DiscountType,
+                    request.DiscountValue,
+                    request.MinOrderValue,
+                    request.MaxDiscountAmount,
+                    request.StartDate,
+                    request.EndDate,
+                    request.UsageLimit,
+                    request.IsActive,
+                    airlineId);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Created($"/api/partner/coupons/{result.Value}", new { Id = result.Value });
             });
 
         coupons.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerCouponRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var coupon = MapCoupon(request, airlineId);
-                coupon.Id = id;
-                await repo.UpdateCouponAsync(coupon, airlineId, ct);
+
+                var command = new UpdateCouponPartnerCommand(
+                    id,
+                    request.Code,
+                    request.Description,
+                    request.DiscountType,
+                    request.DiscountValue,
+                    request.MinOrderValue,
+                    request.MaxDiscountAmount,
+                    request.StartDate,
+                    request.EndDate,
+                    request.UsageLimit,
+                    request.IsActive,
+                    airlineId);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
                 return Results.Ok();
             });
 
         coupons.MapDelete("/{id:guid}", async (
                 Guid id,
                 ClaimsPrincipal principal,
-                [FromServices] IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                await repo.DeleteCouponAsync(id, airlineId, ct);
+
+                var command = new DeleteCouponPartnerCommand(id, airlineId);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
                 return Results.NoContent();
             });
 
@@ -75,80 +116,80 @@ public class PartnerPromotionEndpoints : IEndpoint
 
         campaigns.MapGet("/", async (
                 ClaimsPrincipal principal,
-                [FromServices] IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var items = await repo.GetCampaignsByAirlineAsync(airlineId, ct);
-                return Results.Ok(new { items, totalCount = items.Count });
+
+                var query = new GetCampaignsPartnerQuery(airlineId);
+                var result = await sender.Send(query, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(new { items = result.Value, totalCount = result.Value.Count });
             });
 
         campaigns.MapPost("/", async (
                 [FromBody] PartnerCampaignRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var id = await repo.CreateCampaignAsync(new Campaign
-                {
-                    Title = request.Title,
-                    BannerUrl = request.BannerUrl,
-                    Content = request.Content,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
-                    IsFeatured = request.IsFeatured ?? false,
-                    AirlineId = airlineId
-                }, ct);
-                return Results.Created($"/api/partner/campaigns/{id}", new { Id = id });
+
+                var command = new CreateCampaignPartnerCommand(
+                    request.Title,
+                    request.BannerUrl,
+                    request.Content,
+                    request.StartDate,
+                    request.EndDate,
+                    request.IsFeatured,
+                    airlineId);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Created($"/api/partner/campaigns/{result.Value}", new { Id = result.Value });
             });
 
         campaigns.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerCampaignRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                await repo.UpdateCampaignAsync(new Campaign
-                {
-                    Id = id,
-                    Title = request.Title,
-                    BannerUrl = request.BannerUrl,
-                    Content = request.Content,
-                    StartDate = request.StartDate,
-                    EndDate = request.EndDate,
-                    IsFeatured = request.IsFeatured ?? false,
-                    AirlineId = airlineId
-                }, ct);
+
+                var command = new UpdateCampaignPartnerCommand(
+                    id,
+                    request.Title,
+                    request.BannerUrl,
+                    request.Content,
+                    request.StartDate,
+                    request.EndDate,
+                    request.IsFeatured,
+                    airlineId);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
                 return Results.Ok();
             });
 
         campaigns.MapDelete("/{id:guid}", async (
                 Guid id,
-                [FromServices] IPromotionRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                await repo.DeleteCampaignAsync(id, ct);
+                var command = new DeleteCampaignPartnerCommand(id);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
                 return Results.NoContent();
             });
     }
-
-    private static Coupon MapCoupon(PartnerCouponRequest request, Guid airlineId) => new()
-    {
-        Code = request.Code,
-        Description = request.Description,
-        DiscountType = (DiscountType)(request.DiscountType ?? 0),
-        DiscountValue = request.DiscountValue,
-        MinOrderValue = request.MinOrderValue,
-        MaxDiscountAmount = request.MaxDiscountAmount,
-        StartDate = request.StartDate,
-        EndDate = request.EndDate,
-        UsageLimit = request.UsageLimit,
-        IsActive = request.IsActive ?? true,
-        AirlineId = airlineId
-    };
 
     private static bool TryGetAirlineId(ClaimsPrincipal principal, out Guid airlineId)
     {

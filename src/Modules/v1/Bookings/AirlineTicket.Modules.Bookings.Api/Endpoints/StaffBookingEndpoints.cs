@@ -25,34 +25,25 @@ public class StaffBookingEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var passengers = request.Passengers.ConvertAll(p =>
-                        new StaffPassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
+                var passengers = request.Passengers.ConvertAll(p =>
+                    new StaffPassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
 
-                    var command = new StaffCreateBookingCommand(
-                        request.FlightId,
-                        request.ContactName,
-                        request.ContactEmail,
-                        request.ContactPhone,
-                        passengers);
+                var command = new StaffCreateBookingCommand(
+                    request.FlightId,
+                    request.ContactName,
+                    request.ContactEmail,
+                    request.ContactPhone,
+                    passengers);
 
-                    var result = await sender.Send(command, ct);
-                    return Results.Ok(result);
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
-                {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.BadRequestException ex)
-                {
-                    // Seat already taken / not found — let the client refresh the seat map.
-                    return Results.Json(new { Code = "SEAT_CONFLICT", Message = ex.Message }, statusCode: 409);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
-                }
+                var result = await sender.Send(command, ct);
+
+                if (result.IsSuccess)
+                    return Results.Ok(result.Value);
+
+                if (result.Error.Code == "SEAT_CONFLICT")
+                    return Results.Conflict(result.Error);
+
+                return Results.BadRequest(result.Error);
             })
             .WithName("StaffCreateBooking")
             .WithSummary("Staff creates a booking on behalf of a call-in customer")
@@ -67,7 +58,7 @@ public class StaffBookingEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var result = await sender.Send(new GetStaffSalesQuery(), ct);
-                return Results.Ok(result);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithTags("Staff Bookings")
             .WithName("StaffGetSales")

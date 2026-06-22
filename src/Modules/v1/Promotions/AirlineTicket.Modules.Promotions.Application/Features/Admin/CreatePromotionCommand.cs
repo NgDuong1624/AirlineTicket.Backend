@@ -1,14 +1,16 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Promotions.Application.Contracts;
 using MediatR;
 
 namespace AirlineTicket.Modules.Promotions.Application.Features.Admin;
 
-public record CreatePromotionCommand(string Name, string PromoCode, string DiscountType, decimal DiscountValue, int MaxUsage, DateTime StartDate, DateTime EndDate) : IRequest<Guid>;
+public record CreatePromotionCommand(string Name, string PromoCode, string DiscountType, decimal DiscountValue, int MaxUsage, DateTime StartDate, DateTime EndDate) : ICommand<Result<Guid>>;
 
-public class CreatePromotionCommandHandler : IRequestHandler<CreatePromotionCommand, Guid>
+public class CreatePromotionCommandHandler : ICommandHandler<CreatePromotionCommand, Result<Guid>>
 {
     private readonly IPromotionRepository _promotionRepository;
 
@@ -17,7 +19,7 @@ public class CreatePromotionCommandHandler : IRequestHandler<CreatePromotionComm
         _promotionRepository = promotionRepository;
     }
 
-    public async Task<Guid> Handle(CreatePromotionCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(CreatePromotionCommand request, CancellationToken cancellationToken)
     {
         var promo = new PromotionDto
         {
@@ -32,6 +34,7 @@ public class CreatePromotionCommandHandler : IRequestHandler<CreatePromotionComm
             EndDate = request.EndDate
         };
 
-        return await _promotionRepository.CreateAsync(promo, cancellationToken);
+        var id = await _promotionRepository.CreateAsync(promo, cancellationToken);
+        return Result.Success(id);
     }
 }

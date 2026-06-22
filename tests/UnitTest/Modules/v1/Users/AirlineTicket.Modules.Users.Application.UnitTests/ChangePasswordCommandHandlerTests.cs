@@ -1,3 +1,4 @@
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
@@ -25,7 +26,7 @@ public class ChangePasswordCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenUserNotFound()
+    public async Task Handle_ShouldReturnFailure_WhenUserNotFound()
     {
         // Arrange
         var command = new ChangePasswordCommand(Guid.NewGuid(), "old-password", "new-password");
@@ -33,30 +34,32 @@ public class ChangePasswordCommandHandlerTests
             .ReturnsAsync((User?)null);
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("User not found.");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("USER_NOT_FOUND");
     }
 
     [Fact]
-    public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenCurrentPasswordIsIncorrect()
+    public async Task Handle_ShouldReturnFailure_WhenCurrentPasswordIsIncorrect()
     {
         // Arrange
         var command = new ChangePasswordCommand(Guid.NewGuid(), "wrong-old-password", "new-password");
         var user = new User { Id = command.UserId, PasswordHash = "hashed-old-password" };
-        
+
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync(command.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        
+
         _passwordHasherMock.Setup(h => h.VerifyPassword(command.CurrentPassword, user.PasswordHash))
             .Returns(false);
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Incorrect current password.");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("INCORRECT_PASSWORD");
     }
 
     [Fact]
@@ -69,10 +72,10 @@ public class ChangePasswordCommandHandlerTests
 
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync(command.UserId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-            
+
         _passwordHasherMock.Setup(h => h.VerifyPassword(command.CurrentPassword, user.PasswordHash))
             .Returns(true);
-            
+
         _passwordHasherMock.Setup(h => h.HashPassword(command.NewPassword))
             .Returns(newHashedPassword);
 
@@ -80,7 +83,7 @@ public class ChangePasswordCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         user.PasswordHash.Should().Be(newHashedPassword);
         _userRepositoryMock.Verify(repo => repo.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
     }

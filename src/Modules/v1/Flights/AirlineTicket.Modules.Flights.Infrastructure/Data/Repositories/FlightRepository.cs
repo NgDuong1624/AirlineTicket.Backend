@@ -33,7 +33,12 @@ public class FlightRepository : IFlightRepository
             RouteId = flight.RouteId,
             AirplaneId = flight.AirplaneId,
             FlightNumber = flight.FlightNumber,
-            BasePrice = flight.BasePrice
+            BasePrice = flight.BasePrice,
+            DepartureTime = flight.DepartureTime,
+            ArrivalTime = flight.ArrivalTime,
+            OriginCode = flight.Route?.OriginAirport?.IataCode ?? string.Empty,
+            DestinationCode = flight.Route?.DestinationAirport?.IataCode ?? string.Empty,
+            AirlineName = flight.Route?.Airline?.Name ?? string.Empty
         };
     }
 
@@ -55,6 +60,8 @@ public class FlightRepository : IFlightRepository
                 .ThenInclude(r => r.OriginAirport)
             .Include(f => f.Route)
                 .ThenInclude(r => r.DestinationAirport)
+            .Include(f => f.Route)
+                .ThenInclude(r => r.Airline)
             .Where(f => f.Route.OriginAirport.IataCode == origin
                      && f.Route.DestinationAirport.IataCode == destination
                      && f.DepartureTime.Date == date.Date);
@@ -91,7 +98,12 @@ public class FlightRepository : IFlightRepository
                 RouteId = f.RouteId,
                 AirplaneId = f.AirplaneId,
                 FlightNumber = f.FlightNumber,
-                BasePrice = f.BasePrice
+                BasePrice = f.BasePrice,
+                DepartureTime = f.DepartureTime,
+                ArrivalTime = f.ArrivalTime,
+                OriginCode = f.Route.OriginAirport.IataCode,
+                DestinationCode = f.Route.DestinationAirport.IataCode,
+                AirlineName = f.Route.Airline.Name
             })
             .ToListAsync(cancellationToken);
     }
@@ -142,6 +154,9 @@ public class FlightRepository : IFlightRepository
     {
         // Simple trending logic: take top 5 cheapest flights
         return await _context.Flights
+            .Include(f => f.Route).ThenInclude(r => r.OriginAirport)
+            .Include(f => f.Route).ThenInclude(r => r.DestinationAirport)
+            .Include(f => f.Route).ThenInclude(r => r.Airline)
             .OrderBy(f => f.BasePrice)
             .Take(5)
             .Select(f => new FlightDto
@@ -150,7 +165,12 @@ public class FlightRepository : IFlightRepository
                 RouteId = f.RouteId,
                 AirplaneId = f.AirplaneId,
                 FlightNumber = f.FlightNumber,
-                BasePrice = f.BasePrice
+                BasePrice = f.BasePrice,
+                DepartureTime = f.DepartureTime,
+                ArrivalTime = f.ArrivalTime,
+                OriginCode = f.Route.OriginAirport.IataCode,
+                DestinationCode = f.Route.DestinationAirport.IataCode,
+                AirlineName = f.Route.Airline.Name
             })
             .ToListAsync(cancellationToken);
     }

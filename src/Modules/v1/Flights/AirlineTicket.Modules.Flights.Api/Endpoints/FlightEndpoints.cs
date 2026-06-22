@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Features.Airports;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
 using AirlineTicket.Modules.Flights.Application.Features.Routes;
+using AirlineTicket.Modules.Flights.Application.Features.Airlines;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -20,14 +22,14 @@ public class FlightEndpoints : IEndpoint
         // ——————————————————————— Airports ————————————————————————————————
         app.MapGroup("/api/airports")
             .WithTags("Airports Module")
-                        .MapGet("/", async (
+            .MapGet("/", async (
                     [FromQuery] string? search,
                     [FromServices] ISender sender,
                     CancellationToken ct) =>
                 {
                     var query = new GetAirportsQuery(search);
                     var result = await sender.Send(query, ct);
-                    return Results.Ok(result);
+                    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
                 })
             .WithName("GetAirports")
             .WithSummary("Lấy danh sách sân bay hoặc tìm kiếm theo từ khóa")
@@ -38,11 +40,12 @@ public class FlightEndpoints : IEndpoint
         app.MapGroup("/api/airlines")
             .WithTags("Airlines Module")
             .MapGet("/", async (
-                    [FromServices] IAirlineRepository airlineRepository,
+                    [FromServices] ISender sender,
                     CancellationToken ct) =>
                 {
-                    var result = await airlineRepository.GetAllAsync(ct);
-                    return Results.Ok(new { airlines = result });
+                    var query = new GetAirlinesQuery();
+                    var result = await sender.Send(query, ct);
+                    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
                 })
             .WithName("GetAirlines")
             .WithSummary("Lấy danh sách hãng hàng không")
@@ -52,13 +55,13 @@ public class FlightEndpoints : IEndpoint
         // ——————————————————————— Routes ————————————————————————————————
         app.MapGroup("/api/routes")
             .WithTags("Routes Module")
-                        .MapGet("/", async (
+            .MapGet("/", async (
                     [FromServices] ISender sender,
                     CancellationToken ct) =>
                 {
                     var query = new GetRoutesQuery();
                     var result = await sender.Send(query, ct);
-                    return Results.Ok(result);
+                    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
                 })
             .WithName("GetRoutes")
             .WithSummary("Lấy danh sách tuyến bay")
@@ -75,30 +78,19 @@ public class FlightEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var query = new SearchFlightsQuery(
-                        request.OriginCode,
-                        request.DestinationCode,
-                        request.DepartDate,
-                        request.CabinClass,
-                        request.Airlines,
-                        request.PriceRangeMin,
-                        request.PriceRangeMax,
-                        request.MaxStops,
-                        request.SortBy,
-                        request.Currency);
-                    var result = await sender.Send(query, ct);
-                    return Results.Ok(result);
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
-                {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
-                }
+                var query = new SearchFlightsQuery(
+                    request.OriginCode,
+                    request.DestinationCode,
+                    request.DepartDate,
+                    request.CabinClass,
+                    request.Airlines,
+                    request.PriceRangeMin,
+                    request.PriceRangeMax,
+                    request.MaxStops,
+                    request.SortBy,
+                    request.Currency);
+                var result = await sender.Send(query, ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("SearchFlights")
             .WithSummary("Tìm kiếm chuyến bay theo bộ lọc")
@@ -115,7 +107,7 @@ public class FlightEndpoints : IEndpoint
             {
                 var query = new GetFlightByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("GetFlightById")
             .WithSummary("Lấy chi tiết chuyến bay theo ID")
@@ -130,7 +122,7 @@ public class FlightEndpoints : IEndpoint
             {
                 var query = new GetTrendingFlightsQuery();
                 var result = await sender.Send(query, ct);
-                return Results.Ok(result);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("GetTrendingFlights")
             .WithSummary("Lấy danh sách các chuyến bay/tuyến đường phổ biến")
@@ -145,7 +137,7 @@ public class FlightEndpoints : IEndpoint
             {
                 var query = new GetFlightSeatsQuery(id);
                 var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("GetFlightSeats")
             .WithSummary("Lấy sơ đồ ghế của chuyến bay")
@@ -153,33 +145,22 @@ public class FlightEndpoints : IEndpoint
             .Produces(404)
             .AllowAnonymous();
 
-        // POST /api/flights (Admin create)
+        // POST /api/flights/admin
         flightsGroup.MapPost("/admin", async (
                 [FromBody] CreateFlightRequest request,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var command = new CreateFlightCommand(
-                        request.RouteId,
-                        request.AirplaneId,
-                        request.FlightNumber,
-                        request.BasePrice,
-                        request.ScheduledDeparture,
-                        request.ScheduledArrival);
+                var command = new CreateFlightCommand(
+                    request.RouteId,
+                    request.AirplaneId,
+                    request.FlightNumber,
+                    request.BasePrice,
+                    request.ScheduledDeparture,
+                    request.ScheduledArrival);
 
-                    var result = await sender.Send(command, ct);
-                    return Results.Created($"/api/flights/{result}", new { Id = result });
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
-                {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
-                }
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/flights/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             })
             .WithName("CreateFlight")
             .WithSummary("Tạo chuyến bay mới")

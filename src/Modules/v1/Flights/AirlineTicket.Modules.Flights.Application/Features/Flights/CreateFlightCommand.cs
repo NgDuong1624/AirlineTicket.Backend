@@ -2,22 +2,23 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.Modules.Flights.Application.Contracts;
-using MediatR;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Flights;
 
-public record CreateFlightCommand(Guid RouteId, Guid AirplaneId, string FlightNumber, decimal BasePrice, DateTime ScheduledDeparture, DateTime ScheduledArrival) : IRequest<Guid>;
+public record CreateFlightCommand(Guid RouteId, Guid AirplaneId, string FlightNumber, decimal BasePrice, DateTime ScheduledDeparture, DateTime ScheduledArrival) : ICommand<Result<Guid>>;
 
-public class CreateFlightCommandHandler : IRequestHandler<CreateFlightCommand, Guid>
+public class CreateFlightCommandHandler : ICommandHandler<CreateFlightCommand, Result<Guid>>
 {
     private readonly IFlightRepository _flightRepository;
-    
+
     public CreateFlightCommandHandler(IFlightRepository flightRepository)
     {
         _flightRepository = flightRepository;
     }
-    
-    public async Task<Guid> Handle(CreateFlightCommand request, CancellationToken cancellationToken)
+
+    public async Task<Result<Guid>> Handle(CreateFlightCommand request, CancellationToken cancellationToken)
     {
         var flight = new FlightDto
         {
@@ -27,7 +28,8 @@ public class CreateFlightCommandHandler : IRequestHandler<CreateFlightCommand, G
             FlightNumber = request.FlightNumber,
             BasePrice = request.BasePrice
         };
-        
-        return await _flightRepository.CreateAsync(flight, cancellationToken);
+
+        var id = await _flightRepository.CreateAsync(flight, cancellationToken);
+        return Result.Success(id);
     }
 }

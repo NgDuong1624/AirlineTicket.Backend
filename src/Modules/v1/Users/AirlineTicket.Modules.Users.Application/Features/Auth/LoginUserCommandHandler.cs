@@ -1,10 +1,14 @@
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
 using MediatR;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, string>
+public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<string>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -17,15 +21,16 @@ public class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, string>
         _jwtService = jwtService;
     }
 
-    public async Task<string> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
-        
+
         if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
-            throw new UnauthorizedAccessException("Invalid email or password");
+            return Result.Failure<string>(new Error("UNAUTHORIZED", "Invalid email or password."));
         }
 
-        return _jwtService.GenerateToken(user);
+        var token = _jwtService.GenerateToken(user);
+        return Result.Success(token);
     }
 }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using MediatR;
 
@@ -10,9 +12,11 @@ namespace AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 
 public record PassengerDto(string FirstName, string LastName, string IdentityCard, string SeatNumber);
 
-public record CreateBookingCommand(Guid FlightId, List<PassengerDto> Passengers, Guid? UserId) : IRequest<object>;
+public record CreateBookingResponse(Guid Id, string PnrCode);
 
-public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand, object>
+public record CreateBookingCommand(Guid FlightId, List<PassengerDto> Passengers, Guid? UserId) : ICommand<Result<CreateBookingResponse>>;
+
+public class CreateBookingCommandHandler : ICommandHandler<CreateBookingCommand, Result<CreateBookingResponse>>
 {
     private readonly IBookingRepository _bookingRepository;
 
@@ -21,7 +25,7 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
         _bookingRepository = bookingRepository;
     }
 
-    public async Task<object> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
+    public async Task<Result<CreateBookingResponse>> Handle(CreateBookingCommand request, CancellationToken cancellationToken)
     {
         var booking = new BookingDto
         {
@@ -34,7 +38,7 @@ public class CreateBookingCommandHandler : IRequestHandler<CreateBookingCommand,
         };
 
         await _bookingRepository.CreateAsync(booking, cancellationToken);
-        
-        return new { Id = booking.Id, PnrCode = booking.PnrCode };
+
+        return Result.Success(new CreateBookingResponse(booking.Id, booking.PnrCode));
     }
 }
