@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
-using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
-using AirlineTicket.Modules.Flights.Domain.Entities;
+using AirlineTicket.Modules.Flights.Application.Features.Airports;
+using AirlineTicket.Modules.Flights.Application.Features.Airlines;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -23,63 +23,61 @@ public class FlightAdminEndpoints : IEndpoint
             .RequireAuthorization("AdminOnly");
 
         adminAirports.MapGet("/", async (
-                [FromServices] IAirportRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var items = await repo.GetAllAsync(ct);
-                return Results.Ok(new { items, totalCount = items.Count });
+                var result = await sender.Send(new GetAirportsQuery(null), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAirports");
 
         adminAirports.MapPost("/", async (
                 [FromBody] AdminAirportRequest request,
-                [FromServices] IAirportRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var id = await repo.CreateAsync(new Airport
-                {
-                    IataCode = request.IataCode,
-                    NameEn = request.NameEn,
-                    NameVi = request.NameVi,
-                    CityEn = request.CityEn,
-                    CityVi = request.CityVi,
-                    CountryCode = request.CountryCode,
-                    Timezone = request.Timezone,
-                    IsActive = request.IsActive ?? true
-                }, ct);
-                return Results.Created($"/api/admin/airports/{id}", new { Id = id });
+                var command = new CreateAirportCommand(
+                    request.IataCode,
+                    request.NameEn,
+                    request.NameVi,
+                    request.CityEn,
+                    request.CityVi,
+                    request.CountryCode,
+                    request.Timezone,
+                    request.IsActive);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/admin/airports/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminCreateAirport");
 
         adminAirports.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] AdminAirportRequest request,
-                [FromServices] IAirportRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                await repo.UpdateAsync(new Airport
-                {
-                    Id = id,
-                    IataCode = request.IataCode,
-                    NameEn = request.NameEn,
-                    NameVi = request.NameVi,
-                    CityEn = request.CityEn,
-                    CityVi = request.CityVi,
-                    CountryCode = request.CountryCode,
-                    Timezone = request.Timezone,
-                    IsActive = request.IsActive ?? true
-                }, ct);
-                return Results.Ok();
+                var command = new UpdateAirportCommand(
+                    id,
+                    request.IataCode,
+                    request.NameEn,
+                    request.NameVi,
+                    request.CityEn,
+                    request.CityVi,
+                    request.CountryCode,
+                    request.Timezone,
+                    request.IsActive);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             })
             .WithName("AdminUpdateAirport");
 
         adminAirports.MapDelete("/{id:guid}", async (
                 Guid id,
-                [FromServices] IAirportRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                await repo.DeleteAsync(id, ct);
-                return Results.NoContent();
+                var result = await sender.Send(new DeleteAirportCommand(id), ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             })
             .WithName("AdminDeleteAirport");
 
@@ -89,57 +87,55 @@ public class FlightAdminEndpoints : IEndpoint
             .RequireAuthorization("AdminOnly");
 
         adminAirlines.MapGet("/", async (
-                [FromServices] IAirlineRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var items = await repo.GetAllAsync(ct);
-                return Results.Ok(new { items, totalCount = items.Count });
+                var result = await sender.Send(new GetAirlinesQuery(), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAirlines");
 
         adminAirlines.MapPost("/", async (
                 [FromBody] AdminAirlineRequest request,
-                [FromServices] IAirlineRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var id = await repo.CreateAsync(new Airline
-                {
-                    IataCode = request.IataCode,
-                    Name = request.Name,
-                    LogoUrl = request.LogoUrl,
-                    BaseCountry = request.BaseCountry,
-                    IsActive = request.IsActive ?? true
-                }, ct);
-                return Results.Created($"/api/admin/airlines/{id}", new { Id = id });
+                var command = new CreateAirlineCommand(
+                    request.IataCode,
+                    request.Name,
+                    request.LogoUrl,
+                    request.BaseCountry,
+                    request.IsActive);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/admin/airlines/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminCreateAirline");
 
         adminAirlines.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] AdminAirlineRequest request,
-                [FromServices] IAirlineRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                await repo.UpdateAsync(new Airline
-                {
-                    Id = id,
-                    IataCode = request.IataCode,
-                    Name = request.Name,
-                    LogoUrl = request.LogoUrl,
-                    BaseCountry = request.BaseCountry,
-                    IsActive = request.IsActive ?? true
-                }, ct);
-                return Results.Ok();
+                var command = new UpdateAirlineCommand(
+                    id,
+                    request.IataCode,
+                    request.Name,
+                    request.LogoUrl,
+                    request.BaseCountry,
+                    request.IsActive);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             })
             .WithName("AdminUpdateAirline");
 
         adminAirlines.MapDelete("/{id:guid}", async (
                 Guid id,
-                [FromServices] IAirlineRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                await repo.DeleteAsync(id, ct);
-                return Results.NoContent();
+                var result = await sender.Send(new DeleteAirlineCommand(id), ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             })
             .WithName("AdminDeleteAirline");
 
@@ -148,7 +144,13 @@ public class FlightAdminEndpoints : IEndpoint
             .WithTags("Admin Flights")
             .RequireAuthorization("AdminOnly");
 
-        adminFlights.MapGet("/", () => Results.Ok(new List<object>()))
+        adminFlights.MapGet("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new GetAdminFlightsQuery(), ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+            })
             .WithName("AdminGetFlights");
 
         adminFlights.MapPost("/", async (
@@ -156,30 +158,37 @@ public class FlightAdminEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var command = new CreateFlightCommand(
-                        request.RouteId,
-                        request.AirplaneId,
-                        request.FlightNumber,
-                        request.BasePrice,
-                        request.ScheduledDeparture,
-                        request.ScheduledArrival);
+                var command = new CreateFlightCommand(
+                    request.RouteId,
+                    request.AirplaneId,
+                    request.FlightNumber,
+                    request.BasePrice,
+                    request.ScheduledDeparture,
+                    request.ScheduledArrival);
 
-                    var result = await sender.Send(command, ct);
-                    return Results.Created($"/api/admin/flights/{result}", new { Id = result });
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
-                }
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/admin/flights/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminCreateFlight");
 
-        adminFlights.MapPut("/{id:guid}", (Guid id) => Results.Ok())
+        adminFlights.MapPut("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new UpdateFlightCommand(id), ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
+            })
             .WithName("AdminUpdateFlight");
 
-        adminFlights.MapDelete("/{id:guid}", (Guid id) => Results.NoContent())
+        adminFlights.MapDelete("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new DeleteFlightCommand(id), ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+            })
             .WithName("AdminDeleteFlight");
     }
 }

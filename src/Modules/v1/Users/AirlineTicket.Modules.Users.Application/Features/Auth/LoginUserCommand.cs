@@ -1,9 +1,11 @@
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using MediatR;
 using FluentValidation;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public record LoginUserCommand(string Email, string Password) : IRequest<string>;
+public record LoginUserCommand(string Email, string Password) : ICommand<Result<string>>;
 
 public class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
 {

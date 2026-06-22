@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
+using AirlineTicket.BuildingBlocks.Behaviors;
+using AirlineTicket.BuildingBlocks.Caching;
 using AirlineTicket.Modules.Flights.Application.Contracts;
-using MediatR;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Flights;
 
@@ -17,9 +20,15 @@ public record SearchFlightsQuery(
     decimal? PriceRangeMax = null,
     int? MaxStops = null,
     string? SortBy = null,
-    string Currency = "VND") : IRequest<List<FlightDto>>;
+    string Currency = "VND") : IQuery<Result<List<FlightDto>>>, ICacheableRequest
+{
+    public string CacheKey => CacheKeyBuilder.ForQuery<SearchFlightsQuery>(
+        $"{OriginCode}_{DestinationCode}_{Date:yyyyMMdd}_{CabinClass}_{(Airlines != null ? string.Join("-", Airlines) : "")}_{PriceRangeMin}_{PriceRangeMax}_{MaxStops}_{SortBy}_{Currency}");
 
-public class SearchFlightsQueryHandler : IRequestHandler<SearchFlightsQuery, List<FlightDto>>
+    public int CacheDurationMinutes => 5;
+}
+
+public class SearchFlightsQueryHandler : IQueryHandler<SearchFlightsQuery, Result<List<FlightDto>>>
 {
     private readonly IFlightRepository _flightRepository;
 
@@ -28,9 +37,9 @@ public class SearchFlightsQueryHandler : IRequestHandler<SearchFlightsQuery, Lis
         _flightRepository = flightRepository;
     }
 
-    public async Task<List<FlightDto>> Handle(SearchFlightsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<FlightDto>>> Handle(SearchFlightsQuery request, CancellationToken cancellationToken)
     {
-        return await _flightRepository.SearchAsync(
+        var flights = await _flightRepository.SearchAsync(
             request.OriginCode,
             request.DestinationCode,
             request.Date,
@@ -42,5 +51,6 @@ public class SearchFlightsQueryHandler : IRequestHandler<SearchFlightsQuery, Lis
             request.SortBy,
             request.Currency,
             cancellationToken);
+        return Result.Success(flights);
     }
 }

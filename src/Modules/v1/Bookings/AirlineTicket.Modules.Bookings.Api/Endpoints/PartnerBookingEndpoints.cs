@@ -29,7 +29,9 @@ public class PartnerBookingEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var result = await sender.Send(new GetAllBookingsQuery(), ct);
-                return Results.Ok(new { items = result, totalCount = result.Count });
+                return result.IsSuccess
+                    ? Results.Ok(new { items = result.Value, totalCount = result.Value.Count })
+                    : Results.BadRequest(result.Error);
             })
             .WithName("PartnerGetBookings");
 
@@ -39,19 +41,10 @@ public class PartnerBookingEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    await sender.Send(new UpdateBookingStatusCommand(id, request.Status), ct);
-                    return Results.Ok();
-                }
-                catch (ArgumentException ex)
-                {
-                    return Results.Json(new { Code = "BAD_REQUEST", Message = ex.Message }, statusCode: 400);
-                }
-                catch (System.Collections.Generic.KeyNotFoundException ex)
-                {
-                    return Results.Json(new { Code = "NOT_FOUND", Message = ex.Message }, statusCode: 404);
-                }
+                var result = await sender.Send(new UpdateBookingStatusCommand(id, request.Status), ct);
+                if (result.IsSuccess) return Results.Ok();
+                if (result.Error.Code == "NOT_FOUND") return Results.NotFound(result.Error);
+                return Results.BadRequest(result.Error);
             })
             .WithName("PartnerUpdateBooking");
     }

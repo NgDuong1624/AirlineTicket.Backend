@@ -1,3 +1,5 @@
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using MediatR;
 using System.Threading;
@@ -6,7 +8,7 @@ using AirlineTicket.Modules.Users.Application.Features.Admin;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Users;
 
-public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, UserDto?>
+public class GetUserProfileQueryHandler : IQueryHandler<GetUserProfileQuery, Result<UserDto?>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -15,12 +17,13 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, U
         _userRepository = userRepository;
     }
 
-    public async Task<UserDto?> Handle(GetUserProfileQuery request, CancellationToken cancellationToken)
+    public async Task<Result<UserDto?>> Handle(GetUserProfileQuery request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
-        if (user == null) return null;
+        if (user == null)
+            return Result.Failure<UserDto?>(new Error("USER_NOT_FOUND", "User not found."));
 
-        return new UserDto(
+        var userDto = new UserDto(
             user.Id,
             user.Email,
             user.FullName,
@@ -31,5 +34,7 @@ public class GetUserProfileQueryHandler : IRequestHandler<GetUserProfileQuery, U
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         );
+
+        return Result.Success<UserDto?>(userDto);
     }
 }

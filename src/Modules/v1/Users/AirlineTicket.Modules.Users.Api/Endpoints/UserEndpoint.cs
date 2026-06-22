@@ -34,7 +34,11 @@ public class UserEndpoint : IEndpoint
                 {
                     var command = new LoginUserCommand(request.Email, request.Password);
                     var result = await sender.Send(command, ct);
-                    return Results.Ok(new { Token = result });
+                    if (result.IsFailure)
+                    {
+                        return Results.Json(new { Code = result.Error.Code, Message = result.Error.Message }, statusCode: 401);
+                    }
+                    return Results.Ok(new { Token = result.Value });
                 }
                 catch (Exception ex)
                 {
@@ -54,7 +58,11 @@ public class UserEndpoint : IEndpoint
                 {
                     var command = new RegisterUserCommand(request.Email, request.Password, request.FullName, request.Phone);
                     var result = await sender.Send(command, ct);
-                    return Results.Ok(new { UserId = result });
+                    if (result.IsFailure)
+                    {
+                        return Results.Json(new { Code = result.Error.Code, Message = result.Error.Message }, statusCode: 400);
+                    }
+                    return Results.Ok(new { UserId = result.Value });
                 }
                 catch (ValidationException ex)
                 {
@@ -85,7 +93,7 @@ public class UserEndpoint : IEndpoint
 
                 var query = new AirlineTicket.Modules.Users.Application.Features.Users.GetUserProfileQuery(userId);
                 var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                return result.IsSuccess && result.Value != null ? Results.Ok(result.Value) : Results.NotFound();
             })
             .WithName("GetMe")
             .WithSummary("Lấy thông tin tài khoản đang đăng nhập")
@@ -100,7 +108,9 @@ public class UserEndpoint : IEndpoint
             {
                 var query = new GetUsersQuery();
                 var result = await sender.Send(query, ct);
-                return Results.Ok(new { items = result, totalCount = result.Count });
+                return result.IsSuccess
+                    ? Results.Ok(new { items = result.Value, totalCount = result.Value.Count })
+                    : Results.BadRequest(result.Error);
             });
 
         adminGroup.MapPost("/", async (
@@ -153,14 +163,14 @@ public class UserEndpoint : IEndpoint
             {
                 var query = new GetUserByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                return result.IsSuccess && result.Value != null ? Results.Ok(result.Value) : Results.NotFound();
             });
 
         adminGroup.MapDelete("/{id:guid}", async (Guid id, [FromServices] ISender sender, CancellationToken ct) =>
             {
                 var command = new DeleteUserCommand(id);
-                await sender.Send(command, ct);
-                return Results.NoContent();
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             });
 
         // ——————————————————————— Admin Permission Management ————————————————————————————————

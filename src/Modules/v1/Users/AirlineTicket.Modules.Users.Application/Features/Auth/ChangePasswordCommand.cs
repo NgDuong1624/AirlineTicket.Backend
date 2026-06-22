@@ -1,9 +1,11 @@
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using MediatR;
 using FluentValidation;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public record ChangePasswordCommand(Guid UserId, string CurrentPassword, string NewPassword) : IRequest<bool>;
+public record ChangePasswordCommand(Guid UserId, string CurrentPassword, string NewPassword) : ICommand<Result<Unit>>;
 
 public class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCommand>
 {

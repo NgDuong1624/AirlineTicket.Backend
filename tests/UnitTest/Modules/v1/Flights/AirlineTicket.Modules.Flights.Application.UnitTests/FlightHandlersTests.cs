@@ -48,9 +48,10 @@ public class FlightHandlersTests
 
         var result = await handler.Handle(query, CancellationToken.None);
 
-        result.Should().NotBeNull();
-        result.Should().HaveCount(2);
-        result.Should().Contain(f => f.FlightNumber == "VN123");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().HaveCount(2);
+        result.Value.Should().Contain(f => f.FlightNumber == "VN123");
     }
 
     [Fact]
@@ -75,8 +76,9 @@ public class FlightHandlersTests
 
         var result = await handler.Handle(query, CancellationToken.None);
 
-        result.Should().NotBeNull();
-        result.Should().BeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().BeEmpty();
     }
 
     [Fact]
@@ -110,7 +112,8 @@ public class FlightHandlersTests
 
         var result = await handler.Handle(query, CancellationToken.None);
 
-        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
         _flightRepoMock.Verify(x => x.SearchAsync(
             "SGN", "HAN",
             It.IsAny<DateTime>(),
@@ -140,9 +143,10 @@ public class FlightHandlersTests
 
         var result = await handler.Handle(new GetTrendingFlightsQuery(), CancellationToken.None);
 
-        result.Should().NotBeNull();
-        result.Should().HaveCount(2);
-        result.Should().Contain(f => f.FlightNumber == "VN100");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Should().HaveCount(2);
+        result.Value.Should().Contain(f => f.FlightNumber == "VN100");
     }
 
     // ======================= GetFlightByIdQueryHandler Tests =======================
@@ -163,9 +167,10 @@ public class FlightHandlersTests
 
         var result = await handler.Handle(new GetFlightByIdQuery(flightId), CancellationToken.None);
 
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(flightId);
-        result.FlightNumber.Should().Be("VN123");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Id.Should().Be(flightId);
+        result.Value.FlightNumber.Should().Be("VN123");
     }
 
     [Fact]
@@ -179,7 +184,8 @@ public class FlightHandlersTests
 
         var result = await handler.Handle(new GetFlightByIdQuery(flightId), CancellationToken.None);
 
-        result.Should().BeNull();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Flight.NotFound");
     }
 
     // ======================= CreateFlightCommandHandler Tests =======================
@@ -197,7 +203,8 @@ public class FlightHandlersTests
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        result.Should().Be(expectedId);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(expectedId);
         _flightRepoMock.Verify(x => x.CreateAsync(
             It.Is<FlightDto>(f => f.FlightNumber == "VJ123" && f.BasePrice == 1000m),
             It.IsAny<CancellationToken>()), Times.Once);

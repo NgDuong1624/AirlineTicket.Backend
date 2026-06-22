@@ -1,3 +1,5 @@
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using MediatR;
 using System;
@@ -6,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Users;
 
-public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfileCommand, bool>
+public class UpdateUserProfileCommandHandler : ICommandHandler<UpdateUserProfileCommand, Result<Unit>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -15,16 +17,16 @@ public class UpdateUserProfileCommandHandler : IRequestHandler<UpdateUserProfile
         _userRepository = userRepository;
     }
 
-    public async Task<bool> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(UpdateUserProfileCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null)
-            throw new UnauthorizedAccessException("User not found.");
+            return Result.Failure<Unit>(new Error("USER_NOT_FOUND", "User not found."));
 
         user.FullName = request.FullName;
         user.Phone = request.Phone;
 
         await _userRepository.UpdateAsync(user, cancellationToken);
-        return true;
+        return Result.Success(Unit.Value);
     }
 }

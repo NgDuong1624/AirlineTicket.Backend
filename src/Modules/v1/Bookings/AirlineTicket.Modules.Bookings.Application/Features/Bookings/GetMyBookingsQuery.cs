@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using MediatR;
 
 namespace AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 
-public record GetMyBookingsQuery(Guid UserId) : IRequest<List<BookingDto>>;
+public record GetMyBookingsQuery(Guid UserId) : IQuery<Result<List<BookingDto>>>;
 
-public class GetMyBookingsQueryHandler : IRequestHandler<GetMyBookingsQuery, List<BookingDto>>
+public class GetMyBookingsQueryHandler : IQueryHandler<GetMyBookingsQuery, Result<List<BookingDto>>>
 {
     private readonly IBookingRepository _bookingRepository;
 
@@ -18,8 +20,9 @@ public class GetMyBookingsQueryHandler : IRequestHandler<GetMyBookingsQuery, Lis
         _bookingRepository = bookingRepository;
     }
 
-    public async Task<List<BookingDto>> Handle(GetMyBookingsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<BookingDto>>> Handle(GetMyBookingsQuery request, CancellationToken cancellationToken)
     {
-        return await _bookingRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+        var bookings = await _bookingRepository.GetByUserIdAsync(request.UserId, cancellationToken);
+        return Result.Success(bookings);
     }
 }

@@ -43,6 +43,7 @@ public class BookingHandlersTests
 
         // Assert
         result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
         _bookingRepoMock.Verify(x => x.CreateAsync(
             It.Is<BookingDto>(b =>
                 b.FlightId == flightId &&
@@ -71,8 +72,10 @@ public class BookingHandlersTests
         var result = await handler.Handle(new GetBookingByIdQuery(bookingId), CancellationToken.None);
 
         result.Should().NotBeNull();
-        result!.Id.Should().Be(bookingId);
-        result.Status.Should().Be("Confirmed");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Id.Should().Be(bookingId);
+        result.Value.Status.Should().Be("Confirmed");
     }
 
     [Fact]
@@ -86,7 +89,9 @@ public class BookingHandlersTests
 
         var result = await handler.Handle(new GetBookingByIdQuery(bookingId), CancellationToken.None);
 
-        result.Should().BeNull();
+        result.Should().NotBeNull();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeNull();
     }
 
     // ======================= GetMyBookingsQueryHandler Tests =======================
@@ -107,8 +112,8 @@ public class BookingHandlersTests
         var result = await handler.Handle(new GetMyBookingsQuery(userId), CancellationToken.None);
 
         result.Should().NotBeNull();
-        var resultList = (System.Collections.Generic.List<BookingDto>)result;
-        resultList.Should().HaveCount(2);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(2);
     }
 
     // ======================= GetAllBookingsQueryHandler Tests =======================
@@ -129,7 +134,8 @@ public class BookingHandlersTests
         var result = await handler.Handle(new GetAllBookingsQuery(), CancellationToken.None);
 
         result.Should().NotBeNull();
-        result.Should().HaveCount(3);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().HaveCount(3);
     }
 
     [Fact]
@@ -143,7 +149,8 @@ public class BookingHandlersTests
         var result = await handler.Handle(new GetAllBookingsQuery(), CancellationToken.None);
 
         result.Should().NotBeNull();
-        result.Should().BeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
     }
 
     // ======================= UpdateBookingCommandHandler Tests =======================
@@ -170,7 +177,8 @@ public class BookingHandlersTests
 
         var result = await handler.Handle(command, CancellationToken.None);
 
-        result.Should().Be(MediatR.Unit.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(MediatR.Unit.Value);
         _bookingRepoMock.Verify(x => x.UpdateAsync(
             It.Is<BookingDto>(b => b.ContactEmail == "new@email.com" && b.ContactPhone == "0909000123"),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -187,10 +195,10 @@ public class BookingHandlersTests
 
         var command = new UpdateBookingCommand(bookingId, null, "test@email.com", "0909123456");
 
-        Func<Task> act = async () => await handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
-        await act.Should().ThrowAsync<KeyNotFoundException>()
-            .WithMessage($"Booking with ID {bookingId} not found.");
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("NOT_FOUND");
     }
 
     // ======================= CancelBookingCommandHandler Tests =======================
@@ -206,7 +214,8 @@ public class BookingHandlersTests
 
         var result = await handler.Handle(new CancelBookingCommand(bookingId), CancellationToken.None);
 
-        result.Should().Be(MediatR.Unit.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(MediatR.Unit.Value);
         _bookingRepoMock.Verify(x => x.UpdateAsync(
             It.Is<BookingDto>(b => b.Status == "Cancelled"),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -223,7 +232,8 @@ public class BookingHandlersTests
 
         var result = await handler.Handle(new CancelBookingCommand(bookingId), CancellationToken.None);
 
-        result.Should().Be(MediatR.Unit.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(MediatR.Unit.Value);
         _bookingRepoMock.Verify(x => x.UpdateAsync(It.IsAny<BookingDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

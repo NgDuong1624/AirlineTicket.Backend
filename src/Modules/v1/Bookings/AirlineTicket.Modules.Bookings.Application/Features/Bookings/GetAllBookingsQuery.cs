@@ -1,14 +1,16 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using MediatR;
 
 namespace AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 
-public record GetAllBookingsQuery : IRequest<List<BookingDto>>;
+public record GetAllBookingsQuery : IQuery<Result<List<BookingDto>>>;
 
-public class GetAllBookingsQueryHandler : IRequestHandler<GetAllBookingsQuery, List<BookingDto>>
+public class GetAllBookingsQueryHandler : IQueryHandler<GetAllBookingsQuery, Result<List<BookingDto>>>
 {
     private readonly IBookingRepository _bookingRepository;
 
@@ -17,8 +19,9 @@ public class GetAllBookingsQueryHandler : IRequestHandler<GetAllBookingsQuery, L
         _bookingRepository = bookingRepository;
     }
 
-    public async Task<List<BookingDto>> Handle(GetAllBookingsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<BookingDto>>> Handle(GetAllBookingsQuery request, CancellationToken cancellationToken)
     {
-        return await _bookingRepository.GetAllAsync(cancellationToken);
+        var bookings = await _bookingRepository.GetAllAsync(cancellationToken);
+        return Result.Success(bookings);
     }
 }

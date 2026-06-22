@@ -1,8 +1,14 @@
+using System.Threading;
+using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Responses;
+using AirlineTicket.Modules.CMS.Application.Features.Dashboard;
+using AirlineTicket.Modules.CMS.Application.Features.Settings;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using System.Collections.Generic;
 
 namespace AirlineTicket.Modules.CMS.Api.Endpoints;
 
@@ -11,42 +17,54 @@ public class CMSEndpoints : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         // ——————————————————————— Admin Dashboard ————————————————————————————————
-        app.MapGet("/api/admin/dashboard", () => Results.Ok(new {
-            TotalRevenue = 1500000000,
-            TotalBookings = 1250,
-            NewUsers = 450
-        }))
-        .WithTags("Admin Dashboard")
-        .RequireAuthorization("AdminOnly")
-        .WithName("AdminGetDashboard");
+        app.MapGet("/api/admin/dashboard", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new GetAdminDashboardQuery();
+                var result = await sender.Send(query, ct);
+                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
+            })
+            .WithTags("Admin Dashboard")
+            .RequireAuthorization("AdminOnly")
+            .WithName("AdminGetDashboard");
 
         // ——————————————————————— Partner Dashboard ————————————————————————————————
-        app.MapGet("/api/partner/dashboard", () => Results.Ok(new {
-            stats = new[] {
-                new { value = "0" },
-                new { value = "0" },
-                new { value = "0" }
-            },
-            recentFlights = new List<object>(),
-            recentBookings = new List<object>()
-        }))
-        .WithTags("Partner Dashboard")
-        .RequireAuthorization("PartnerOnly")
-        .WithName("PartnerGetDashboard");
+        app.MapGet("/api/partner/dashboard", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new GetPartnerDashboardQuery();
+                var result = await sender.Send(query, ct);
+                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
+            })
+            .WithTags("Partner Dashboard")
+            .RequireAuthorization("PartnerOnly")
+            .WithName("PartnerGetDashboard");
 
         // ——————————————————————— Admin Settings ————————————————————————————————
         var adminSettings = app.MapGroup("/api/admin/settings")
             .WithTags("Admin Settings")
             .RequireAuthorization("AdminOnly");
 
-        adminSettings.MapGet("/", () => Results.Ok(new {
-            ServiceFee = 50000,
-            Currency = "VND",
-            MaintenanceMode = false
-        }))
-        .WithName("AdminGetSettings");
+        adminSettings.MapGet("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new GetAdminSettingsQuery();
+                var result = await sender.Send(query, ct);
+                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
+            })
+            .WithName("AdminGetSettings");
 
-        adminSettings.MapPut("/", () => Results.Ok())
-        .WithName("AdminUpdateSettings");
+        adminSettings.MapPut("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new UpdateAdminSettingsCommand();
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
+            })
+            .WithName("AdminUpdateSettings");
     }
 }

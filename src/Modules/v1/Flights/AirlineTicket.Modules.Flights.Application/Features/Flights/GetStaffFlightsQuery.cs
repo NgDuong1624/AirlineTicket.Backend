@@ -1,15 +1,15 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Flights.Application.Contracts;
-using MediatR;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Flights;
 
-/// <summary>Flight list for the staff portal, with route, schedule and seat-availability summary.</summary>
-public record GetStaffFlightsQuery(string? Search = null) : IRequest<List<StaffFlightListItemDto>>;
+public record GetStaffFlightsQuery(string? Search = null) : IQuery<Result<List<StaffFlightListItemDto>>>;
 
-public class GetStaffFlightsQueryHandler : IRequestHandler<GetStaffFlightsQuery, List<StaffFlightListItemDto>>
+public class GetStaffFlightsQueryHandler : IQueryHandler<GetStaffFlightsQuery, Result<List<StaffFlightListItemDto>>>
 {
     private readonly IFlightRepository _flightRepository;
 
@@ -18,8 +18,9 @@ public class GetStaffFlightsQueryHandler : IRequestHandler<GetStaffFlightsQuery,
         _flightRepository = flightRepository;
     }
 
-    public async Task<List<StaffFlightListItemDto>> Handle(GetStaffFlightsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<StaffFlightListItemDto>>> Handle(GetStaffFlightsQuery request, CancellationToken cancellationToken)
     {
-        return await _flightRepository.GetStaffFlightsAsync(request.Search, cancellationToken);
+        var flights = await _flightRepository.GetStaffFlightsAsync(request.Search, cancellationToken);
+        return Result.Success(flights);
     }
 }

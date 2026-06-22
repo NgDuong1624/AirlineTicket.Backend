@@ -25,7 +25,7 @@ public class StaffFlightEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var result = await sender.Send(new GetStaffFlightsQuery(search), ct);
-                return Results.Ok(result);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("StaffGetFlights")
             .WithSummary("List flights for the staff portal")
@@ -38,7 +38,7 @@ public class StaffFlightEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var result = await sender.Send(new GetFlightSeatsQuery(id), ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("StaffGetFlightSeats")
             .WithSummary("Seat map for a flight (staff)")

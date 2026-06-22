@@ -28,28 +28,18 @@ public class BookingEndpoints : IEndpoint
                 ClaimsPrincipal user,
                 CancellationToken ct) =>
             {
-                try
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                Guid? userId = null;
+                if (Guid.TryParse(userIdClaim, out var parsedId))
                 {
-                    var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Guid? userId = null;
-                    if (Guid.TryParse(userIdClaim, out var parsedId))
-                    {
-                        userId = parsedId;
-                    }
+                    userId = parsedId;
+                }
 
-                    var passengers = request.Passengers.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
-                    var command = new CreateBookingCommand(request.FlightId, passengers, userId);
-                    var result = await sender.Send(command, ct);
-                    return Results.Ok(result);
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
-                {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
-                }
+                var passengers = request.Passengers.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
+                var command = new CreateBookingCommand(request.FlightId, passengers, userId);
+                var result = await sender.Send(command, ct);
+
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("CreateBooking")
             .WithSummary("Tạo đơn đặt chỗ mới")
@@ -64,7 +54,7 @@ public class BookingEndpoints : IEndpoint
             {
                 var query = new GetAllBookingsQuery();
                 var result = await sender.Send(query, ct);
-                return Results.Ok(result);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("GetAllBookings")
             .WithSummary("Lấy danh sách tất cả đặt vé")
@@ -78,7 +68,7 @@ public class BookingEndpoints : IEndpoint
             {
                 var query = new GetBookingByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound();
             })
             .WithName("GetBookingById")
             .WithSummary("Xem chi tiết đơn đặt chỗ")
@@ -99,7 +89,7 @@ public class BookingEndpoints : IEndpoint
 
                 var query = new GetMyBookingsQuery(userId);
                 var result = await sender.Send(query, ct);
-                return Results.Ok(result);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("GetMyBookings")
             .WithSummary("Xem lịch sử đặt chỗ của User đang đăng nhập")
@@ -113,21 +103,13 @@ public class BookingEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var passengers = request.Passengers?.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
-                    var command = new UpdateBookingCommand(id, passengers, request.ContactEmail, request.ContactPhone);
-                    await sender.Send(command, ct);
-                    return Results.Ok(new { Message = "Cập nhật đặt chỗ thành công." });
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
-                {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "INTERNAL_ERROR", Message = ex.Message }, statusCode: 500);
-                }
+                var passengers = request.Passengers?.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
+                var command = new UpdateBookingCommand(id, passengers, request.ContactEmail, request.ContactPhone);
+                var result = await sender.Send(command, ct);
+
+                return result.IsSuccess
+                    ? Results.Ok(new { Message = "Cập nhật đặt chỗ thành công." })
+                    : Results.BadRequest(result.Error);
             })
             .WithName("UpdateBooking")
             .WithSummary("Cập nhật thông tin đặt vé")
@@ -141,8 +123,8 @@ public class BookingEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var command = new CancelBookingCommand(id);
-                await sender.Send(command, ct);
-                return Results.NoContent();
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             })
             .WithName("CancelBooking")
             .WithSummary("Hủy đơn đặt chỗ")
@@ -156,20 +138,12 @@ public class BookingEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var command = new PayBookingCommand(id, request.PaymentMethod, request.Amount);
-                    var result = await sender.Send(command, ct);
-                    return Results.Ok(new { Status = "Payment Completed", TransactionId = result });
-                }
-                catch (AirlineTicket.BuildingBlocks.Exceptions.ValidationException ex)
-                {
-                    return Results.Json(new { Code = "VALIDATION_ERROR", Errors = ex.Errors }, statusCode: 400);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "BAD_REQUEST", Message = ex.Message }, statusCode: 400);
-                }
+                var command = new PayBookingCommand(id, request.PaymentMethod, request.Amount);
+                var result = await sender.Send(command, ct);
+
+                return result.IsSuccess
+                    ? Results.Ok(new { Status = "Payment Completed", TransactionId = result.Value })
+                    : Results.BadRequest(result.Error);
             })
             .WithName("PayBooking")
             .WithSummary("Thực hiện thanh toán")
@@ -184,7 +158,7 @@ public class BookingEndpoints : IEndpoint
             {
                 var query = new GetTicketByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound();
             })
             .WithTags("Tickets Module")
             .WithName("GetTicketById")

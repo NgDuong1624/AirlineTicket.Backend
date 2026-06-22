@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using MediatR;
 
 namespace AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 
 /// <summary>Ticket-sales rows for the staff board (booking + passenger + flight/route).</summary>
-public record GetStaffSalesQuery : IRequest<List<StaffSaleDto>>;
+public record GetStaffSalesQuery : IQuery<Result<List<StaffSaleDto>>>;
 
-public class GetStaffSalesQueryHandler : IRequestHandler<GetStaffSalesQuery, List<StaffSaleDto>>
+public class GetStaffSalesQueryHandler : IQueryHandler<GetStaffSalesQuery, Result<List<StaffSaleDto>>>
 {
     private readonly IStaffSalesReader _reader;
 
@@ -19,6 +21,9 @@ public class GetStaffSalesQueryHandler : IRequestHandler<GetStaffSalesQuery, Lis
         _reader = reader;
     }
 
-    public Task<List<StaffSaleDto>> Handle(GetStaffSalesQuery request, CancellationToken cancellationToken)
-        => _reader.GetSalesAsync(cancellationToken);
+    public async Task<Result<List<StaffSaleDto>>> Handle(GetStaffSalesQuery request, CancellationToken cancellationToken)
+    {
+        var sales = await _reader.GetSalesAsync(cancellationToken);
+        return Result.Success(sales);
+    }
 }

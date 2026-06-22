@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
-using AirlineTicket.Modules.Flights.Application.Contracts;
-using AirlineTicket.Modules.Flights.Domain.Entities;
+using AirlineTicket.Modules.Flights.Application.Features.Routes;
+using AirlineTicket.Modules.Flights.Application.Features.Airplanes;
+using AirlineTicket.Modules.Flights.Application.Features.Flights;
+using AirlineTicket.Modules.Flights.Application.Features.Airlines;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using RouteEntity = AirlineTicket.Modules.Flights.Domain.Entities.Route;
 
 namespace AirlineTicket.Modules.Flights.Api.Endpoints;
 
@@ -25,60 +26,48 @@ public class FlightPartnerEndpoints : IEndpoint
 
         partnerRoutes.MapGet("/", async (
                 ClaimsPrincipal principal,
-                [FromServices] IRouteRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var items = await repo.GetByAirlineAsync(airlineId, ct);
-                return Results.Ok(new { items, totalCount = items.Count });
+                var result = await sender.Send(new GetRoutesByAirlineQuery(airlineId), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
             });
 
         partnerRoutes.MapPost("/", async (
                 [FromBody] PartnerRouteRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IRouteRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var id = await repo.CreateAsync(new RouteEntity
-                {
-                    AirlineId = airlineId,
-                    OriginAirportId = request.OriginAirportId,
-                    DestinationAirportId = request.DestinationAirportId,
-                    DistanceKm = request.DistanceKm,
-                    EstimatedDurationMinutes = request.EstimatedDurationMinutes
-                }, ct);
-                return Results.Created($"/api/partner/routes/{id}", new { Id = id });
+                var command = new CreateRouteCommand(airlineId, request.OriginAirportId, request.DestinationAirportId, request.DistanceKm, request.EstimatedDurationMinutes);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/partner/routes/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             });
 
         partnerRoutes.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerRouteRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IRouteRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                await repo.UpdateAsync(new RouteEntity
-                {
-                    Id = id,
-                    OriginAirportId = request.OriginAirportId,
-                    DestinationAirportId = request.DestinationAirportId,
-                    DistanceKm = request.DistanceKm,
-                    EstimatedDurationMinutes = request.EstimatedDurationMinutes
-                }, airlineId, ct);
-                return Results.Ok();
+                var command = new UpdateRouteCommand(id, airlineId, request.OriginAirportId, request.DestinationAirportId, request.DistanceKm, request.EstimatedDurationMinutes);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             });
 
         partnerRoutes.MapDelete("/{id:guid}", async (
                 Guid id,
                 ClaimsPrincipal principal,
-                [FromServices] IRouteRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                await repo.DeleteAsync(id, airlineId, ct);
-                return Results.NoContent();
+                var result = await sender.Send(new DeleteRouteCommand(id, airlineId), ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             });
 
         // ——————————————————————— Partner Airplanes ————————————————————————————————
@@ -88,58 +77,48 @@ public class FlightPartnerEndpoints : IEndpoint
 
         partnerAirplanes.MapGet("/", async (
                 ClaimsPrincipal principal,
-                [FromServices] IAirplaneRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var items = await repo.GetByAirlineAsync(airlineId, ct);
-                return Results.Ok(new { items, totalCount = items.Count });
+                var result = await sender.Send(new GetAirplanesByAirlineQuery(airlineId), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
             });
 
         partnerAirplanes.MapPost("/", async (
                 [FromBody] PartnerAirplaneRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IAirplaneRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var id = await repo.CreateAsync(new Airplane
-                {
-                    AirlineId = airlineId,
-                    Model = request.Model,
-                    RegistrationNumber = request.RegistrationNumber,
-                    TotalCapacity = request.TotalCapacity
-                }, ct);
-                return Results.Created($"/api/partner/airplanes/{id}", new { Id = id });
+                var command = new CreateAirplaneCommand(airlineId, request.Model, request.RegistrationNumber, request.TotalCapacity);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/partner/airplanes/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             });
 
         partnerAirplanes.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerAirplaneRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IAirplaneRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                await repo.UpdateAsync(new Airplane
-                {
-                    Id = id,
-                    Model = request.Model,
-                    RegistrationNumber = request.RegistrationNumber,
-                    TotalCapacity = request.TotalCapacity
-                }, airlineId, ct);
-                return Results.Ok();
+                var command = new UpdateAirplaneCommand(id, airlineId, request.Model, request.RegistrationNumber, request.TotalCapacity);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             });
 
         partnerAirplanes.MapDelete("/{id:guid}", async (
                 Guid id,
                 ClaimsPrincipal principal,
-                [FromServices] IAirplaneRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                await repo.DeleteAsync(id, airlineId, ct);
-                return Results.NoContent();
+                var result = await sender.Send(new DeleteAirplaneCommand(id, airlineId), ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             });
 
         // ——————————————————————— Partner Flights (stub — full scheduling CRUD pending) ————————————————————————————————
@@ -147,20 +126,78 @@ public class FlightPartnerEndpoints : IEndpoint
             .WithTags("Partner Flights")
             .RequireAuthorization("PartnerOnly");
 
-        partnerFlights.MapGet("/", () => Results.Ok(new { items = new List<object>(), totalCount = 0 }));
-        partnerFlights.MapPost("/", () => Results.Created("/api/partner/flights/1", new { Id = Guid.NewGuid() }));
-        partnerFlights.MapPut("/{id:guid}", (Guid id) => Results.Ok());
-        partnerFlights.MapDelete("/{id:guid}", (Guid id) => Results.NoContent());
+        partnerFlights.MapGet("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new GetPartnerFlightsQuery(), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+            });
+
+        partnerFlights.MapPost("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new CreatePartnerFlightCommand(), ct);
+                return result.IsSuccess ? Results.Created($"/api/partner/flights/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
+            });
+
+        partnerFlights.MapPut("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new UpdatePartnerFlightCommand(id), ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
+            });
+
+        partnerFlights.MapDelete("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new DeletePartnerFlightCommand(id), ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+            });
 
         // ——————————————————————— Partner Aircraft (stub — alias of airplanes view) ————————————————————————————————
         var partnerAircraft = app.MapGroup("/api/partner/aircraft")
             .WithTags("Partner Aircraft")
             .RequireAuthorization("PartnerOnly");
 
-        partnerAircraft.MapGet("/", () => Results.Ok(new { items = new List<object>(), totalCount = 0 }));
-        partnerAircraft.MapPost("/", () => Results.Created("/api/partner/aircraft/1", new { Id = Guid.NewGuid() }));
-        partnerAircraft.MapPut("/{id:guid}", (Guid id) => Results.Ok());
-        partnerAircraft.MapDelete("/{id:guid}", (Guid id) => Results.NoContent());
+        partnerAircraft.MapGet("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new GetPartnerAircraftQuery(), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+            });
+
+        partnerAircraft.MapPost("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new CreatePartnerAircraftCommand(), ct);
+                return result.IsSuccess ? Results.Created($"/api/partner/aircraft/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
+            });
+
+        partnerAircraft.MapPut("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new UpdatePartnerAircraftCommand(id), ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
+            });
+
+        partnerAircraft.MapDelete("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new DeletePartnerAircraftCommand(id), ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+            });
 
         // ——————————————————————— Partner Settings (airline profile) ————————————————————————————————
         var partnerSettings = app.MapGroup("/api/partner/settings")
@@ -169,12 +206,13 @@ public class FlightPartnerEndpoints : IEndpoint
 
         partnerSettings.MapGet("/", async (
                 ClaimsPrincipal principal,
-                [FromServices] IAirlineRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var airline = await repo.GetByIdAsync(airlineId, ct);
-                if (airline is null) return Results.NotFound();
+                var result = await sender.Send(new GetPartnerSettingsQuery(airlineId), ct);
+                if (!result.IsSuccess) return Results.NotFound();
+                var airline = result.Value;
                 return Results.Ok(new
                 {
                     airlineName = airline.Name,
@@ -187,19 +225,13 @@ public class FlightPartnerEndpoints : IEndpoint
         partnerSettings.MapPut("/", async (
                 [FromBody] PartnerSettingsRequest request,
                 ClaimsPrincipal principal,
-                [FromServices] IAirlineRepository repo,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var airline = await repo.GetByIdAsync(airlineId, ct);
-                if (airline is null) return Results.NotFound();
-
-                if (!string.IsNullOrEmpty(request.AirlineName)) airline.Name = request.AirlineName;
-                airline.Address = request.Address;
-                airline.SupportEmail = request.SupportEmail;
-                airline.SupportPhone = request.SupportPhone;
-                await repo.UpdateAsync(airline, ct);
-                return Results.Ok();
+                var command = new UpdatePartnerSettingsCommand(airlineId, request.AirlineName, request.Address, request.SupportEmail, request.SupportPhone);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : Results.NotFound();
             });
     }
 

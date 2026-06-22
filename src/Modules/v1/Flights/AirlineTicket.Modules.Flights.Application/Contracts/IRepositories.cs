@@ -13,6 +13,11 @@ public class FlightDto
     public Guid AirplaneId { get; set; }
     public string FlightNumber { get; set; } = string.Empty;
     public decimal BasePrice { get; set; }
+    public DateTime DepartureTime { get; set; }
+    public DateTime ArrivalTime { get; set; }
+    public string OriginCode { get; set; } = string.Empty;
+    public string DestinationCode { get; set; } = string.Empty;
+    public string AirlineName { get; set; } = string.Empty;
 }
 
 public class StaffFlightListItemDto

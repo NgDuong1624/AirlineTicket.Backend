@@ -1,3 +1,4 @@
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Features.Users;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Domain.Entities;
@@ -22,7 +23,7 @@ public class GetUserProfileQueryHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnNull_WhenUserNotFound()
+    public async Task Handle_ShouldReturnFailure_WhenUserNotFound()
     {
         // Arrange
         var query = new GetUserProfileQuery(Guid.NewGuid());
@@ -33,7 +34,8 @@ public class GetUserProfileQueryHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.Should().BeNull();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("USER_NOT_FOUND");
     }
 
     [Fact]
@@ -57,10 +59,11 @@ public class GetUserProfileQueryHandlerTests
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull();
-        result!.Id.Should().Be(userId);
-        result.Email.Should().Be("test@example.com");
-        result.FullName.Should().Be("Test User");
-        result.Role.Should().Be("Customer");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Id.Should().Be(userId);
+        result.Value.Email.Should().Be("test@example.com");
+        result.Value.FullName.Should().Be("Test User");
+        result.Value.Role.Should().Be("Customer");
     }
 }

@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Exceptions;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using FluentValidation;
 using MediatR;
@@ -21,7 +23,7 @@ public record StaffCreateBookingCommand(
     string ContactName,
     string ContactEmail,
     string ContactPhone,
-    List<StaffPassengerDto> Passengers) : IRequest<StaffBookingResult>;
+    List<StaffPassengerDto> Passengers) : ICommand<Result<StaffBookingResult>>;
 
 public record StaffBookingResult(Guid BookingId, string PnrCode, decimal TotalPrice, List<string> SeatNumbers);
 
@@ -46,7 +48,7 @@ public class StaffCreateBookingCommandValidator : AbstractValidator<StaffCreateB
     }
 }
 
-public class StaffCreateBookingCommandHandler : IRequestHandler<StaffCreateBookingCommand, StaffBookingResult>
+public class StaffCreateBookingCommandHandler : ICommandHandler<StaffCreateBookingCommand, Result<StaffBookingResult>>
 {
     private readonly IBookingRepository _bookingRepository;
     private readonly IFlightSeatReservation _seatReservation;
@@ -59,12 +61,10 @@ public class StaffCreateBookingCommandHandler : IRequestHandler<StaffCreateBooki
         _seatReservation = seatReservation;
     }
 
-    public async Task<StaffBookingResult> Handle(StaffCreateBookingCommand request, CancellationToken cancellationToken)
+    public async Task<Result<StaffBookingResult>> Handle(StaffCreateBookingCommand request, CancellationToken cancellationToken)
     {
         var seatNumbers = request.Passengers.Select(p => p.SeatNumber).ToList();
 
-        // Reserve seats first (cross-module, marks FlightSeat.IsAvailable=false + broadcasts).
-        // Throws SeatUnavailableException if any seat is gone — surfaced as 409 by the endpoint.
         IReadOnlyDictionary<string, ReservedSeat> reserved;
         try
         {
@@ -72,7 +72,7 @@ public class StaffCreateBookingCommandHandler : IRequestHandler<StaffCreateBooki
         }
         catch (SeatUnavailableException ex)
         {
-            throw new BadRequestException(ex.Message);
+            return Result.Failure<StaffBookingResult>(new Error("SEAT_CONFLICT", ex.Message));
         }
 
         var totalPrice = reserved.Values.Sum(r => r.Price);
@@ -81,7 +81,7 @@ public class StaffCreateBookingCommandHandler : IRequestHandler<StaffCreateBooki
         {
             Id = Guid.NewGuid(),
             FlightId = request.FlightId,
-            UserId = null, // call-in customer, no account
+            UserId = null,
             PnrCode = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant(),
             TotalPrice = totalPrice,
             ContactEmail = request.ContactEmail ?? string.Empty,
@@ -102,11 +102,10 @@ public class StaffCreateBookingCommandHandler : IRequestHandler<StaffCreateBooki
         }
         catch
         {
-            // Compensating action: don't leave seats locked if persistence failed.
             await _seatReservation.ReleaseSeatsAsync(request.FlightId, seatNumbers, cancellationToken);
             throw;
         }
 
-        return new StaffBookingResult(booking.Id, booking.PnrCode, totalPrice, seatNumbers);
+        return Result.Success(new StaffBookingResult(booking.Id, booking.PnrCode, totalPrice, seatNumbers));
     }
 }

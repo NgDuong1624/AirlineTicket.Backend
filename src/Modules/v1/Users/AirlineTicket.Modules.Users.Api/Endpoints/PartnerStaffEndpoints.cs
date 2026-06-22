@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Auth;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
 using AirlineTicket.Modules.Users.Domain.Entities;
@@ -27,10 +28,11 @@ public class PartnerStaffEndpoints : IEndpoint
                 [FromServices] IUserRepository repo,
                 CancellationToken ct) =>
             {
-                if (!TryGetAirlineId(principal, out var airlineId))
+                var airlineId = principal.GetAirlineId();
+                if (airlineId is null)
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 
-                var users = await repo.GetByAirlineIdAsync(airlineId, ct);
+                var users = await repo.GetByAirlineIdAsync(airlineId.Value, ct);
                 var items = users
                     .Where(u => u.Role == UserRoleEnum.Staff)
                     .Select(ToDto)
@@ -45,7 +47,8 @@ public class PartnerStaffEndpoints : IEndpoint
                 [FromServices] IPasswordHasher passwordHasher,
                 CancellationToken ct) =>
             {
-                if (!TryGetAirlineId(principal, out var airlineId))
+                var airlineId = principal.GetAirlineId();
+                if (airlineId is null)
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 
                 if (!await repo.IsEmailUniqueAsync(request.Email, ct))
@@ -73,7 +76,8 @@ public class PartnerStaffEndpoints : IEndpoint
                 [FromServices] IUserRepository repo,
                 CancellationToken ct) =>
             {
-                if (!TryGetAirlineId(principal, out var airlineId))
+                var airlineId = principal.GetAirlineId();
+                if (airlineId is null)
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 
                 var user = await repo.GetByIdAsync(id, ct);
@@ -93,7 +97,8 @@ public class PartnerStaffEndpoints : IEndpoint
                 [FromServices] IUserRepository repo,
                 CancellationToken ct) =>
             {
-                if (!TryGetAirlineId(principal, out var airlineId))
+                var airlineId = principal.GetAirlineId();
+                if (airlineId is null)
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 
                 var user = await repo.GetByIdAsync(id, ct);
@@ -102,13 +107,20 @@ public class PartnerStaffEndpoints : IEndpoint
                 await repo.DeleteAsync(user, ct);
                 return Results.NoContent();
             });
-    }
 
-    private static bool TryGetAirlineId(ClaimsPrincipal principal, out Guid airlineId)
-    {
-        airlineId = Guid.Empty;
-        var claim = principal.FindFirst("AirlineId")?.Value;
-        return Guid.TryParse(claim, out airlineId);
+        staff.MapGet("/my-airline", async (
+                ClaimsPrincipal principal,
+                [FromServices] IUserRepository repo,
+                CancellationToken ct) =>
+            {
+                var airlineId = principal.GetAirlineId();
+                if (airlineId is null)
+                    return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
+
+                var users = await repo.GetByAirlineIdAsync(airlineId.Value, ct);
+                var items = users.Select(ToDto).ToList();
+                return Results.Ok(new { airlineId, items, totalCount = items.Count });
+            });
     }
 
     private static object ToDto(User u) => new

@@ -1,3 +1,4 @@
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
@@ -25,7 +26,7 @@ public class RegisterUserCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ShouldThrowException_WhenEmailAlreadyExists()
+    public async Task Handle_ShouldReturnFailure_WhenEmailAlreadyExists()
     {
         // Arrange
         var command = new RegisterUserCommand("test@test.com", "password123", "Test User", "123456789");
@@ -33,10 +34,11 @@ public class RegisterUserCommandHandlerTests
             .ReturnsAsync(false); // Not unique
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Exception>().WithMessage("Email already exists");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("EMAIL_ALREADY_EXISTS");
         _userRepositoryMock.Verify(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -47,7 +49,7 @@ public class RegisterUserCommandHandlerTests
         var command = new RegisterUserCommand("new@test.com", "password123", "New User", "123456789");
         _userRepositoryMock.Setup(repo => repo.IsEmailUniqueAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-            
+
         _passwordHasherMock.Setup(hasher => hasher.HashPassword(command.Password))
             .Returns("hashed_password");
 
@@ -55,11 +57,12 @@ public class RegisterUserCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeEmpty();
-        _userRepositoryMock.Verify(x => x.AddAsync(It.Is<User>(u => 
-            u.Email == command.Email && 
-            u.PasswordHash == "hashed_password" && 
-            u.FullName == command.FullName), 
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeEmpty();
+        _userRepositoryMock.Verify(x => x.AddAsync(It.Is<User>(u =>
+            u.Email == command.Email &&
+            u.PasswordHash == "hashed_password" &&
+            u.FullName == command.FullName),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }

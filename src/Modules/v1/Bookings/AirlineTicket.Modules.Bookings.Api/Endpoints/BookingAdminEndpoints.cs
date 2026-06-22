@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using System.Collections.Generic;
 
 namespace AirlineTicket.Modules.Bookings.Api.Endpoints;
 
@@ -25,7 +24,7 @@ public class BookingAdminEndpoints : IEndpoint
             {
                 var query = new GetAllBookingsQuery();
                 var result = await sender.Send(query, ct);
-                return Results.Ok(result);
+                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetBookings");
 
@@ -36,7 +35,7 @@ public class BookingAdminEndpoints : IEndpoint
             {
                 var query = new GetBookingByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound();
             })
             .WithName("AdminGetBookingById");
 
@@ -48,8 +47,8 @@ public class BookingAdminEndpoints : IEndpoint
             {
                 var passengers = request.Passengers?.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
                 var command = new UpdateBookingCommand(id, passengers, request.ContactEmail, request.ContactPhone);
-                await sender.Send(command, ct);
-                return Results.Ok();
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             })
             .WithName("AdminUpdateBooking");
 
@@ -59,20 +58,11 @@ public class BookingAdminEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
-                {
-                    var command = new UpdateBookingStatusCommand(id, request.Status);
-                    await sender.Send(command, ct);
-                    return Results.Ok();
-                }
-                catch (ArgumentException ex)
-                {
-                    return Results.Json(new { Code = "BAD_REQUEST", Message = ex.Message }, statusCode: 400);
-                }
-                catch (KeyNotFoundException ex)
-                {
-                    return Results.Json(new { Code = "NOT_FOUND", Message = ex.Message }, statusCode: 404);
-                }
+                var command = new UpdateBookingStatusCommand(id, request.Status);
+                var result = await sender.Send(command, ct);
+                if (result.IsSuccess) return Results.Ok();
+                if (result.Error.Code == "NOT_FOUND") return Results.NotFound(result.Error);
+                return Results.BadRequest(result.Error);
             })
             .WithName("AdminUpdateBookingStatus");
 
@@ -82,8 +72,8 @@ public class BookingAdminEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var command = new CancelBookingCommand(id);
-                await sender.Send(command, ct);
-                return Results.NoContent();
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             })
             .WithName("AdminDeleteBooking");
     }
