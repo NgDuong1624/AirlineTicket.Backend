@@ -99,6 +99,34 @@ public class FlightEndpoints : IEndpoint
             .Produces(500)
             .AllowAnonymous();
 
+        // POST /api/flights/round-trip — Search round-trip flights
+        flightsGroup.MapPost("/round-trip", async (
+                [FromBody] RoundTripFlightSearchRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new SearchRoundTripFlightsQuery(
+                    request.OriginCode,
+                    request.DestinationCode,
+                    request.OutboundDate,
+                    request.ReturnDate,
+                    request.CabinClass,
+                    request.Airlines,
+                    request.PriceRangeMin,
+                    request.PriceRangeMax,
+                    request.MaxStops,
+                    request.SortBy,
+                    request.Currency);
+                var result = await sender.Send(query, ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+            })
+            .WithName("SearchRoundTripFlights")
+            .WithSummary("Tìm kiếm chuyến bay khứ hồi theo bộ lọc")
+            .Produces(200)
+            .Produces(400)
+            .Produces(500)
+            .AllowAnonymous();
+
         // GET /api/flights/{id}
         flightsGroup.MapGet("/{id:guid}", async (
                 Guid id,
@@ -176,6 +204,19 @@ public record FlightSearchRequest(
     string OriginCode,
     string DestinationCode,
     DateTime DepartDate,
+    string? CabinClass = null,
+    List<string>? Airlines = null,
+    decimal? PriceRangeMin = null,
+    decimal? PriceRangeMax = null,
+    int? MaxStops = null,
+    string? SortBy = null,
+    string Currency = "VND");
+
+public record RoundTripFlightSearchRequest(
+    string OriginCode,
+    string DestinationCode,
+    DateTime OutboundDate,
+    DateTime ReturnDate,
     string? CabinClass = null,
     List<string>? Airlines = null,
     decimal? PriceRangeMin = null,

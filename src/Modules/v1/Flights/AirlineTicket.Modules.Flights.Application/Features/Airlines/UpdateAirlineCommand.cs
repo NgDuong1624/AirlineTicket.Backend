@@ -5,6 +5,7 @@ using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Domain.Entities;
+using AirlineTicket.BuildingBlocks.Caching;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Airlines;
 
@@ -13,10 +14,12 @@ public record UpdateAirlineCommand(Guid Id, string IataCode, string Name, string
 internal sealed class UpdateAirlineCommandHandler : ICommandHandler<UpdateAirlineCommand, Result<bool>>
 {
     private readonly IAirlineRepository _airlineRepository;
+    private readonly ICacheService _cacheService;
 
-    public UpdateAirlineCommandHandler(IAirlineRepository airlineRepository)
+    public UpdateAirlineCommandHandler(IAirlineRepository airlineRepository, ICacheService cacheService)
     {
         _airlineRepository = airlineRepository;
+        _cacheService = cacheService;
     }
 
     public async Task<Result<bool>> Handle(UpdateAirlineCommand request, CancellationToken cancellationToken)
@@ -32,6 +35,9 @@ internal sealed class UpdateAirlineCommandHandler : ICommandHandler<UpdateAirlin
         };
 
         await _airlineRepository.UpdateAsync(airline, cancellationToken);
+        
+        await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetAirlinesQuery>("all"), cancellationToken);
+
         return Result.Success(true);
     }
 }

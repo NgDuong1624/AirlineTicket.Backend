@@ -1,6 +1,7 @@
 using AirlineTicket.Modules.Promotions.Application.Contracts;
 using AirlineTicket.Modules.Promotions.Application.Features.Admin;
 using AirlineTicket.Modules.Promotions.Application.Features.Public;
+using AirlineTicket.BuildingBlocks.Caching;
 using FluentAssertions;
 using Moq;
 using System;
@@ -49,7 +50,7 @@ public class PromotionHandlersTests
     [Fact]
     public async Task CreatePromotionCommandHandler_ShouldCreatePromotion()
     {
-        var handler = new CreatePromotionCommandHandler(_promoRepoMock.Object);
+        var handler = new CreatePromotionCommandHandler(_promoRepoMock.Object, Mock.Of<ICacheService>());
         var command = new CreatePromotionCommand("Summer Sale", "SUMMER", "Percentage", 10, 100, DateTime.UtcNow, DateTime.UtcNow.AddMonths(1));
 
         var expectedId = Guid.NewGuid();

@@ -5,6 +5,7 @@ using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Domain.Entities;
+using AirlineTicket.BuildingBlocks.Caching;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Routes;
 
@@ -13,10 +14,12 @@ public record CreateRouteCommand(Guid AirlineId, Guid OriginAirportId, Guid Dest
 internal sealed class CreateRouteCommandHandler : ICommandHandler<CreateRouteCommand, Result<Guid>>
 {
     private readonly IRouteRepository _routeRepository;
+    private readonly ICacheService _cacheService;
 
-    public CreateRouteCommandHandler(IRouteRepository routeRepository)
+    public CreateRouteCommandHandler(IRouteRepository routeRepository, ICacheService cacheService)
     {
         _routeRepository = routeRepository;
+        _cacheService = cacheService;
     }
 
     public async Task<Result<Guid>> Handle(CreateRouteCommand request, CancellationToken cancellationToken)
@@ -31,6 +34,9 @@ internal sealed class CreateRouteCommandHandler : ICommandHandler<CreateRouteCom
         };
 
         var id = await _routeRepository.CreateAsync(route, cancellationToken);
+        
+        await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetRoutesQuery>("all"), cancellationToken);
+
         return Result.Success(id);
     }
 }
