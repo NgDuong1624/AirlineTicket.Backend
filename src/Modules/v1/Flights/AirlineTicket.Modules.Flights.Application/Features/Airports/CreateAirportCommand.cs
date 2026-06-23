@@ -5,6 +5,7 @@ using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Domain.Entities;
+using AirlineTicket.BuildingBlocks.Caching;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Airports;
 
@@ -21,10 +22,12 @@ public record CreateAirportCommand(
 internal sealed class CreateAirportCommandHandler : ICommandHandler<CreateAirportCommand, Result<Guid>>
 {
     private readonly IAirportRepository _airportRepository;
+    private readonly ICacheService _cacheService;
 
-    public CreateAirportCommandHandler(IAirportRepository airportRepository)
+    public CreateAirportCommandHandler(IAirportRepository airportRepository, ICacheService cacheService)
     {
         _airportRepository = airportRepository;
+        _cacheService = cacheService;
     }
 
     public async Task<Result<Guid>> Handle(CreateAirportCommand request, CancellationToken cancellationToken)
@@ -42,6 +45,17 @@ internal sealed class CreateAirportCommandHandler : ICommandHandler<CreateAirpor
         };
 
         var id = await _airportRepository.CreateAsync(airport, cancellationToken);
+        
+        await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetAirportsQuery>("all"), cancellationToken);
+        if (request.NameEn != null)
+        {
+            await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetAirportsQuery>(request.NameEn), cancellationToken);
+        }
+        if (request.NameVi != null)
+        {
+            await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetAirportsQuery>(request.NameVi), cancellationToken);
+        }
+
         return Result.Success(id);
     }
 }
