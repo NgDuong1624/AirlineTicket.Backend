@@ -38,7 +38,8 @@ public class FlightRepository : IFlightRepository
             ArrivalTime = flight.ArrivalTime,
             OriginCode = flight.Route?.OriginAirport?.IataCode ?? string.Empty,
             DestinationCode = flight.Route?.DestinationAirport?.IataCode ?? string.Empty,
-            AirlineName = flight.Route?.Airline?.Name ?? string.Empty
+            AirlineName = flight.Route?.Airline?.Name ?? string.Empty,
+            Currency = flight.Currency
         };
     }
 
@@ -103,7 +104,8 @@ public class FlightRepository : IFlightRepository
                 ArrivalTime = f.ArrivalTime,
                 OriginCode = f.Route.OriginAirport.IataCode,
                 DestinationCode = f.Route.DestinationAirport.IataCode,
-                AirlineName = f.Route.Airline.Name
+                AirlineName = f.Route.Airline.Name,
+                Currency = f.Currency
             })
             .ToListAsync(cancellationToken);
     }
@@ -170,7 +172,8 @@ public class FlightRepository : IFlightRepository
                 ArrivalTime = f.ArrivalTime,
                 OriginCode = f.Route.OriginAirport.IataCode,
                 DestinationCode = f.Route.DestinationAirport.IataCode,
-                AirlineName = f.Route.Airline.Name
+                AirlineName = f.Route.Airline.Name,
+                Currency = f.Currency
             })
             .ToListAsync(cancellationToken);
     }
