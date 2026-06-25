@@ -19,7 +19,9 @@ public static class DependencyInjection
 
         // Đăng ký DbContext
         services.AddDbContext<InteractionDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
         // Đăng ký AI client dưới dạng typed HttpClient (dùng IHttpClientFactory để quản lý connection pooling).
         services.AddHttpClient<IAirTicketAiClient, NvidiaModelStoreQaClient>((sp, client) =>

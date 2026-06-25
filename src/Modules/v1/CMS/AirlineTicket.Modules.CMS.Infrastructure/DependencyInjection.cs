@@ -10,7 +10,9 @@ public static class DependencyInjection
     public static IServiceCollection AddCMSInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<CMSDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
         return services;
     }
