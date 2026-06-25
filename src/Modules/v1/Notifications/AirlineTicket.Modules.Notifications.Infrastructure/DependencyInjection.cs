@@ -10,7 +10,9 @@ public static class DependencyInjection
     public static IServiceCollection AddNotificationsInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<NotificationDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
         return services;
     }

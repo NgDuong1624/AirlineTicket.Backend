@@ -1,13 +1,13 @@
 services:
   airlineticket-api:
-    image: airlineticket-backend:prod
+    image: airlineticket-backend:local
     build:
       context: ../../
       dockerfile: Dockerfile
     ports:
-      - "${PORT:-5000}:8080"
+      - "${PORT:-5179}:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
       - ConnectionStrings__Redis=${REDIS_CONNECTION_STRING}
       - Cors__AllowedOrigins__0=${CORS_ORIGINS}
@@ -23,19 +23,19 @@ services:
       - LuckyPenny__MediatR__LicenseKey=${LUCKY_PENNY_MEDIATR_LICENSE_KEY}
     depends_on:
       - sqlserver
-    restart: unless-stopped
+    restart: always
 
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       ACCEPT_EULA: Y
-      SA_PASSWORD: ${SQLSERVER_PASSWORD}
+      SA_PASSWORD: ${SQLSERVER_PASSWORD:-Admin@123}
       MSSQL_PID: Developer
     ports:
       - "1433:1433"
     volumes:
-      - sqlserver-data:/var/opt/mssql
-    restart: unless-stopped
+      - sqlserver-data-local:/var/opt/mssql
+    restart: always
 
 volumes:
-  sqlserver-data:
+  sqlserver-data-local:

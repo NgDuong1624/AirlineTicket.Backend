@@ -12,7 +12,9 @@ public static class DependencyInjection
     public static IServiceCollection AddPromotionsInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<PromotionDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(
+                configuration.GetConnectionString("DefaultConnection"),
+                sqlOptions => sqlOptions.EnableRetryOnFailure()));
         
         // Register repositories
         services.AddScoped<IPromotionRepository, PromotionRepository>();

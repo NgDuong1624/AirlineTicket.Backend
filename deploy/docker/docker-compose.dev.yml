@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   airlineticket-api:
     image: airlineticket-backend:dev
@@ -7,26 +5,37 @@ services:
       context: ../../
       dockerfile: Dockerfile
     ports:
-      - "5000:8080"
+      - "${PORT:-5000}:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      # Chuỗi kết nối trỏ sang container SQL Server chạy cùng mạng nội bộ Docker
-      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=AirlineTicketDb;User Id=sa;Password=Admin@123;TrustServerCertificate=True;
-    depends_on:
-      - sqlserver
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - ConnectionStrings__Redis=${REDIS_CONNECTION_STRING}
+      - Cors__AllowedOrigins__0=${CORS_ORIGINS}
+      - AiService__ModelStore__ApiKey=${AI_SERVICE_API_KEY}
+      - AiService__ModelStore__BaseUrl=${AI_SERVICE_BASE_URL}
+      - AiService__ModelStore__Model=${AI_SERVICE_MODEL}
+      - AiService__ModelStore__MaxTokens=${AI_SERVICE_MAX_TOKENS}
+      - AiService__ModelStore__Temperature=${AI_SERVICE_TEMPERATURE}
+      - AiService__ModelStore__TopP=${AI_SERVICE_TOP_P}
+      - AiService__ModelStore__TimeoutSeconds=${AI_SERVICE_TIMEOUT_SECONDS}
+      - AiService__ModelStore__EnableThinking=${AI_SERVICE_ENABLE_THINKING}
+      - AiService__ModelStore__ReasoningEffort=${AI_SERVICE_REASONING_EFFORT}
+      - LuckyPenny__MediatR__LicenseKey=${LUCKY_PENNY_MEDIATR_LICENSE_KEY}
+    # depends_on:
+    #   - sqlserver
     restart: always
 
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    environment:
-      ACCEPT_EULA: Y
-      SA_PASSWORD: Admin@123
-      MSSQL_PID: Developer
-    ports:
-      - "1433:1433"
-    volumes:
-      - sqlserver-data-dev:/var/opt/mssql
-    restart: always
+  # sqlserver:
+  #   image: mcr.microsoft.com/mssql/server:2022-latest
+  #   environment:
+  #     ACCEPT_EULA: Y
+  #     SA_PASSWORD: Admin@123
+  #     MSSQL_PID: Developer
+  #   ports:
+  #     - "1433:1433"
+  #   volumes:
+  #     - sqlserver-data-dev:/var/opt/mssql
+  #   restart: always
 
 volumes:
   sqlserver-data-dev:
