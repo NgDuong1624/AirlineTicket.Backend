@@ -1,104 +1,186 @@
-# Airline Ticket Backend System
+# AirlineTicket Backend
 
-Hệ thống đặt vé và theo dõi chuyến bay xây dựng trên nền tảng **.NET 10** theo kiến trúc **Modular Monolith** kết hợp **Clean Architecture**.
+A modular monolith backend system for airline ticket booking, built on **.NET 10** with **Clean Architecture**, **CQRS**, and **Domain-Driven Design**.
 
-## Kiến trúc hệ thống (Architecture)
-Hệ thống được chia thành 4 Module chính biệt lập, giúp dễ dàng mở rộng và tách thành Microservices trong tương lai:
-1. **Flights**: Quản lý chuyến bay, sân bay, máy bay, sơ đồ ghế máy bay và theo dõi trạng thái chuyến bay.
-2. **Bookings**: Quản lý đặt vé, thanh toán, hành khách và phát hành vé.
-3. **Users**: Quản lý tài khoản người dùng, phân quyền hệ thống.
-4. **Promotions**: Quản lý các chiến dịch giảm giá (Campaigns) và mã giảm giá (Coupons), định giá động (Dynamic Pricing).
-5. **Interactions**: Cung cấp hệ thống Q&A thông minh, xử lý các thắc mắc của khách hàng về vé và thủ tục bay sử dụng AI Model Store.
-6. **CMS**: Quản lý nội dung bài viết, tin tức và trang tĩnh.
-7. **Notifications**: Xử lý gửi Email/SMS và thông báo đẩy.
-8. **Logs**: Hệ thống ghi nhật ký tập trung và kiểm soát hoạt động.
+---
 
-Mỗi Module tuân thủ chặt chẽ nguyên lý Clean Architecture gồm 4 tầng:
-* `Api`: Cung cấp các RESTful Endpoints (Controllers / Minimal APIs).
-* `Application`: Chứa logic nghiệp vụ (Use Cases), CQRS Pattern (với MediatR) và xử lý Validate (với FluentValidation).
-* `Domain`: Nơi định nghĩa các Core Entities, Enums và Domain Exceptions. Không phụ thuộc vào bất kỳ thư viện ngoài nào.
-* `Infrastructure`: Nơi xử lý truy cập cơ sở dữ liệu với Entity Framework Core, cấu hình Fluent API, và kết nối External APIs...
+## Architecture
 
-## Cơ sở dữ liệu (Database)
-Hệ thống sử dụng **SQL Server** làm cơ sở dữ liệu chính.
-Được thiết kế dựa trên cùng một Database nhưng phân vùng bảng dữ liệu bằng **Schemas** để đảm bảo ranh giới độc lập (bounded contexts) cho từng module:
-* Schema `flights`
-* Schema `bookings`
-* Schema `users`
-* Schema `promotions`
-* Schema `CMS`
-* Schema `Notifications`
-* Schema `Logs`
+The system follows a **Modular Monolith** architecture with 8 independent business modules, each adhering to Clean Architecture with 4 layers:
 
-## Hướng dẫn cài đặt (Setup Instructions)
+| Layer | Responsibility |
+|-------|---------------|
+| **Domain** | Core entities, enums, domain events. Zero external dependencies. |
+| **Application** | Business logic (use cases), CQRS handlers (MediatR), validators (FluentValidation), DTOs. |
+| **Infrastructure** | Database access (EF Core DbContext), Fluent API config, repositories, external service integrations. |
+| **Api** | Minimal API endpoints (implements `IEndpoint` interface). |
 
-### 1. Chuẩn bị Môi trường
-* Cài đặt **.NET 10 SDK**.
-* Cài đặt **Entity Framework Core CLI**:
-  ```bash
-  dotnet tool install --global dotnet-ef
-  ```
-* Chạy SQL Server và đảm bảo cấu hình kết nối chuẩn xác.
+### Modules
 
-### 2. Cấu hình Connection String
-Mở file `src/Api/AirlineTicket.Api/appsettings.json` và cập nhật chuỗi kết nối Database phù hợp với môi trường của bạn (Ví dụ IP Server, SQL Authentication với User Id/Password).
+| Module | Schema | Description |
+|--------|--------|-------------|
+| **Users** | `identity` | Authentication (JWT), user management, RBAC, dynamic permission scopes |
+| **Flights** | `flights` | Airlines, airports, airplanes, routes, flights, seat maps |
+| **Bookings** | `bookings` | Booking lifecycle, passengers, payments, e-tickets |
+| **Promotions** | `promotions` | Coupons (percentage/fixed), campaigns (admin & partner scoped) |
+| **Interactions** | `interactions` | AI Travel Assistant (NVIDIA API + DeepSeek V4 Flash), reviews |
+| **CMS** | `cms` | Admin/Partner dashboards, system settings, articles |
+| **Logs** | `logs` | System logs, partner activity logs (paginated) |
+| **Notifications** | `notifications` | Email, SMS, Push notification templates and delivery |
 
-### 3. Cấu hình Secret Keys
-Ứng dụng yêu cầu hai loại cấu hình bảo mật chính thông qua User Secrets hoặc Biến môi trường:
+### BuildingBlocks (Shared Infrastructure)
 
-#### A. MediatR License Key (Lucky Penny)
-Bắt buộc cho môi trường Production để sử dụng MediatR.
-- Key: `LuckyPenny:MediatR:LicenseKey`
-- CLI: `dotnet user-secrets set "LuckyPenny:MediatR:LicenseKey" "your-key"`
+| Component | Purpose |
+|-----------|---------|
+| **CQRS** | `ICommand`/`IQuery` + `ICommandHandler`/`IQueryHandler` via MediatR |
+| **LoggingBehavior** | Auto-logs MediatR request/response |
+| **CachingBehavior** | Auto-caches query results based on query attributes |
+| **ValidationBehavior** | Auto-validates input via FluentValidation before handler execution |
+| **CorrelationMiddleware** | Generates/propagates `X-Correlation-ID` for request tracing |
+| **RequestResponseLoggingMiddleware** | Logs HTTP request/response details |
+| **JWT Auth** | Bearer token authentication, supports SignalR query string tokens |
+| **DynamicPermissionPolicyProvider** | Dynamic authorization based on permission codes |
+| **AirlineResourceHandler** | Ensures Partner/Staff can only access their own airline's resources |
+| **ICacheService** | Abstraction over Redis Cloud with in-memory fallback |
 
-#### B. AI Service API Key (Model Store)
-Dùng để xác thực dịch vụ AI trong tính năng Q&A (`/api/v1/qa/ask`).
-- Key: `AiService:ModelStore:ApiKey`
-- CLI: `dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-ai-api-key"`
+## Real-time (SignalR)
 
-### 4. Cập nhật Cơ sở dữ liệu (Migrations)
-Để tiện lợi, dự án đã có sẵn script tự động chạy các lệnh EF Core. Bạn chỉ cần chạy script sau tại thư mục gốc của Backend:
+### SeatHub (`/hubs/seats`)
+- Groups clients by `flight-{flightId}` rooms
+- Broadcasts `SeatUpdated(flightId, seatNumber, isAvailable)` on seat status changes
+- **Anti-double-booking:** Atomic `ExecuteUpdateAsync` with `WHERE IsAvailable = 1` — no row/table locks
+
+### SupportChatHub (`/hubs/support`)
+- Customer ↔ Staff live chat scoped by airline
+- Auto-assigns customers to least-busy staff of the same airline
+- Re-assigns customers when staff disconnects
+- In-memory session storage via `ConcurrentDictionary`
+
+## Database
+
+**SQL Server** with 8 schemas as bounded contexts:
+- `identity`, `flights`, `bookings`, `promotions`, `interactions`, `cms`, `logs`, `notifications`
+
+### Key Design Decisions
+- **Soft Delete** — `IsDeleted` column + SQL Server `INSTEAD OF DELETE` triggers on all major tables
+- **Performance Indexes** — On `DepartureTime`, `RouteId`, `PnrCode`, `TicketNumber`, `UserId`
+- **UUID Primary Keys** — `UNIQUEIDENTIFIER` for all entity IDs
+
+## API Endpoints
+
+The system exposes **100+ REST API endpoints** across 12 sections:
+
+1. **Authentication** — Login, Register, Me
+2. **Flights (Public)** — Search (one-way, round-trip), Details, Trending, Seats
+3. **Airports, Airlines & Routes** — List, Search
+4. **Bookings** — Create, Pay, History, Update, Cancel
+5. **Tickets** — E-ticket details
+6. **Promotions** — List, Apply coupon
+7. **AI Chat** — Q&A with AI Travel Assistant
+8. **Staff** — Flight list, Seat map, Telesales booking, Sales board
+9. **Admin** — Users, Permissions, Airports, Airlines, Flights, Bookings, Coupons, Campaigns, Dashboard, Settings, Logs
+10. **Partner** — Routes, Airplanes, Flights, Aircraft, Coupons, Campaigns, Bookings, Staff, Settings, Dashboard, Logs
+11. **Module Status** — Health checks for Interactions and Notifications
+12. **SignalR Hubs** — SeatHub, SupportChatHub
+
+Full interactive API documentation available at `/scalar/v1` when running.
+
+## Setup
+
+### Prerequisites
+- .NET 10 SDK
+- SQL Server 2022+
+- Redis (optional — falls back to in-memory cache)
+- EF Core CLI: `dotnet tool install --global dotnet-ef`
+
+### Configuration
+
 ```bash
-./run_ef.sh
+# Required secrets
+dotnet user-secrets set "Jwt:Secret" "your-secret-key-minimum-32-characters"
+dotnet user-secrets set "LuckyPenny:MediatR:LicenseKey" "your-mediatr-license-key"
+dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-nvidia-api-key"
 ```
-*(Script này sẽ tự động chạy lệnh tạo Migration và Update Database cho toàn bộ modules).*
 
-### 5. Chạy dự án
-Dự án có thể mở trên các IDE (Visual Studio, Rider) thông qua file `AirlineTicket.Backend.sln`.
-Hoặc chạy trực tiếp bằng lệnh:
+Update `src/Api/AirlineTicket.Api/appsettings.json` with your SQL Server connection string.
+
+### Run
+
 ```bash
+# Apply database migrations
+./run_ef.sh
+
+# Start the API
 dotnet run --project src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj
 ```
-Dự án API trung tâm (API Gateway) sẽ tự động nạp tất cả các Controller từ các Modules con. Sau khi chạy, bạn có thể truy cập `/swagger` để xem tài liệu API.
 
-## Hướng dẫn Triển khai (Deploy with Docker)
+API available at `http://localhost:5179`. Scalar docs at `/scalar/v1`.
 
-Dự án đã được trang bị sẵn `Dockerfile` và `docker-compose.yml` để dễ dàng triển khai.
+### Docker
 
-### 1. Triển khai bằng Docker Compose (Khuyên dùng)
-Hệ thống sử dụng các file cấu hình Docker Compose theo từng môi trường nằm trong thư mục `deploy/docker`.
-
-**Chạy môi trường Development:**
 ```bash
+# Local (API + SQL Server)
+docker-compose -f deploy/docker/docker-compose.local.yml up -d --build
+
+# Development
 docker-compose -f deploy/docker/docker-compose.dev.yml up -d --build
-```
-Hệ thống sẽ chạy tại cổng **5000** (bạn có thể truy cập http://localhost:5000/swagger).
 
-**Chạy môi trường Production:**
-```bash
+# Production (with Nginx reverse proxy)
 docker-compose -f deploy/docker/docker-compose.prod.yml up -d --build
 ```
-Hệ thống sẽ chạy tại cổng **80** (mặc định HTTP).
 
-### 2. Triển khai Backend API bằng Docker thuần (Standalone)
-Nếu bạn đã có sẵn SQL Server (ví dụ ở máy host hoặc cloud), bạn chỉ cần build image cho Backend API:
+### Environment Variables (Docker)
+
+| Variable | Description |
+|----------|-------------|
+| `DB_CONNECTION_STRING` | SQL Server connection string |
+| `REDIS_CONNECTION_STRING` | Redis connection string |
+| `CORS_ORIGINS` | Allowed CORS origins (frontend URL) |
+| `AI_SERVICE_API_KEY` | NVIDIA API key |
+| `AI_SERVICE_BASE_URL` | NVIDIA API base URL |
+| `AI_SERVICE_MODEL` | AI model name (e.g., DeepSeek V4 Flash) |
+| `LUCKY_PENNY_MEDIATR_LICENSE_KEY` | MediatR license key |
+
+## Testing
+
 ```bash
-docker build -t airlineticket-backend .
+# Unit tests
+dotnet test tests/UnitTest/
+
+# Integration tests
+dotnet test tests/IntegrationTest/
 ```
-Sau đó chạy Container (Nhớ truyền tham số kết nối tới DB thực tế của bạn):
-```bash
-docker run -d -p 5000:8080 \
-  -e "ConnectionStrings__DefaultConnection=Server=YOUR_IP;Database=AirlineTicketDb;User Id=sa;Password=YOUR_PASS;TrustServerCertificate=True" \
-  --name airlineticket-api \
-  airlineticket-backend
+
+Target: 80%+ code coverage for core business logic.
+
+## Project Structure
+
 ```
+AirlineTicket.Backend/
+├── src/
+│   ├── Api/AirlineTicket.Api/           # API Gateway Host
+│   │   ├── Program.cs                   # Bootstrap, middleware, DI
+│   │   ├── ModuleRegistration.cs        # Module assembly registration
+│   │   └── Realtime/                    # SignalR Hubs
+│   ├── BuildingBlock/                   # Shared infrastructure (4 projects)
+│   └── Modules/v1/                      # 8 Business modules (4 layers each)
+│       ├── Bookings/
+│       ├── CMS/
+│       ├── Flights/
+│       ├── Interactions/
+│       ├── Logs/
+│       ├── Notifications/
+│       ├── Promotions/
+│       └── Users/
+├── database/                            # SQL scripts
+│   ├── init_v1.sql                      # Schema + table creation
+│   ├── seed_v1.sql                      # Base seed data
+│   ├── seed_routes_flights.sql          # Route & flight seed data
+│   ├── seed_extra_data.sql              # Additional seed data
+│   └── triggers_soft_delete_v1.sql      # Soft delete triggers
+├── deploy/                              # Docker & Nginx configs
+├── docs/                                # Documentation
+│   ├── api/api-list.md                  # Complete API endpoint reference
+│   ├── database/database_design.md      # Full database schema documentation
+│   └── plan/                            # Project planning docs
+└── tests/                               # Unit & Integration tests

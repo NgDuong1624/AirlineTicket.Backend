@@ -43,6 +43,10 @@ erDiagram
     %% CMS SCHEMA
     cms_Categories ||--o{ cms_Articles : "belongs_to"
     identity_Users ||--o{ cms_Articles : "writes"
+
+    %% NOTIFICATIONS SCHEMA
+    notifications_NotificationTemplates : "standalone"
+    identity_Users ||--o{ notifications_Notifications : "receives"
 ```
 
 ---
@@ -67,6 +71,7 @@ Lưu trữ thông tin người dùng (Khách hàng, Đối tác, Quản trị vi
 | `LanguagePreference` | NVARCHAR(10) | DEFAULT 'vi' | Ngôn ngữ ưu tiên (vi, en,...) |
 | `LastLoginAt` | DATETIME2 | NULL | Thời gian đăng nhập cuối cùng |
 | `IsActive` | BIT | DEFAULT 1, NOT NULL | Trạng thái hoạt động tài khoản |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm (Soft Delete) |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ khởi tạo |
 | `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ cập nhật mới nhất |
 
@@ -137,6 +142,7 @@ Quản lý các đối tác Hãng hàng không tích hợp hệ thống.
 | `ApiEndpoint` | NVARCHAR(500) | NULL | Điểm cuối API kết nối của hãng (B2B) |
 | `ApiKey` | NVARCHAR(255) | NULL | Khóa API bảo mật xác thực đối tác |
 | `IsActive` | BIT | DEFAULT 1, NOT NULL | Trạng thái tích hợp hoạt động |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo lập đối tác |
 
 #### Bảng `flights.Airports`
@@ -155,6 +161,7 @@ Danh sách thông tin sân bay trên thế giới.
 | `Latitude` | DECIMAL(9, 6) | NULL | Vĩ độ địa lý |
 | `Longitude` | DECIMAL(9, 6) | NULL | Kinh độ địa lý |
 | `IsActive` | BIT | DEFAULT 1, NOT NULL | Trạng thái hoạt động sân bay |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 
 #### Bảng `flights.Airplanes`
 Hạ tầng đội bay của các hãng hàng không.
@@ -164,8 +171,9 @@ Hạ tầng đội bay của các hãng hàng không.
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất tàu bay |
 | `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Airlines(Id) | Thuộc sở hữu hãng bay nào |
 | `Model` | NVARCHAR(100) | NOT NULL | Dòng máy bay (VD: Boeing 787, Airbus A350) |
-| `RegistrationNumber`| NVARCHAR(50) | UNIQUE, NOT NULL | Số đăng ký kiểm soát máy bay |
+| `RegistrationNumber` | NVARCHAR(50) | UNIQUE, NOT NULL | Số đăng ký kiểm soát máy bay |
 | `TotalCapacity` | INT | NOT NULL | Tổng tải lượng số ghế |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 
 #### Bảng `flights.Routes`
 Các tuyến đường bay kết nối giữa các sân bay.
@@ -175,9 +183,10 @@ Các tuyến đường bay kết nối giữa các sân bay.
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh tuyến bay |
 | `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Airlines(Id) | Hãng vận hành tuyến bay |
 | `OriginAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Airports(Id) | Sân bay điểm khởi hành |
-| `DestinationAirportId`| UNIQUEIDENTIFIER| FOREIGN KEY -> Airports(Id) | Sân bay điểm đến |
+| `DestinationAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Airports(Id) | Sân bay điểm đến |
 | `DistanceKm` | DECIMAL(10, 2) | NULL | Khoảng cách tuyến bay (km) |
-| `EstimatedDurationMinutes`| INT | NULL | Thời gian bay dự kiến (phút) |
+| `EstimatedDurationMinutes` | INT | NULL | Thời gian bay dự kiến (phút) |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 
 #### Bảng `flights.Flights`
 Thông tin chi tiết chuyến bay thực tế theo thời gian.
@@ -194,6 +203,7 @@ Thông tin chi tiết chuyến bay thực tế theo thời gian.
 | `Currency` | NVARCHAR(3) | DEFAULT 'USD' | Tiền tệ áp dụng |
 | `Status` | INT | DEFAULT 0, NOT NULL | Trạng thái (0: Scheduled, 1: Delayed, 2: Boarding, 3: InAir, 4: Landed, 5: Cancelled) |
 | `ExternalId` | NVARCHAR(100) | NULL | ID đồng bộ hệ thống ngoài của đối tác |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ khởi tạo |
 | `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ cập nhật |
 
@@ -229,6 +239,7 @@ Thông tin đơn đặt chỗ (Booking/PNR) của khách hàng.
 | `ContactEmail` | NVARCHAR(255) | NOT NULL | Email liên hệ nhận vé điện tử |
 | `ContactPhone` | NVARCHAR(20) | NOT NULL | Số điện thoại liên hệ |
 | `SpecialRequests` | NVARCHAR(MAX) | NULL | Yêu cầu đặc biệt (suất ăn, xe lăn...) |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo đơn |
 | `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian cập nhật trạng thái đơn |
 
@@ -245,7 +256,7 @@ Thông tin giấy tờ tùy thân của từng hành khách bay.
 | `DateOfBirth` | DATE | NOT NULL | Ngày tháng năm sinh |
 | `Nationality` | NVARCHAR(100) | NULL | Quốc tịch |
 | `PassportNumber` | NVARCHAR(50) | NOT NULL | Số hộ chiếu/CCCD |
-| `PassportExpiryDate`| DATE | NOT NULL | Ngày hết hạn hộ chiếu |
+| `PassportExpiryDate` | DATE | NOT NULL | Ngày hết hạn hộ chiếu |
 
 #### Bảng `bookings.Tickets`
 Thông tin vé máy bay điện tử (E-ticket) phát hành cho hành khách.
@@ -293,12 +304,13 @@ Thông tin mã giảm giá khuyến mãi áp dụng trực tiếp cho giỏ hàn
 | `DiscountType` | INT | NOT NULL | Kiểu chiết khấu (0: Phần trăm, 1: Số tiền cố định) |
 | `DiscountValue` | DECIMAL(18, 2) | NOT NULL | Giá trị được chiết khấu |
 | `MinOrderValue` | DECIMAL(18, 2) | NULL | Giá trị đơn đặt vé tối thiểu được áp dụng |
-| `MaxDiscountAmount`| DECIMAL(18, 2) | NULL | Giá trị giảm giá tối đa cho kiểu chiết khấu % |
+| `MaxDiscountAmount` | DECIMAL(18, 2) | NULL | Giá trị giảm giá tối đa cho kiểu chiết khấu % |
 | `StartDate` | DATETIME2 | NOT NULL | Thời gian hiệu lực bắt đầu |
 | `EndDate` | DATETIME2 | NOT NULL | Thời gian hết hiệu lực |
 | `UsageLimit` | INT | NULL | Số lượng lượt sử dụng tối đa của mã |
 | `UsageCount` | INT | DEFAULT 0 | Số lượt đã sử dụng thực tế |
 | `IsActive` | BIT | DEFAULT 1 | Trạng thái hoạt động của coupon |
+| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
 
 #### Bảng `promotions.Campaigns`
 Lưu trữ thông tin quảng cáo banner chiến dịch.
@@ -312,6 +324,7 @@ Lưu trữ thông tin quảng cáo banner chiến dịch.
 | `StartDate` | DATETIME2 | NOT NULL | Thời gian bắt đầu chiến dịch |
 | `EndDate` | DATETIME2 | NOT NULL | Thời gian kết thúc chiến dịch |
 | `IsFeatured` | BIT | DEFAULT 0 | Đánh dấu nổi bật tại trang chủ |
+| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
 
 ---
 
@@ -329,8 +342,9 @@ Lưu nhận xét thực tế từ phía khách hàng sau trải nghiệm dịch 
 | `FlightId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Flights(Id) | Chuyến bay cụ thể được đánh giá |
 | `Rating` | INT | CHECK (1-5), NOT NULL | Xếp hạng số sao (từ 1 đến 5) |
 | `Comment` | NVARCHAR(MAX) | NULL | Nhận xét chi tiết của hành khách |
-| `IsVerifiedPurchase`| BIT | DEFAULT 0 | Trạng thái người dùng đã thực hiện bay thực tế |
+| `IsVerifiedPurchase` | BIT | DEFAULT 0 | Trạng thái người dùng đã thực hiện bay thực tế |
 | `IsHidden` | BIT | DEFAULT 0 | Quản trị viên ẩn bài đánh giá (spam, thô tục) |
+| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian đánh giá |
 
 ---
@@ -346,6 +360,7 @@ Các danh mục nội dung bài viết.
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh danh mục |
 | `Name` | NVARCHAR(100) | NOT NULL | Tên danh mục (VD: Mẹo du lịch, Điểm đến) |
 | `Slug` | NVARCHAR(100) | UNIQUE, NOT NULL | Đường dẫn thân thiện SEO của danh mục |
+| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
 
 #### Bảng `cms.Articles`
 Lưu trữ thông tin chi tiết các bài báo của trang quản trị nội dung.
@@ -363,6 +378,7 @@ Lưu trữ thông tin chi tiết các bài báo của trang quản trị nội d
 | `PublishedAt` | DATETIME2 | NULL | Thời gian xuất bản bài viết lên trang chủ |
 | `Status` | INT | DEFAULT 0, NOT NULL | Trạng thái bài viết (0: Nháp, 1: Đã duyệt, 2: Lưu trữ) |
 | `ViewCount` | INT | DEFAULT 0 | Tổng lượt xem bài viết |
+| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời điểm tạo bài viết |
 
 ---
@@ -384,3 +400,72 @@ Lưu trữ log hệ thống và lỗi runtime.
 | `AirlineId` | UNIQUEIDENTIFIER | NULL | ID hãng bay liên quan (nếu có) |
 | `IpAddress` | NVARCHAR(50) | NULL | Địa chỉ IP |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian ghi log |
+
+---
+
+### 2.8. Phân hệ Thông báo (`notifications`)
+Quản lý mẫu thông báo và hàng đợi gửi thông báo (Email, SMS, Push, SignalR).
+
+#### Bảng `notifications.NotificationTemplates`
+Lưu trữ các mẫu thông báo (template) có sẵn cho từng loại sự kiện.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh template |
+| `Code` | NVARCHAR(100) | UNIQUE, NOT NULL | Mã template (VD: 'BOOKING_CONFIRMED', 'FLIGHT_DELAYED') |
+| `Subject` | NVARCHAR(255) | NOT NULL | Tiêu đề thông báo |
+| `BodyTemplate` | NVARCHAR(MAX) | NOT NULL | Nội dung template (hỗ trợ placeholder) |
+| `Language` | NVARCHAR(10) | DEFAULT 'vi' | Ngôn ngữ template |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo |
+
+#### Bảng `notifications.Notifications`
+Lưu trữ thông báo đã gửi hoặc chờ gửi đến người dùng.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh thông báo |
+| `UserId` | UNIQUEIDENTIFIER | NULL, FK -> Users(Id) | Người nhận (nếu có tài khoản) |
+| `Recipient` | NVARCHAR(255) | NOT NULL | Email hoặc số điện thoại |
+| `Subject` | NVARCHAR(255) | NULL | Tiêu đề |
+| `Content` | NVARCHAR(MAX) | NOT NULL | Nội dung thông báo |
+| `Type` | INT | NOT NULL | Loại: 0: Email, 1: SMS, 2: Push, 3: SignalR |
+| `Status` | INT | DEFAULT 0 | Trạng thái: 0: Pending, 1: Sent, 2: Failed |
+| `RetryCount` | INT | DEFAULT 0 | Số lần thử gửi lại |
+| `ErrorMessage` | NVARCHAR(MAX) | NULL | Thông báo lỗi (nếu gửi thất bại) |
+| `SentAt` | DATETIME2 | NULL | Thời điểm gửi thành công |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo |
+
+---
+
+## 3. Indexes hiệu năng
+
+Các chỉ mục được tạo nhằm tối ưu tốc độ truy vấn cho các bảng có khối lượng giao dịch lớn.
+
+| Tên Index | Bảng | Cột | Mục đích |
+| :--- | :--- | :--- | :--- |
+| `IX_Flights_Departure` | flights.Flights | DepartureTime | Tra cứu chuyến bay theo giờ khởi hành |
+| `IX_Flights_Route` | flights.Flights | RouteId | Lọc chuyến bay theo tuyến đường |
+| `IX_Bookings_Pnr` | bookings.Bookings | PnrCode | Tra cứu đơn đặt chỗ theo mã PNR |
+| `IX_Bookings_User` | bookings.Bookings | UserId | Liệt kê đơn đặt chỗ theo người dùng |
+| `IX_Tickets_Number` | bookings.Tickets | TicketNumber | Tra cứu vé theo số vé điện tử |
+| `IX_Notifications_User` | notifications.Notifications | UserId | Lấy danh sách thông báo của người dùng |
+
+## 4. Soft Delete (Xóa mềm)
+
+Hệ thống áp dụng Soft Delete pattern thông qua SQL Server INSTEAD OF DELETE triggers. Khi thực hiện lệnh DELETE, trigger sẽ tự động chuyển thành UPDATE `IsDeleted = 1` thay vì xóa vật lý.
+
+Các bảng được áp dụng:
+
+| Schema | Bảng |
+| :--- | :--- |
+| identity | Users |
+| flights | Airlines, Airports, Airplanes, Routes, Flights |
+| bookings | Bookings |
+| promotions | Coupons, Campaigns |
+| interactions | Reviews |
+| cms | Categories, Articles |
+
+Lợi ích của Soft Delete:
+- Giữ lại dữ liệu lịch sử cho mục đích kiểm toán (audit) và báo cáo.
+- Tránh lỗi vi phạm khóa ngoại (FK violation) khi dữ liệu con đang được tham chiếu.
+- Dễ dàng khôi phục (restore) dữ liệu khi cần thiết.
