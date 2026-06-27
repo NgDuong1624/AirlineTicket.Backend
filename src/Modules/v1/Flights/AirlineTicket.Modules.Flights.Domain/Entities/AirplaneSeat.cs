@@ -9,6 +9,7 @@ public class AirplaneSeat
     public string SeatNumber { get; set; } = string.Empty;
     public string SeatRow { get; set; } = string.Empty;
     public string SeatColumn { get; set; } = string.Empty;
+    public AirlineTicket.Modules.Flights.Domain.Enums.SeatClass SeatClass { get; set; }
     public bool IsExtraLegroom { get; set; }
     public decimal PriceMultiplier { get; set; } = 1.0m;
 

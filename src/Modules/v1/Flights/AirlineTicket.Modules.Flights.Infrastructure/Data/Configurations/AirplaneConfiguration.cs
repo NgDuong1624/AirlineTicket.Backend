@@ -14,5 +14,10 @@ public class AirplaneConfiguration : IEntityTypeConfiguration<Airplane>
             .WithMany(a => a.Airplanes)
             .HasForeignKey(x => x.AirlineId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(x => x.AircraftModel)
+            .WithMany(m => m.Airplanes)
+            .HasForeignKey(x => x.AircraftModelId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
