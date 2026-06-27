@@ -13,10 +13,12 @@ namespace AirlineTicket.Modules.Bookings.Application.UnitTests;
 public class BookingHandlersTests
 {
     private readonly Mock<IBookingRepository> _bookingRepoMock;
+    private readonly Mock<IFlightSeatReservation> _seatReservationMock;
 
     public BookingHandlersTests()
     {
         _bookingRepoMock = new Mock<IBookingRepository>();
+        _seatReservationMock = new Mock<IFlightSeatReservation>();
     }
 
     // ======================= CreateBookingCommandHandler Tests =======================
@@ -24,7 +26,7 @@ public class BookingHandlersTests
     public async Task CreateBookingCommandHandler_ShouldReturnNewBookingId()
     {
         // Arrange
-        var handler = new CreateBookingCommandHandler(_bookingRepoMock.Object);
+        var handler = new CreateBookingCommandHandler(_bookingRepoMock.Object, _seatReservationMock.Object);
         var passengers = new List<PassengerDto>
         {
             new PassengerDto("John", "Doe", "ID123456", "1A"),
@@ -32,11 +34,20 @@ public class BookingHandlersTests
         };
         var flightId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var command = new CreateBookingCommand(flightId, passengers, userId);
+        var command = new CreateBookingCommand(flightId, "test@email.com", "0909123456", passengers, userId);
         var expectedId = Guid.NewGuid();
 
-        _bookingRepoMock.Setup(x => x.CreateAsync(It.IsAny<BookingDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedId);
+        var reservedSeats = new Dictionary<string, ReservedSeat>
+        {
+            { "1A", new ReservedSeat(Guid.NewGuid(), 150.00m) },
+            { "1B", new ReservedSeat(Guid.NewGuid(), 150.00m) }
+        };
+
+        _seatReservationMock.Setup(x => x.ReserveSeatsAsync(flightId, It.IsAny<IReadOnlyCollection<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(reservedSeats);
+
+        _bookingRepoMock.Setup(x => x.CreateFullBookingAsync(It.IsAny<NewBooking>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);
@@ -44,10 +55,12 @@ public class BookingHandlersTests
         // Assert
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
-        _bookingRepoMock.Verify(x => x.CreateAsync(
-            It.Is<BookingDto>(b =>
+        _bookingRepoMock.Verify(x => x.CreateFullBookingAsync(
+            It.Is<NewBooking>(b =>
                 b.FlightId == flightId &&
-                b.UserId == userId),
+                b.UserId == userId &&
+                b.ContactEmail == "test@email.com" &&
+                b.ContactPhone == "0909123456"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 

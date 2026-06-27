@@ -84,6 +84,7 @@ public class StaffCreateBookingCommandHandler : ICommandHandler<StaffCreateBooki
             UserId = null,
             PnrCode = Guid.NewGuid().ToString("N")[..6].ToUpperInvariant(),
             TotalPrice = totalPrice,
+            Status = "Confirmed",
             ContactEmail = request.ContactEmail ?? string.Empty,
             ContactPhone = request.ContactPhone,
             Tickets = request.Passengers.Select(p => new NewTicket
@@ -98,7 +99,7 @@ public class StaffCreateBookingCommandHandler : ICommandHandler<StaffCreateBooki
 
         try
         {
-            await _bookingRepository.CreateStaffBookingAsync(booking, cancellationToken);
+            await _bookingRepository.CreateFullBookingAsync(booking, cancellationToken);
         }
         catch
         {

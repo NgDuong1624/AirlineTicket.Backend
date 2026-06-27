@@ -36,7 +36,7 @@ public class BookingEndpoints : IEndpoint
                 }
 
                 var passengers = request.Passengers.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
-                var command = new CreateBookingCommand(request.FlightId, passengers, userId);
+                var command = new CreateBookingCommand(request.FlightId, request.ContactEmail, request.ContactPhone, passengers, userId);
                 var result = await sender.Send(command, ct);
 
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
@@ -170,7 +170,7 @@ public class BookingEndpoints : IEndpoint
 }
 
 // ======================= Requests =======================
-public record CreateBookingRequest(Guid FlightId, List<PassengerDto> Passengers);
+public record CreateBookingRequest(Guid FlightId, string ContactEmail, string ContactPhone, List<PassengerDto> Passengers);
 public record PassengerDto(string FirstName, string LastName, string IdentityCard, string SeatNumber);
 public record UpdateBookingRequest(List<PassengerDto>? Passengers, string? ContactEmail, string? ContactPhone);
 public record PayBookingRequest(string PaymentMethod, decimal Amount);
