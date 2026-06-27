@@ -4,6 +4,7 @@ using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
 using AirlineTicket.Modules.Flights.Application.Features.Airports;
 using AirlineTicket.Modules.Flights.Application.Features.Airlines;
+using AirlineTicket.Modules.Flights.Application.Features.AircraftModels;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -190,8 +191,80 @@ public class FlightAdminEndpoints : IEndpoint
                 return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             })
             .WithName("AdminDeleteFlight");
+
+        // ——————————————————————— Admin Aircraft Models ————————————————————————————————
+        var adminAircraftModels = app.MapGroup("/api/admin/aircraft-models")
+            .WithTags("Admin Aircraft Models")
+            .RequireAuthorization("AdminOnly");
+
+        adminAircraftModels.MapGet("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new GetAircraftModelsQuery(), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+            })
+            .WithName("AdminGetAircraftModels");
+
+        adminAircraftModels.MapGet("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new GetAircraftModelByIdQuery(id), ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound(result.Error);
+            })
+            .WithName("AdminGetAircraftModelById");
+
+        adminAircraftModels.MapPost("/", async (
+                [FromBody] AdminAircraftModelRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new CreateAircraftModelCommand(
+                    request.Name,
+                    request.Manufacturer,
+                    request.TotalSeats,
+                    request.SeatTemplates);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/admin/aircraft-models/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
+            })
+            .WithName("AdminCreateAircraftModel");
+
+        adminAircraftModels.MapPut("/{id:guid}", async (
+                Guid id,
+                [FromBody] AdminAircraftModelRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new UpdateAircraftModelCommand(
+                    id,
+                    request.Name,
+                    request.Manufacturer,
+                    request.TotalSeats,
+                    request.SeatTemplates);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
+            })
+            .WithName("AdminUpdateAircraftModel");
+
+        adminAircraftModels.MapDelete("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var result = await sender.Send(new DeleteAircraftModelCommand(id), ct);
+                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+            })
+            .WithName("AdminDeleteAircraftModel");
     }
 }
+
+public record AdminAircraftModelRequest(
+    string Name,
+    string Manufacturer,
+    int TotalSeats,
+    List<SeatTemplateDto> SeatTemplates);
 
 public sealed record AdminAirlineRequest(
     string IataCode,

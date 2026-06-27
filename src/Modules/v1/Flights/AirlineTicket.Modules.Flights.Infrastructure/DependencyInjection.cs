@@ -25,9 +25,11 @@ public static class DependencyInjection
         services.AddScoped<IAirplaneRepository, AirplaneRepository>();
         services.AddScoped<IFlightSeatRepository, FlightSeatRepository>();
         services.AddScoped<IAirlineRepository, AirlineRepository>();
+        services.AddScoped<IAircraftModelRepository, AircraftModelRepository>();
 
         // Register cross-module shared services
         services.AddScoped<ISharedFlightSearchService, SharedFlightSearchService>();
+        services.AddScoped<ISeatGenerationService, SeatGenerationService>();
 
         return services;
     }

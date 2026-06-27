@@ -11,6 +11,8 @@ public class FlightDbContext : DbContext
 
     public DbSet<Airport> Airports => Set<Airport>();
     public DbSet<Airline> Airlines => Set<Airline>();
+    public DbSet<AircraftModel> AircraftModels => Set<AircraftModel>();
+    public DbSet<AircraftModelSeatTemplate> AircraftModelSeatTemplates => Set<AircraftModelSeatTemplate>();
     public DbSet<Airplane> Airplanes => Set<Airplane>();
     public DbSet<AirplaneSeat> AirplaneSeats => Set<AirplaneSeat>();
     public DbSet<Route> Routes => Set<Route>();
