@@ -167,6 +167,15 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 | :--- | :--- | :--- |
 | **GET** | `/api/admin/logs?pageNumber=&pageSize=` | Xem log hệ thống (phân trang) |
 
+### 9.11. Quản lý Dòng máy bay (Aircraft Models)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| **GET** | `/api/admin/aircraft-models` | Danh sách dòng máy bay |
+| **GET** | `/api/admin/aircraft-models/{id}` | Chi tiết dòng máy bay và sơ đồ ghế mẫu |
+| **POST** | `/api/admin/aircraft-models` | Tạo dòng máy bay (name, manufacturer, totalSeats, seatTemplates) |
+| **PUT** | `/api/admin/aircraft-models/{id}` | Cập nhật dòng máy bay |
+| **DELETE** | `/api/admin/aircraft-models/{id}` | Xóa dòng máy bay |
+
 ---
 
 ## 10. Partner APIs (Đối tác hãng bay - Role: PartnerOnly)
@@ -183,7 +192,7 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | **GET** | `/api/partner/airplanes` | Danh sách máy bay (scoped by AirlineId) |
-| **POST** | `/api/partner/airplanes` | Tạo máy bay (model, registrationNumber, totalCapacity) |
+| **POST** | `/api/partner/airplanes` | Tạo máy bay (aircraftModelId?, model, registrationNumber, totalCapacity) |
 | **PUT** | `/api/partner/airplanes/{id}` | Cập nhật máy bay |
 | **DELETE** | `/api/partner/airplanes/{id}` | Xóa máy bay |
 

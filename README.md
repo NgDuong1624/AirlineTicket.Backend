@@ -175,6 +175,7 @@ AirlineTicket.Backend/
 ├── database/                            # SQL scripts
 │   ├── init_v1.sql                      # Schema + table creation
 │   ├── seed_v1.sql                      # Base seed data
+│   ├── seed_aircraft_models.sql         # Aircraft models & seat templates seed data
 │   ├── seed_routes_flights.sql          # Route & flight seed data
 │   ├── seed_extra_data.sql              # Additional seed data
 │   └── triggers_soft_delete_v1.sql      # Soft delete triggers
