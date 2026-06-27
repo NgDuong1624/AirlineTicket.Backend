@@ -56,6 +56,18 @@ BEGIN
 END
 GO
 
+CREATE TRIGGER [dbo].[TR_AircraftModels_SoftDelete]
+ON [dbo].[AircraftModels]
+INSTEAD OF DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    UPDATE [dbo].[AircraftModels]
+    SET [IsDeleted] = 1
+    WHERE [Id] IN (SELECT [Id] FROM deleted);
+END
+GO
+
 CREATE TRIGGER [dbo].[TR_Routes_SoftDelete]
 ON [dbo].[Routes]
 INSTEAD OF DELETE

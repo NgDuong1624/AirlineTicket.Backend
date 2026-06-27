@@ -56,11 +56,11 @@
 - `PUT /api/partner/flights/{id}` — Cập nhật chuyến bay (stub)
 - `DELETE /api/partner/flights/{id}` — Xóa chuyến bay (stub)
 
-### 2.4. Quản lý Sơ đồ ghế
-- `GET /api/partner/aircraft` — Danh sách cấu hình tàu bay (stub — alias of airplanes view)
-- `POST /api/partner/aircraft` — Tạo cấu hình (stub)
-- `PUT /api/partner/aircraft/{id}` — Cập nhật cấu hình (stub)
-- `DELETE /api/partner/aircraft/{id}` — Xóa cấu hình (stub)
+### 2.4. Quản lý Dòng máy bay (Aircraft Models)
+- `GET /api/partner/aircraft` — Danh sách cấu hình tàu bay
+- `POST /api/partner/aircraft` — Tạo cấu hình tàu bay
+- `PUT /api/partner/aircraft/{id}` — Cập nhật cấu hình tàu bay
+- `DELETE /api/partner/aircraft/{id}` — Xóa cấu hình tàu bay
 
 ### 2.5. Quản lý Coupon riêng hãng
 - `GET /api/partner/coupons` — Danh sách mã giảm giá (scoped by AirlineId)

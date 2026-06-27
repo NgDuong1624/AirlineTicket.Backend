@@ -19,6 +19,9 @@ erDiagram
     
     %% FLIGHTS SCHEMA
     flights_Airlines ||--o{ flights_Airplanes : "owns"
+    flights_AircraftModels ||--o{ flights_Airplanes : "defines"
+    flights_AircraftModels ||--o{ flights_AircraftModelSeatTemplates : "has"
+    flights_Airplanes ||--o{ flights_AirplaneSeats : "has"
     flights_Airlines ||--o{ flights_Routes : "operates"
     flights_Airports ||--o{ flights_Routes : "origin"
     flights_Airports ||--o{ flights_Routes : "destination"
@@ -163,6 +166,31 @@ Danh sách thông tin sân bay trên thế giới.
 | `IsActive` | BIT | DEFAULT 1, NOT NULL | Trạng thái hoạt động sân bay |
 | `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 
+#### Bảng `flights.AircraftModels`
+Danh mục các dòng/mẫu máy bay trong hệ thống (dùng làm cấu hình mẫu).
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất mẫu máy bay |
+| `Name` | NVARCHAR(100) | NOT NULL | Tên mẫu máy bay (VD: Boeing 787-9 Dreamliner) |
+| `Manufacturer` | NVARCHAR(100) | NOT NULL | Nhà sản xuất (VD: Boeing, Airbus) |
+| `TotalSeats` | INT | NOT NULL | Tổng số ghế theo cấu hình mẫu |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
+
+#### Bảng `flights.AircraftModelSeatTemplates`
+Cấu hình sơ đồ ghế mẫu cho từng dòng máy bay.
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất ghế mẫu |
+| `AircraftModelId` | UNIQUEIDENTIFIER | FOREIGN KEY -> AircraftModels(Id) | Thuộc mẫu máy bay nào |
+| `SeatNumber` | NVARCHAR(10) | NOT NULL | Số ghế (VD: 1A, 12B) |
+| `SeatRow` | NVARCHAR(10) | NOT NULL | Hàng ghế (VD: 1, 12) |
+| `SeatColumn` | NVARCHAR(10) | NOT NULL | Cột ghế (VD: A, B) |
+| `SeatClass` | INT | NOT NULL | Hạng ghế (0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass) |
+| `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Ghế có khoảng để chân rộng rãi không |
+| `PriceMultiplier` | DECIMAL(18, 2) | DEFAULT 1.0, NOT NULL | Hệ số nhân giá vé cho hạng ghế này |
+
 #### Bảng `flights.Airplanes`
 Hạ tầng đội bay của các hãng hàng không.
 
@@ -170,10 +198,25 @@ Hạ tầng đội bay của các hãng hàng không.
 | :--- | :--- | :--- | :--- |
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất tàu bay |
 | `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Airlines(Id) | Thuộc sở hữu hãng bay nào |
+| `AircraftModelId` | UNIQUEIDENTIFIER | NULL, FOREIGN KEY -> AircraftModels(Id) | Liên kết cấu hình mẫu máy bay |
 | `Model` | NVARCHAR(100) | NOT NULL | Dòng máy bay (VD: Boeing 787, Airbus A350) |
 | `RegistrationNumber` | NVARCHAR(50) | UNIQUE, NOT NULL | Số đăng ký kiểm soát máy bay |
 | `TotalCapacity` | INT | NOT NULL | Tổng tải lượng số ghế |
 | `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
+
+#### Bảng `flights.AirplaneSeats`
+Sơ đồ ghế thực tế của từng tàu bay cụ thể (được sinh ra từ cấu hình mẫu).
+
+| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| :--- | :--- | :--- | :--- |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất ghế tàu bay |
+| `AirplaneId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Airplanes(Id) | Thuộc tàu bay nào |
+| `SeatNumber` | NVARCHAR(10) | NOT NULL | Số ghế (VD: 1A, 12B) |
+| `SeatRow` | NVARCHAR(10) | NOT NULL | Hàng ghế (VD: 1, 12) |
+| `SeatColumn` | NVARCHAR(10) | NOT NULL | Cột ghế (VD: A, B) |
+| `SeatClass` | INT | NOT NULL | Hạng ghế (0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass) |
+| `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Ghế có khoảng để chân rộng rãi không |
+| `PriceMultiplier` | DECIMAL(18, 2) | DEFAULT 1.0, NOT NULL | Hệ số nhân giá vé cho hạng ghế này |
 
 #### Bảng `flights.Routes`
 Các tuyến đường bay kết nối giữa các sân bay.

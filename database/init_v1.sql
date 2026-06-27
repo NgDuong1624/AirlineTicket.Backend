@@ -30,40 +30,6 @@ GO
 -- 2. IDENTITY SCHEMA - Authentication & Authorization & Permission
 -- ================================================================
 
--- Phase 1:
--- CREATE TABLE [identity].[Roles] (
---     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
---     [Name] NVARCHAR(50) NOT NULL UNIQUE,
---     [Description] NVARCHAR(255) NULL
--- )
--- GO
-
--- CREATE TABLE [identity].[Users] (
---     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
---     [Email] NVARCHAR(255) NOT NULL UNIQUE,
---     [EmailConfirmed] BIT NOT NULL DEFAULT 0,
---     [PasswordHash] NVARCHAR(MAX) NOT NULL,
---     [FullName] NVARCHAR(255) NOT NULL,
---     [PhoneNumber] NVARCHAR(20) NULL,
---     [AvatarUrl] NVARCHAR(500) NULL,
---     [LanguagePreference] NVARCHAR(10) DEFAULT 'vi',
---     [LastLoginAt] DATETIME2 NULL,
---     [IsActive] BIT NOT NULL DEFAULT 1,
---     [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
---     [UpdatedAt] DATETIME2 DEFAULT GETUTCDATE()
--- )
--- GO
-
--- CREATE TABLE [identity].[UserRoles] (
---     [UserId] UNIQUEIDENTIFIER NOT NULL,
---     [RoleId] UNIQUEIDENTIFIER NOT NULL,
---     PRIMARY KEY ([UserId], [RoleId]),
---     CONSTRAINT [FK_UserRoles_Users] FOREIGN KEY ([UserId]) REFERENCES [identity].[Users]([Id]) ON DELETE CASCADE,
---     CONSTRAINT [FK_UserRoles_Roles] FOREIGN KEY ([RoleId]) REFERENCES [identity].[Roles]([Id]) ON DELETE CASCADE
--- )
--- GO
-
---Phase 2:
 -- Bảng Roles (Vai trò - Sử dụng kiểu INT)
 CREATE TABLE [identity].[Roles] (
     [Id] INT PRIMARY KEY, 
@@ -175,14 +141,51 @@ CREATE TABLE [flights].[Airports] (
 )
 GO
 
+CREATE TABLE [flights].[AircraftModels] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [Name] NVARCHAR(100) NOT NULL,
+    [Manufacturer] NVARCHAR(100) NOT NULL,
+    [TotalSeats] INT NOT NULL,
+    [IsDeleted] BIT NOT NULL DEFAULT 0
+)
+GO
+
+CREATE TABLE [flights].[AircraftModelSeatTemplates] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [AircraftModelId] UNIQUEIDENTIFIER NOT NULL,
+    [SeatNumber] NVARCHAR(10) NOT NULL,
+    [SeatRow] NVARCHAR(10) NOT NULL,
+    [SeatColumn] NVARCHAR(10) NOT NULL,
+    [SeatClass] INT NOT NULL, -- 0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass
+    [IsExtraLegroom] BIT NOT NULL DEFAULT 0,
+    [PriceMultiplier] DECIMAL(18, 2) NOT NULL DEFAULT 1.0,
+    CONSTRAINT [FK_Templates_AircraftModels] FOREIGN KEY ([AircraftModelId]) REFERENCES [flights].[AircraftModels]([Id]) ON DELETE CASCADE
+)
+GO
+
 CREATE TABLE [flights].[Airplanes] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [AirlineId] UNIQUEIDENTIFIER NOT NULL,
+    [AircraftModelId] UNIQUEIDENTIFIER NULL,
     [Model] NVARCHAR(100) NOT NULL,
     [RegistrationNumber] NVARCHAR(50) NOT NULL UNIQUE,
     [TotalCapacity] INT NOT NULL,
     [IsDeleted] BIT NOT NULL DEFAULT 0,
-    CONSTRAINT [FK_Airplanes_Airlines] FOREIGN KEY ([AirlineId]) REFERENCES [flights].[Airlines]([Id])
+    CONSTRAINT [FK_Airplanes_Airlines] FOREIGN KEY ([AirlineId]) REFERENCES [flights].[Airlines]([Id]),
+    CONSTRAINT [FK_Airplanes_AircraftModels] FOREIGN KEY ([AircraftModelId]) REFERENCES [flights].[AircraftModels]([Id])
+)
+GO
+
+CREATE TABLE [flights].[AirplaneSeats] (
+    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    [AirplaneId] UNIQUEIDENTIFIER NOT NULL,
+    [SeatNumber] NVARCHAR(10) NOT NULL,
+    [SeatRow] NVARCHAR(10) NOT NULL,
+    [SeatColumn] NVARCHAR(10) NOT NULL,
+    [SeatClass] INT NOT NULL, -- 0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass
+    [IsExtraLegroom] BIT NOT NULL DEFAULT 0,
+    [PriceMultiplier] DECIMAL(18, 2) NOT NULL DEFAULT 1.0,
+    CONSTRAINT [FK_AirplaneSeats_Airplanes] FOREIGN KEY ([AirplaneId]) REFERENCES [flights].[Airplanes]([Id]) ON DELETE CASCADE
 )
 GO
 

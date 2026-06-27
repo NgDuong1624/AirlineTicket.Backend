@@ -92,7 +92,7 @@ public class FlightPartnerEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var command = new CreateAirplaneCommand(airlineId, request.Model, request.RegistrationNumber, request.TotalCapacity);
+                var command = new CreateAirplaneCommand(airlineId, request.AircraftModelId, request.Model, request.RegistrationNumber, request.TotalCapacity);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Created($"/api/partner/airplanes/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             });
@@ -246,5 +246,5 @@ public class FlightPartnerEndpoints : IEndpoint
 }
 
 public sealed record PartnerRouteRequest(Guid OriginAirportId, Guid DestinationAirportId, decimal? DistanceKm, int? EstimatedDurationMinutes);
-public sealed record PartnerAirplaneRequest(string Model, string RegistrationNumber, int TotalCapacity);
+public sealed record PartnerAirplaneRequest(Guid? AircraftModelId, string Model, string RegistrationNumber, int TotalCapacity);
 public sealed record PartnerSettingsRequest(string? AirlineName, string? Address, string? SupportEmail, string? SupportPhone);

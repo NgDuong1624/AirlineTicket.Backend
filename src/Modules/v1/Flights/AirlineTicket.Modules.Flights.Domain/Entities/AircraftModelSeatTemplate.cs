@@ -1,18 +1,19 @@
 using System;
+using AirlineTicket.Modules.Flights.Domain.Enums;
 
 namespace AirlineTicket.Modules.Flights.Domain.Entities;
 
-public class AirplaneSeat
+public class AircraftModelSeatTemplate
 {
     public Guid Id { get; set; }
-    public Guid AirplaneId { get; set; }
+    public Guid AircraftModelId { get; set; }
     public string SeatNumber { get; set; } = string.Empty;
     public string SeatRow { get; set; } = string.Empty;
     public string SeatColumn { get; set; } = string.Empty;
-    public AirlineTicket.Modules.Flights.Domain.Enums.SeatClass SeatClass { get; set; }
+    public SeatClass SeatClass { get; set; }
     public bool IsExtraLegroom { get; set; }
     public decimal PriceMultiplier { get; set; } = 1.0m;
 
     // Navigation properties
-    public virtual Airplane Airplane { get; set; } = null!;
+    public virtual AircraftModel AircraftModel { get; set; } = null!;
 }

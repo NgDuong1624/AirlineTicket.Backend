@@ -141,7 +141,7 @@ public class FlightRepository : IFlightRepository
                 Id = Guid.NewGuid(),
                 FlightId = flight.Id,
                 SeatNumber = ts.SeatNumber,
-                SeatClass = Domain.Enums.SeatClass.Economy, // template carries no class; default Economy
+                SeatClass = ts.SeatClass,
                 PriceOverride = multiplier == 1.0m ? null : decimal.Round(flight.BasePrice * multiplier, 2),
                 IsAvailable = true,
                 IsExtraLegroom = ts.IsExtraLegroom
@@ -460,6 +460,73 @@ public class AirlineRepository : IAirlineRepository
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Airlines.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        if (existing is null) return;
+
+        existing.IsDeleted = true;
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+}
+
+public class AircraftModelRepository : IAircraftModelRepository
+{
+    private readonly FlightDbContext _context;
+
+    public AircraftModelRepository(FlightDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<List<AircraftModel>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.AircraftModels
+            .Include(m => m.SeatTemplates)
+            .Where(m => !m.IsDeleted)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<AircraftModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.AircraftModels
+            .Include(m => m.SeatTemplates)
+            .FirstOrDefaultAsync(m => m.Id == id && !m.IsDeleted, cancellationToken);
+    }
+
+    public async Task<Guid> CreateAsync(AircraftModel model, CancellationToken cancellationToken = default)
+    {
+        if (model.Id == Guid.Empty)
+            model.Id = Guid.NewGuid();
+
+        _context.AircraftModels.Add(model);
+        await _context.SaveChangesAsync(cancellationToken);
+        return model.Id;
+    }
+
+    public async Task UpdateAsync(AircraftModel model, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.AircraftModels
+            .Include(m => m.SeatTemplates)
+            .FirstOrDefaultAsync(m => m.Id == model.Id && !m.IsDeleted, cancellationToken);
+        if (existing is null) return;
+
+        existing.Name = model.Name;
+        existing.Manufacturer = model.Manufacturer;
+        existing.TotalSeats = model.TotalSeats;
+
+        // Simple template replacement logic
+        _context.AircraftModelSeatTemplates.RemoveRange(existing.SeatTemplates);
+        foreach (var t in model.SeatTemplates)
+        {
+            t.Id = Guid.NewGuid();
+            t.AircraftModelId = existing.Id;
+            _context.AircraftModelSeatTemplates.Add(t);
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var existing = await _context.AircraftModels.FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
         if (existing is null) return;
 
         existing.IsDeleted = true;

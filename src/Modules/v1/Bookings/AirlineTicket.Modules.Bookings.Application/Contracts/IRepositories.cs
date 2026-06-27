@@ -26,8 +26,8 @@ public interface IBookingRepository
     Task UpdateAsync(BookingDto booking, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 
-    /// <summary>Persists a full staff booking (booking + passengers + tickets) in one transaction.</summary>
-    Task CreateStaffBookingAsync(NewBooking booking, CancellationToken cancellationToken = default);
+    /// <summary>Persists a full booking (booking + passengers + tickets) in one transaction.</summary>
+    Task CreateFullBookingAsync(NewBooking booking, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Input model for persisting a complete staff booking graph.</summary>
@@ -38,6 +38,7 @@ public class NewBooking
     public Guid? UserId { get; set; }
     public string PnrCode { get; set; } = string.Empty;
     public decimal TotalPrice { get; set; }
+    public string Status { get; set; } = "Pending";
     public string ContactEmail { get; set; } = string.Empty;
     public string ContactPhone { get; set; } = string.Empty;
     public List<NewTicket> Tickets { get; set; } = new();

@@ -92,6 +92,15 @@ public interface IAirplaneRepository
     Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
 }
 
+public interface IAircraftModelRepository
+{
+    Task<List<AircraftModel>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<AircraftModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Guid> CreateAsync(AircraftModel model, CancellationToken cancellationToken = default);
+    Task UpdateAsync(AircraftModel model, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+}
+
 public interface IFlightSeatRepository
 {
     Task<List<FlightSeat>> GetByFlightIdAsync(Guid flightId, CancellationToken cancellationToken = default);

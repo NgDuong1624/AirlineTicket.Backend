@@ -90,7 +90,7 @@ public class BookingRepository : IBookingRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task CreateStaffBookingAsync(NewBooking input, CancellationToken cancellationToken = default)
+    public async Task CreateFullBookingAsync(NewBooking input, CancellationToken cancellationToken = default)
     {
         var booking = new Booking
         {
@@ -99,8 +99,7 @@ public class BookingRepository : IBookingRepository
             PnrCode = input.PnrCode,
             TotalPrice = input.TotalPrice,
             Currency = "USD",
-            // Staff booking on a call is treated as confirmed immediately.
-            Status = BookingStatus.Confirmed,
+            Status = ParseStatus(input.Status),
             ContactEmail = input.ContactEmail,
             ContactPhone = input.ContactPhone,
             CreatedAt = DateTime.UtcNow,
@@ -127,7 +126,7 @@ public class BookingRepository : IBookingRepository
                 FlightId = input.FlightId,
                 SeatId = t.SeatId,
                 TicketNumber = $"TK-{booking.PnrCode}-{t.SeatNumber}",
-                Status = TicketStatus.Issued
+                Status = TicketStatus.Valid
             });
         }
 
