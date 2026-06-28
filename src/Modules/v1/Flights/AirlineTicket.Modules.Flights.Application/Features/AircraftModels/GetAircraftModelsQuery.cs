@@ -9,9 +9,9 @@ using AirlineTicket.Modules.Flights.Domain.Entities;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.AircraftModels;
 
-public record GetAircraftModelsQuery() : IQuery<Result<List<AircraftModel>>>;
+public record GetAircraftModelsQuery(int? PageIndex, int? PageSize) : IQuery<Result<(List<AircraftModel> Items, int TotalCount)>>;
 
-internal sealed class GetAircraftModelsQueryHandler : IQueryHandler<GetAircraftModelsQuery, Result<List<AircraftModel>>>
+internal sealed class GetAircraftModelsQueryHandler : IQueryHandler<GetAircraftModelsQuery, Result<(List<AircraftModel> Items, int TotalCount)>>
 {
     private readonly IAircraftModelRepository _repository;
 
@@ -20,9 +20,13 @@ internal sealed class GetAircraftModelsQueryHandler : IQueryHandler<GetAircraftM
         _repository = repository;
     }
 
-    public async Task<Result<List<AircraftModel>>> Handle(GetAircraftModelsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<(List<AircraftModel> Items, int TotalCount)>> Handle(GetAircraftModelsQuery request, CancellationToken cancellationToken)
     {
         var models = await _repository.GetAllAsync(cancellationToken);
-        return Result.Success(models);
+        var totalCount = models.Count;
+        var items = request.PageIndex.HasValue && request.PageSize.HasValue
+            ? models.Skip((request.PageIndex.Value - 1) * request.PageSize.Value).Take(request.PageSize.Value).ToList()
+            : models;
+        return Result.Success((items, totalCount));
     }
 }
