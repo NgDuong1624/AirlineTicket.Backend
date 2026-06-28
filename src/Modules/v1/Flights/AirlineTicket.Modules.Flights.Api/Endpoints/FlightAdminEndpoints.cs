@@ -24,11 +24,13 @@ public class FlightAdminEndpoints : IEndpoint
             .RequireAuthorization("AdminOnly");
 
         adminAirports.MapGet("/", async (
+                [FromQuery] int? pageIndex,
+                [FromQuery] int? pageSize,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new GetAirportsQuery(null), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetAirportsQuery(null, pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value.Items, TotalCount = result.Value.TotalCount }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAirports");
 
@@ -198,11 +200,13 @@ public class FlightAdminEndpoints : IEndpoint
             .RequireAuthorization("AdminOnly");
 
         adminAircraftModels.MapGet("/", async (
+                [FromQuery] int? pageIndex,
+                [FromQuery] int? pageSize,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new GetAircraftModelsQuery(), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetAircraftModelsQuery(pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value.Items, TotalCount = result.Value.TotalCount }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAircraftModels");
 

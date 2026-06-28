@@ -14,7 +14,6 @@ public class UserDbContext : DbContext
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
-    public DbSet<UserPermissionScope> UserPermissionScopes => Set<UserPermissionScope>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
