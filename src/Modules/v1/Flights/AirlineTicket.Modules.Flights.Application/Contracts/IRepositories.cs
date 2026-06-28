@@ -59,7 +59,7 @@ public interface IFlightRepository
 public interface IAirlineRepository
 {
     Task<Airline?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<List<Airline>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<(List<Airline> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(Airline airline, CancellationToken cancellationToken = default);
     Task UpdateAsync(Airline airline, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
@@ -68,8 +68,7 @@ public interface IAirlineRepository
 public interface IAirportRepository
 {
     Task<Airport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<List<Airport>> GetAllAsync(CancellationToken cancellationToken = default);
-    Task<List<Airport>> SearchAsync(string? search, CancellationToken cancellationToken = default);
+    Task<(List<Airport> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, string? search = null, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(Airport airport, CancellationToken cancellationToken = default);
     Task UpdateAsync(Airport airport, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);

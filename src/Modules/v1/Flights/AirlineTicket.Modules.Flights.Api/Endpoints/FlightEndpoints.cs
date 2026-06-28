@@ -23,13 +23,15 @@ public class FlightEndpoints : IEndpoint
         app.MapGroup("/api/airports")
             .WithTags("Airports Module")
             .MapGet("/", async (
-                    [FromQuery] string? search,
                     [FromServices] ISender sender,
-                    CancellationToken ct) =>
+                    CancellationToken ct,
+                    [FromQuery] string? search,
+                    [FromQuery] int pageIndex = 1,
+                    [FromQuery] int pageSize = 1000) =>
                 {
-                    var query = new GetAirportsQuery(search);
+                    var query = new GetAirportsQuery(search, pageIndex, pageSize);
                     var result = await sender.Send(query, ct);
-                    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                    return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
                 })
             .WithName("GetAirports")
             .WithSummary("Lấy danh sách sân bay hoặc tìm kiếm theo từ khóa")

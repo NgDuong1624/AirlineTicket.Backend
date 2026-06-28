@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.ComponentModel.DataAnnotations;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
 using AirlineTicket.Modules.Flights.Application.Features.Airports;
@@ -24,13 +25,14 @@ public class FlightAdminEndpoints : IEndpoint
             .RequireAuthorization("AdminOnly");
 
         adminAirports.MapGet("/", async (
-                [FromQuery] int? pageIndex,
-                [FromQuery] int? pageSize,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] string? search,
+                [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
+                [FromQuery, Range(1, 100)] int pageSize = 10) =>
             {
-                var result = await sender.Send(new GetAirportsQuery(null, pageIndex, pageSize), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value.Items, TotalCount = result.Value.TotalCount }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetAirportsQuery(search, pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAirports");
 
@@ -91,10 +93,12 @@ public class FlightAdminEndpoints : IEndpoint
 
         adminAirlines.MapGet("/", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
+                [FromQuery, Range(1, 100)] int pageSize = 10) =>
             {
-                var result = await sender.Send(new GetAirlinesQuery(), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetAirlinesQuery(pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value.Items, TotalCount = result.Value.TotalCount }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAirlines");
 
