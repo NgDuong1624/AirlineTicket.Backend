@@ -10,5 +10,4 @@ public class Permission
     public string? Description { get; set; }
 
     public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
-    public virtual ICollection<UserPermissionScope> UserPermissionScopes { get; set; } = new List<UserPermissionScope>();
 }

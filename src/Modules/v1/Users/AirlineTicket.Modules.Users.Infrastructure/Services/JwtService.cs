@@ -37,11 +37,14 @@ public class JwtService : IJwtService
 
         // Inject user permissions as claims so dynamic permission policies can evaluate them
         // without a separate database round-trip on every request.
-        if (user.UserPermissionScopes is { Count: > 0 })
+        // Permissions are derived from UserRoles -> Role -> RolePermissions -> Permission.
+        if (user.UserRoles is { Count: > 0 })
         {
-            var uniqueCodes = user.UserPermissionScopes
-                .Where(s => s.Permission != null)
-                .Select(s => s.Permission.Code)
+            var uniqueCodes = user.UserRoles
+                .Where(ur => ur.Role != null && ur.Role.RolePermissions != null)
+                .SelectMany(ur => ur.Role.RolePermissions)
+                .Where(rp => rp.Permission != null)
+                .Select(rp => rp.Permission.Code)
                 .Distinct();
 
             foreach (var code in uniqueCodes)

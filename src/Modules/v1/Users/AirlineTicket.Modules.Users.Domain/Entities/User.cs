@@ -27,5 +27,4 @@ public class User
 
     // Navigation properties
     public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-    public virtual ICollection<UserPermissionScope> UserPermissionScopes { get; set; } = new List<UserPermissionScope>();
 }

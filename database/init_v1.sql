@@ -89,24 +89,6 @@ CREATE TABLE [identity].[RolePermissions] (
 );
 GO
 
--- Bảng UserPermissionScopes (Phân quyền chi tiết theo Trạm bay hoặc Hạn mức/Giới hạn số lượng)
-CREATE TABLE [identity].[UserPermissionScopes] (
-    [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    [UserId] UNIQUEIDENTIFIER NOT NULL,       -- Áp dụng cho tài khoản cụ thể này
-    [PermissionId] INT NOT NULL,              -- Đi kèm với hành động/quyền cụ thể nào
-    -- Thiết lập PHẠM VI (Scope)
-    [AirlineId] UNIQUEIDENTIFIER NULL,        -- Thuộc hãng bay nào (nếu cần quản lý theo hãng)
-    [AirportCode] VARCHAR(10) NULL,           -- Giới hạn nhân viên chỉ được thao tác tại trạm/sân bay này (Ví dụ: 'SGN', 'HAN')
-    -- Thiết lập GIỚI HẠN (Limit)
-    [MaxLimitValue] INT NULL,                 -- Số lượng tối đa được phép thực hiện (Ví dụ: tối đa 20 chuyến bay/ngày)
-    [ScopeDescription] NVARCHAR(255) NULL,
-
-    [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
-    CONSTRAINT [FK_Scopes_Users] FOREIGN KEY ([UserId]) REFERENCES [identity].[Users]([Id]) ON DELETE CASCADE,
-    CONSTRAINT [FK_Scopes_Permissions] FOREIGN KEY ([PermissionId]) REFERENCES [identity].[Permissions]([Id]) ON DELETE CASCADE
-);
-GO
-
 -- =====================================================
 -- 3. FLIGHTS SCHEMA - Core Domain
 -- =====================================================
