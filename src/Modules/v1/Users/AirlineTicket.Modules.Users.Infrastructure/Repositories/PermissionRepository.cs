@@ -2,6 +2,7 @@ using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Domain.Entities;
 using AirlineTicket.Modules.Users.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Dapper;
 
 namespace AirlineTicket.Modules.Users.Infrastructure.Repositories;
 
@@ -16,12 +17,16 @@ public class PermissionRepository : IPermissionRepository
 
     public async Task<IReadOnlyList<Permission>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Permissions.ToListAsync(cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        var result = await connection.QueryAsync<Permission>("SELECT * FROM dbo.Permissions");
+        return result.ToList();
     }
 
     public async Task<Permission?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        return await _context.Permissions.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        return await connection.QueryFirstOrDefaultAsync<Permission>(
+            "SELECT * FROM dbo.Permissions WHERE Id = @Id", new { Id = id });
     }
 
     public async Task<int> CreateAsync(Permission permission, CancellationToken cancellationToken = default)
