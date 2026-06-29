@@ -24,44 +24,13 @@ public class FlightRepository : IFlightRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT f.*, r.OriginAirportId, r.DestinationAirportId, r.AirlineId
+            SELECT f.Id, f.DepartureTime, f.ArrivalTime, f.BasePrice as Price, 
+                   r.OriginAirportId, r.DestinationAirportId, r.AirlineId
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id
             WHERE f.Id = @Id AND f.IsDeleted = 0 AND r.IsDeleted = 0";
         
-        // Note: Dapper mapping to complex objects might require more setup, 
-        // keeping it simple for now or using EF for complex includes if needed.
-        // Given the requirement to use Dapper, I will use it for basic fetching.
-        var flight = await connection.QueryFirstOrDefaultAsync<Flight>(sql, new { Id = id });
-
-        if (flight == null) return null;
-
-        // For simplicity and to avoid complex Dapper mapping, 
-        // I'll keep the original EF logic for the DTO mapping if Dapper is too complex for this specific query.
-        // But the user asked to use Dapper.
-        return await _context.Flights
-            .Include(f => f.Route)
-            .ThenInclude(f => f.OriginAirport)
-            .Include(f => f.Route)
-            .ThenInclude(f => f.DestinationAirport)
-            .Include(f => f.Route)
-            .ThenInclude(f => f.Airline)
-            .Where(f => f.Id == id)
-            .Select(f => new FlightDto
-            {
-                Id = f.Id,
-                RouteId = f.RouteId,
-                AirplaneId = f.AirplaneId,
-                FlightNumber = f.FlightNumber,
-                BasePrice = f.BasePrice,
-                DepartureTime = f.DepartureTime,
-                ArrivalTime = f.ArrivalTime,
-                OriginCode = f.Route.OriginAirport.IataCode,
-                DestinationCode = f.Route.DestinationAirport.IataCode,
-                AirlineName = f.Route.Airline.Name,
-                Currency = f.Currency
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+        return await connection.QueryFirstOrDefaultAsync<FlightDto>(sql, new { Id = id });
     }
 
     public async Task<List<FlightDto>> SearchAsync(
@@ -77,58 +46,55 @@ public class FlightRepository : IFlightRepository
         string currency = "VND",
         CancellationToken cancellationToken = default)
     {
-        var query = _context.Flights
-            .Include(f => f.Route)
-                .ThenInclude(r => r.OriginAirport)
-            .Include(f => f.Route)
-                .ThenInclude(r => r.DestinationAirport)
-            .Include(f => f.Route)
-                .ThenInclude(r => r.Airline)
-            .Where(f => f.Route.OriginAirport.IataCode == origin
-                     && f.Route.DestinationAirport.IataCode == destination
-                     && f.DepartureTime.Date == date.Date);
+        var connection = _context.Database.GetDbConnection();
+        
+        var sql = @"
+            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
+                   f.DepartureTime, f.ArrivalTime, f.Currency,
+                   oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
+            FROM dbo.Flights f
+            JOIN dbo.Routes r ON f.RouteId = r.Id
+            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
+            JOIN dbo.Airlines a ON r.AirlineId = a.Id
+            WHERE oa.IataCode = @Origin 
+              AND da.IataCode = @Destination 
+              AND CAST(f.DepartureTime AS DATE) = CAST(@Date AS DATE)
+              AND f.IsDeleted = 0 AND r.IsDeleted = 0";
 
-        // Filter by airlines if provided
+        var parameters = new DynamicParameters();
+        parameters.Add("Origin", origin);
+        parameters.Add("Destination", destination);
+        parameters.Add("Date", date.Date);
+
         if (airlines != null && airlines.Any())
         {
-            query = query.Where(f => airlines.Contains(f.Route.Airline.Name));
+            sql += " AND a.Name IN @Airlines";
+            parameters.Add("Airlines", airlines);
         }
 
-        // Filter by price
         if (priceRangeMin.HasValue)
         {
-            query = query.Where(f => f.BasePrice >= priceRangeMin.Value);
+            sql += " AND f.BasePrice >= @MinPrice";
+            parameters.Add("MinPrice", priceRangeMin.Value);
         }
+        
         if (priceRangeMax.HasValue)
         {
-            query = query.Where(f => f.BasePrice <= priceRangeMax.Value);
+            sql += " AND f.BasePrice <= @MaxPrice";
+            parameters.Add("MaxPrice", priceRangeMax.Value);
         }
 
-        // Sorting
         if (!string.IsNullOrEmpty(sortBy))
         {
             if (sortBy.Equals("price_asc", StringComparison.OrdinalIgnoreCase))
-                query = query.OrderBy(f => f.BasePrice);
+                sql += " ORDER BY f.BasePrice ASC";
             else if (sortBy.Equals("price_desc", StringComparison.OrdinalIgnoreCase))
-                query = query.OrderByDescending(f => f.BasePrice);
+                sql += " ORDER BY f.BasePrice DESC";
         }
 
-        return await query
-            .Select(f => new FlightDto
-            {
-                Id = f.Id,
-                RouteId = f.RouteId,
-                AirplaneId = f.AirplaneId,
-                FlightNumber = f.FlightNumber,
-                BasePrice = f.BasePrice,
-                DepartureTime = f.DepartureTime,
-                ArrivalTime = f.ArrivalTime,
-                OriginCode = f.Route.OriginAirport.IataCode,
-                DestinationCode = f.Route.DestinationAirport.IataCode,
-                AirlineName = f.Route.Airline.Name,
-                Currency = f.Currency
-            })
-            .ToListAsync(cancellationToken);
+        var result = await connection.QueryAsync<FlightDto>(sql, parameters);
+        return result.ToList();
     }
 
     public async Task<Guid> CreateAsync(FlightDto flightDto, CancellationToken cancellationToken = default)
@@ -175,63 +141,48 @@ public class FlightRepository : IFlightRepository
 
     public async Task<List<FlightDto>> GetTrendingAsync(CancellationToken cancellationToken = default)
     {
-        // Simple trending logic: take top 5 cheapest flights
-        return await _context.Flights
-            .Include(f => f.Route).ThenInclude(r => r.OriginAirport)
-            .Include(f => f.Route).ThenInclude(r => r.DestinationAirport)
-            .Include(f => f.Route).ThenInclude(r => r.Airline)
-            .OrderBy(f => f.BasePrice)
-            .Take(5)
-            .Select(f => new FlightDto
-            {
-                Id = f.Id,
-                RouteId = f.RouteId,
-                AirplaneId = f.AirplaneId,
-                FlightNumber = f.FlightNumber,
-                BasePrice = f.BasePrice,
-                DepartureTime = f.DepartureTime,
-                ArrivalTime = f.ArrivalTime,
-                OriginCode = f.Route.OriginAirport.IataCode,
-                DestinationCode = f.Route.DestinationAirport.IataCode,
-                AirlineName = f.Route.Airline.Name,
-                Currency = f.Currency
-            })
-            .ToListAsync(cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        const string sql = @"
+            SELECT TOP 5 f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
+                         f.DepartureTime, f.ArrivalTime, f.Currency,
+                         oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
+            FROM dbo.Flights f
+            JOIN dbo.Routes r ON f.RouteId = r.Id
+            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
+            JOIN dbo.Airlines a ON r.AirlineId = a.Id
+            WHERE f.IsDeleted = 0 AND r.IsDeleted = 0
+            ORDER BY f.BasePrice ASC";
+        
+        var result = await connection.QueryAsync<FlightDto>(sql);
+        return result.ToList();
     }
 
     public async Task<List<StaffFlightListItemDto>> GetStaffFlightsAsync(string? search, CancellationToken cancellationToken = default)
     {
-        var query = _context.Flights
-            .Include(f => f.Route).ThenInclude(r => r.OriginAirport)
-            .Include(f => f.Route).ThenInclude(r => r.DestinationAirport)
-            .AsQueryable();
+        var connection = _context.Database.GetDbConnection();
+        var sql = @"
+            SELECT f.Id, f.FlightNumber, f.DepartureTime, f.ArrivalTime, f.BasePrice, f.Currency, f.Status,
+                   oa.IataCode as OriginCode, da.IataCode as DestinationCode,
+                   (SELECT COUNT(*) FROM dbo.FlightSeats WHERE FlightId = f.Id) as TotalSeats,
+                   (SELECT COUNT(*) FROM dbo.FlightSeats WHERE FlightId = f.Id AND IsAvailable = 1) as AvailableSeats
+            FROM dbo.Flights f
+            JOIN dbo.Routes r ON f.RouteId = r.Id
+            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
+            WHERE f.IsDeleted = 0";
 
+        var parameters = new DynamicParameters();
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var s = search.Trim().ToLower();
-            query = query.Where(f =>
-                f.FlightNumber.ToLower().Contains(s) ||
-                f.Route.OriginAirport.IataCode.ToLower().Contains(s) ||
-                f.Route.DestinationAirport.IataCode.ToLower().Contains(s));
+            sql += " AND (f.FlightNumber LIKE @Search OR oa.IataCode LIKE @Search OR da.IataCode LIKE @Search)";
+            parameters.Add("Search", $"%{search.Trim()}%");
         }
 
-        return await query
-            .OrderBy(f => f.DepartureTime)
-            .Select(f => new StaffFlightListItemDto
-            {
-                Id = f.Id,
-                FlightNumber = f.FlightNumber,
-                OriginCode = f.Route.OriginAirport.IataCode,
-                DestinationCode = f.Route.DestinationAirport.IataCode,
-                DepartureTime = f.DepartureTime,
-                ArrivalTime = f.ArrivalTime,
-                BasePrice = f.BasePrice,
-                Currency = f.Currency,
-                Status = f.Status.ToString(),
-                TotalSeats = _context.FlightSeats.Count(fs => fs.FlightId == f.Id),
-                AvailableSeats = _context.FlightSeats.Count(fs => fs.FlightId == f.Id && fs.IsAvailable)
-            })
-            .ToListAsync(cancellationToken);
+        sql += " ORDER BY f.DepartureTime";
+
+        var result = await connection.QueryAsync<StaffFlightListItemDto>(sql, parameters);
+        return result.ToList();
     }
 }
 
