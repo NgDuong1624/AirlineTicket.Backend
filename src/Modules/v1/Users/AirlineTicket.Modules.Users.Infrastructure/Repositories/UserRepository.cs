@@ -2,6 +2,7 @@ using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Domain.Entities;
 using AirlineTicket.Modules.Users.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Dapper;
 
 namespace AirlineTicket.Modules.Users.Infrastructure.Repositories;
 
@@ -16,23 +17,32 @@ public class UserRepository : IUserRepository
 
     public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Users.ToListAsync(cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        var result = await connection.QueryAsync<User>("SELECT * FROM dbo.Users");
+        return result.ToList();
     }
 
     public async Task<IReadOnlyList<User>> GetByAirlineIdAsync(Guid airlineId, CancellationToken cancellationToken = default)
     {
-        return await _context.Users
-            .Where(x => x.AirlineId == airlineId && !x.IsDeleted)
-            .ToListAsync(cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        var result = await connection.QueryAsync<User>(
+            "SELECT * FROM dbo.Users WHERE AirlineId = @AirlineId AND IsDeleted = 0", 
+            new { AirlineId = airlineId });
+        return result.ToList();
     }
 
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await _context.Users.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        return await connection.QueryFirstOrDefaultAsync<User>(
+            "SELECT * FROM dbo.Users WHERE Id = @Id", 
+            new { Id = id });
     }
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
+        // Keeping EF for this one due to complex includes (UserRoles, Role, RolePermissions, Permission)
+        // Dapper multi-mapping for 4 levels deep is complex and error-prone.
         return await _context.Users
             .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
@@ -43,7 +53,10 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
-        return await _context.Users.FirstOrDefaultAsync(x => x.RefreshToken == refreshToken, cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        return await connection.QueryFirstOrDefaultAsync<User>(
+            "SELECT * FROM dbo.Users WHERE RefreshToken = @RefreshToken", 
+            new { RefreshToken = refreshToken });
     }
 
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)
