@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using AirlineTicket.Modules.Promotions.Application.Contracts;
 using AirlineTicket.Modules.Promotions.Domain.Entities;
+using Dapper;
 
 namespace AirlineTicket.Modules.Promotions.Infrastructure.Data.Repositories;
 
@@ -20,45 +21,47 @@ public class PromotionRepository : IPromotionRepository
 
     public async Task<PromotionDto?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
-        var coupon = await _context.Coupons
-            .FirstOrDefaultAsync(c => c.Code == code && c.IsActive, cancellationToken);
-
-        if (coupon == null) return null;
-
-        return new PromotionDto
-        {
-            Id = coupon.Id,
-            PromoCode = coupon.Code,
-            DiscountType = coupon.DiscountType.ToString(),
-            DiscountValue = coupon.DiscountValue,
-            MaxUsage = coupon.UsageLimit ?? 0,
-            CurrentUsage = coupon.UsageCount,
-            StartDate = coupon.StartDate,
-            EndDate = coupon.EndDate
-        };
+        var connection = _context.Database.GetDbConnection();
+        const string sql = @"
+            SELECT Id, Code as PromoCode, DiscountType, DiscountValue, 
+                   UsageLimit as MaxUsage, UsageCount as CurrentUsage, StartDate, EndDate
+            FROM dbo.Coupons 
+            WHERE Code = @Code AND IsActive = 1";
+        
+        return await connection.QueryFirstOrDefaultAsync<PromotionDto>(sql, new { Code = code });
     }
 
     public async Task<List<Campaign>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default)
     {
+        var connection = _context.Database.GetDbConnection();
         var now = DateTime.UtcNow;
-        return await _context.Campaigns
-            .Where(c => c.IsFeatured && c.StartDate <= now && c.EndDate >= now)
-            .ToListAsync(cancellationToken);
+        const string sql = @"
+            SELECT * FROM dbo.Campaigns 
+            WHERE IsFeatured = 1 AND StartDate <= @Now AND EndDate >= @Now";
+        
+        var result = await connection.QueryAsync<Campaign>(sql, new { Now = now });
+        return result.ToList();
     }
 
     public async Task<List<Campaign>> GetAllCampaignsAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Campaigns
-            .OrderByDescending(c => c.StartDate)
-            .ToListAsync(cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        const string sql = "SELECT * FROM dbo.Campaigns ORDER BY StartDate DESC";
+        
+        var result = await connection.QueryAsync<Campaign>(sql);
+        return result.ToList();
     }
 
     public async Task<List<Coupon>> GetAllCouponsAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Coupons
-            .Where(c => c.AirlineId == null && !c.IsDeleted)
-            .OrderByDescending(c => c.StartDate)
-            .ToListAsync(cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        const string sql = @"
+            SELECT * FROM dbo.Coupons 
+            WHERE AirlineId IS NULL AND IsDeleted = 0
+            ORDER BY StartDate DESC";
+        
+        var result = await connection.QueryAsync<Coupon>(sql);
+        return result.ToList();
     }
 
     public async Task<Guid> CreateAsync(PromotionDto promotion, CancellationToken cancellationToken = default)

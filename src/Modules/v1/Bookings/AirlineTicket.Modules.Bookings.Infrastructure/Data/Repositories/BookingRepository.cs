@@ -7,6 +7,7 @@ using AirlineTicket.Modules.Bookings.Application.Contracts;
 using AirlineTicket.Modules.Bookings.Domain.Entities;
 using AirlineTicket.Modules.Bookings.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using Dapper;
 
 namespace AirlineTicket.Modules.Bookings.Infrastructure.Data.Repositories;
 
@@ -21,30 +22,38 @@ public class BookingRepository : IBookingRepository
 
     public async Task<BookingDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var booking = await _context.Bookings
-            .AsNoTracking()
-            .FirstOrDefaultAsync(b => b.Id == id, cancellationToken);
-
-        return booking is null ? null : MapToDto(booking);
+        var connection = _context.Database.GetDbConnection();
+        const string sql = @"
+            SELECT Id, UserId, PnrCode, TotalPrice, Status, ContactEmail, ContactPhone, CreatedAt, UpdatedAt
+            FROM dbo.Bookings 
+            WHERE Id = @Id";
+        
+        return await connection.QueryFirstOrDefaultAsync<BookingDto>(sql, new { Id = id });
     }
 
     public async Task<List<BookingDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await _context.Bookings
-            .AsNoTracking()
-            .Where(b => b.UserId == userId)
-            .OrderByDescending(b => b.CreatedAt)
-            .Select(b => MapToDto(b))
-            .ToListAsync(cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        const string sql = @"
+            SELECT Id, UserId, PnrCode, TotalPrice, Status, ContactEmail, ContactPhone, CreatedAt, UpdatedAt
+            FROM dbo.Bookings 
+            WHERE UserId = @UserId
+            ORDER BY CreatedAt DESC";
+        
+        var result = await connection.QueryAsync<BookingDto>(sql, new { UserId = userId });
+        return result.ToList();
     }
 
     public async Task<List<BookingDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Bookings
-            .AsNoTracking()
-            .OrderByDescending(b => b.CreatedAt)
-            .Select(b => MapToDto(b))
-            .ToListAsync(cancellationToken);
+        var connection = _context.Database.GetDbConnection();
+        const string sql = @"
+            SELECT Id, UserId, PnrCode, TotalPrice, Status, ContactEmail, ContactPhone, CreatedAt, UpdatedAt
+            FROM dbo.Bookings 
+            ORDER BY CreatedAt DESC";
+        
+        var result = await connection.QueryAsync<BookingDto>(sql);
+        return result.ToList();
     }
 
     public async Task<Guid> CreateAsync(BookingDto bookingDto, CancellationToken cancellationToken = default)
