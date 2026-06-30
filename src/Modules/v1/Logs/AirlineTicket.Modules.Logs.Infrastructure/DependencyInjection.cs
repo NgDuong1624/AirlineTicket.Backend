@@ -1,4 +1,6 @@
+using AirlineTicket.BuildingBlocks.Logging;
 using AirlineTicket.Modules.Logs.Infrastructure.Data;
+using AirlineTicket.Modules.Logs.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +15,9 @@ public static class DependencyInjection
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
-        
+
+        services.AddScoped<ISystemLogService, SystemLogService>();
+
         return services;
     }
 }

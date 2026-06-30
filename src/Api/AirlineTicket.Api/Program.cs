@@ -197,6 +197,7 @@ var app = builder.Build();
 // Đăng ký Middleware cho Correlation ID & Logging HTTP
 app.UseMiddleware<CorrelationMiddleware>();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
+app.UseSystemLogMiddleware();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
