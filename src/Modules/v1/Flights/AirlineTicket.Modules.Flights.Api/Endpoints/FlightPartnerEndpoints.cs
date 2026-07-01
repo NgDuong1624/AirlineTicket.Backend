@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.Modules.Flights.Application.Features.Routes;
 using AirlineTicket.Modules.Flights.Application.Features.Airplanes;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
@@ -127,19 +128,32 @@ public class FlightPartnerEndpoints : IEndpoint
             .RequireAuthorization("PartnerOnly");
 
         partnerFlights.MapGet("/", async (
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new GetPartnerFlightsQuery(), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var result = await sender.Send(new GetPartnerFlightsQuery(airlineId), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : result.ToErrorResult();
             });
 
         partnerFlights.MapPost("/", async (
+                [FromBody] PartnerFlightRequest request,
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new CreatePartnerFlightCommand(), ct);
-                return result.IsSuccess ? Results.Created($"/api/partner/flights/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var command = new CreatePartnerFlightCommand(
+                    airlineId,
+                    request.RouteId,
+                    request.AirplaneId,
+                    request.FlightNumber,
+                    request.BasePrice,
+                    request.ScheduledDeparture,
+                    request.ScheduledArrival);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/partner/flights/{result.Value}", new { Id = result.Value }) : result.ToErrorResult();
             });
 
         partnerFlights.MapPut("/{id:guid}", async (
@@ -248,3 +262,4 @@ public class FlightPartnerEndpoints : IEndpoint
 public sealed record PartnerRouteRequest(Guid OriginAirportId, Guid DestinationAirportId, decimal? DistanceKm, int? EstimatedDurationMinutes);
 public sealed record PartnerAirplaneRequest(Guid? AircraftModelId, string Model, string RegistrationNumber, int TotalCapacity);
 public sealed record PartnerSettingsRequest(string? AirlineName, string? Address, string? SupportEmail, string? SupportPhone);
+public sealed record PartnerFlightRequest(Guid RouteId, Guid AirplaneId, string FlightNumber, decimal BasePrice, DateTime ScheduledDeparture, DateTime ScheduledArrival);

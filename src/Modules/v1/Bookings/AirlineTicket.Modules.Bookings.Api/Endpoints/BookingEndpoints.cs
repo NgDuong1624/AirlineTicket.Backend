@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using AirlineTicket.Modules.Bookings.Application.Features.Payments;
 using AirlineTicket.Modules.Bookings.Application.Features.Tickets;
@@ -39,7 +40,7 @@ public class BookingEndpoints : IEndpoint
                 var command = new CreateBookingCommand(request.FlightId, request.ContactEmail, request.ContactPhone, passengers, userId);
                 var result = await sender.Send(command, ct);
 
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("CreateBooking")
             .WithSummary("Tạo đơn đặt chỗ mới")
@@ -54,7 +55,7 @@ public class BookingEndpoints : IEndpoint
             {
                 var query = new GetAllBookingsQuery();
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetAllBookings")
             .WithSummary("Lấy danh sách tất cả đặt vé")
@@ -89,7 +90,7 @@ public class BookingEndpoints : IEndpoint
 
                 var query = new GetMyBookingsQuery(userId);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetMyBookings")
             .WithSummary("Xem lịch sử đặt chỗ của User đang đăng nhập")
@@ -109,7 +110,7 @@ public class BookingEndpoints : IEndpoint
 
                 return result.IsSuccess
                     ? Results.Ok(new { Message = "Cập nhật đặt chỗ thành công." })
-                    : Results.BadRequest(result.Error);
+                    : result.ToErrorResult();
             })
             .WithName("UpdateBooking")
             .WithSummary("Cập nhật thông tin đặt vé")
@@ -124,7 +125,7 @@ public class BookingEndpoints : IEndpoint
             {
                 var command = new CancelBookingCommand(id);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
             })
             .WithName("CancelBooking")
             .WithSummary("Hủy đơn đặt chỗ")
@@ -143,7 +144,7 @@ public class BookingEndpoints : IEndpoint
 
                 return result.IsSuccess
                     ? Results.Ok(new { Status = "Payment Completed", TransactionId = result.Value })
-                    : Results.BadRequest(result.Error);
+                    : result.ToErrorResult();
             })
             .WithName("PayBooking")
             .WithSummary("Thực hiện thanh toán")

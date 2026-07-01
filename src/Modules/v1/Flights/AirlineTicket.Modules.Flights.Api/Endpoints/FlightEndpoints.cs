@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Features.Airports;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
@@ -31,7 +32,7 @@ public class FlightEndpoints : IEndpoint
                 {
                     var query = new GetAirportsQuery(search, pageIndex, pageSize);
                     var result = await sender.Send(query, ct);
-                    return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
+                    return result.IsSuccess ? Results.Ok(result) : result.ToErrorResult();
                 })
             .WithName("GetAirports")
             .WithSummary("Lấy danh sách sân bay hoặc tìm kiếm theo từ khóa")
@@ -47,7 +48,7 @@ public class FlightEndpoints : IEndpoint
                 {
                     var query = new GetAirlinesQuery();
                     var result = await sender.Send(query, ct);
-                    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                    return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
                 })
             .WithName("GetAirlines")
             .WithSummary("Lấy danh sách hãng hàng không")
@@ -63,7 +64,7 @@ public class FlightEndpoints : IEndpoint
                 {
                     var query = new GetRoutesQuery();
                     var result = await sender.Send(query, ct);
-                    return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                    return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
                 })
             .WithName("GetRoutes")
             .WithSummary("Lấy danh sách tuyến bay")
@@ -92,7 +93,7 @@ public class FlightEndpoints : IEndpoint
                     request.SortBy,
                     request.Currency);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("SearchFlights")
             .WithSummary("Tìm kiếm chuyến bay theo bộ lọc")
@@ -120,7 +121,7 @@ public class FlightEndpoints : IEndpoint
                     request.SortBy,
                     request.Currency);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("SearchRoundTripFlights")
             .WithSummary("Tìm kiếm chuyến bay khứ hồi theo bộ lọc")
@@ -137,7 +138,7 @@ public class FlightEndpoints : IEndpoint
             {
                 var query = new GetFlightByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetFlightById")
             .WithSummary("Lấy chi tiết chuyến bay theo ID")
@@ -152,7 +153,7 @@ public class FlightEndpoints : IEndpoint
             {
                 var query = new GetTrendingFlightsQuery();
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetTrendingFlights")
             .WithSummary("Lấy danh sách các chuyến bay/tuyến đường phổ biến")
@@ -167,7 +168,7 @@ public class FlightEndpoints : IEndpoint
             {
                 var query = new GetFlightSeatsQuery(id);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetFlightSeats")
             .WithSummary("Lấy sơ đồ ghế của chuyến bay")
@@ -190,7 +191,7 @@ public class FlightEndpoints : IEndpoint
                     request.ScheduledArrival);
 
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.Created($"/api/flights/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Created($"/api/flights/{result.Value}", new { Id = result.Value }) : result.ToErrorResult();
             })
             .WithName("CreateFlight")
             .WithSummary("Tạo chuyến bay mới")
