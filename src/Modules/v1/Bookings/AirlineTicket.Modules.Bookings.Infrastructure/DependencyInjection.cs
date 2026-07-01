@@ -19,6 +19,7 @@ public static class DependencyInjection
         // Register repositories
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
+        services.AddScoped<IRevenueRepository, RevenueRepository>();
         
         return services;
     }
