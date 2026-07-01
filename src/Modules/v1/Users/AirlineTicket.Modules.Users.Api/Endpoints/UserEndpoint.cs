@@ -2,7 +2,9 @@ using System;
 using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.BuildingBlocks.Exceptions;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Features.Admin;
 using AirlineTicket.Modules.Users.Application.Repositories;
@@ -36,7 +38,7 @@ public class UserEndpoint : IEndpoint
                     var result = await sender.Send(command, ct);
                     if (result.IsFailure)
                     {
-                        return Results.Json(new { Code = result.Error.Code, Message = result.Error.Message }, statusCode: 401);
+                        return result.ToErrorResult(statusCode: 401);
                     }
                     return Results.Ok(new { Token = result.Value });
                 }
@@ -60,7 +62,7 @@ public class UserEndpoint : IEndpoint
                     var result = await sender.Send(command, ct);
                     if (result.IsFailure)
                     {
-                        return Results.Json(new { Code = result.Error.Code, Message = result.Error.Message }, statusCode: 400);
+                        return result.ToErrorResult();
                     }
                     return Results.Ok(new { UserId = result.Value });
                 }
@@ -110,7 +112,7 @@ public class UserEndpoint : IEndpoint
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess
                     ? Results.Ok(new { items = result.Value, totalCount = result.Value.Count })
-                    : Results.BadRequest(result.Error);
+                    : result.ToErrorResult();
             });
 
         adminGroup.MapPost("/", async (
@@ -120,7 +122,7 @@ public class UserEndpoint : IEndpoint
                 CancellationToken ct) =>
             {
                 if (!await userRepository.IsEmailUniqueAsync(request.Email, ct))
-                    return Results.Json(new { Code = "BAD_REQUEST", Message = "Email already exists" }, statusCode: 400);
+                    return new Error("BAD_REQUEST", "Email already exists").ToErrorResult();
 
                 var user = new User
                 {
@@ -170,7 +172,7 @@ public class UserEndpoint : IEndpoint
             {
                 var command = new DeleteUserCommand(id);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
             });
 
         // ——————————————————————— Admin Permission Management ————————————————————————————————
