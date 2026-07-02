@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,8 +13,18 @@ public interface IAirTicketAiClient
     /// <summary>
     /// Gửi câu hỏi của khách tới model và trả về câu trả lời (kèm phần suy luận nếu có).
     /// </summary>
-    Task<AirTicketAiResult> AskAsync(string question, CancellationToken cancellationToken = default);
+    Task<AirTicketAiResult> AskAsync(
+        string question,
+        IReadOnlyList<ChatMessageDto>? history = null,
+        CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// Đại diện cho một tin nhắn trong lịch sử hội thoại.
+/// </summary>
+/// <param name="Role">Vai trò (user, assistant).</param>
+/// <param name="Content">Nội dung tin nhắn.</param>
+public sealed record ChatMessageDto(string Role, string Content);
 
 /// <summary>
 /// Kết quả thô trả về từ AI client.
