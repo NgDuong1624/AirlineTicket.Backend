@@ -184,6 +184,24 @@ public class FlightRepository : IFlightRepository
         var result = await connection.QueryAsync<StaffFlightListItemDto>(sql, parameters);
         return result.ToList();
     }
+
+    public async Task<List<FlightDto>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    {
+        var connection = _context.Database.GetDbConnection();
+        const string sql = @"
+            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice,
+                   f.DepartureTime, f.ArrivalTime, f.Currency,
+                   oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
+            FROM dbo.Flights f
+            JOIN dbo.Routes r ON f.RouteId = r.Id
+            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
+            JOIN dbo.Airlines a ON r.AirlineId = a.Id
+            WHERE r.AirlineId = @AirlineId AND f.IsDeleted = 0 AND r.IsDeleted = 0";
+
+        var result = await connection.QueryAsync<FlightDto>(sql, new { AirlineId = airlineId });
+        return result.ToList();
+    }
 }
 
 public class AirportRepository : IAirportRepository

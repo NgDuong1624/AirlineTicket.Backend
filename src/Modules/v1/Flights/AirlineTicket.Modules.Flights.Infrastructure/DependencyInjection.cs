@@ -1,5 +1,6 @@
 using AirlineTicket.BuildingBlocks.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Contracts;
+using AirlineTicket.Modules.Flights.Infrastructure.BackgroundServices;
 using AirlineTicket.Modules.Flights.Infrastructure.Data;
 using AirlineTicket.Modules.Flights.Infrastructure.Data.Repositories;
 using AirlineTicket.Modules.Flights.Infrastructure.Services;
@@ -30,6 +31,10 @@ public static class DependencyInjection
         // Register cross-module shared services
         services.AddScoped<ISharedFlightSearchService, SharedFlightSearchService>();
         services.AddScoped<ISeatGenerationService, SeatGenerationService>();
+
+        // Register background services
+        services.AddSingleton<FlightGenerationBackgroundService>();
+        services.AddHostedService(sp => sp.GetRequiredService<FlightGenerationBackgroundService>());
 
         return services;
     }
