@@ -23,6 +23,7 @@ using System.Text;
 using Scalar.AspNetCore;
 using AirlineTicket.Api;
 using AirlineTicket.Api.Realtime;
+using AirlineTicket.Api.Endpoints;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using Serilog;
 
@@ -223,6 +224,7 @@ app.UseAuthorization();
 
 app.MapControllers();   // Định tuyến các Controller từ các Module (vd: QaController)
 app.MapEndpoints();
+app.MapHealthEndpoints();
 app.MapHub<SeatHub>("/hubs/seats");
 app.MapHub<SupportChatHub>("/hubs/support");
 

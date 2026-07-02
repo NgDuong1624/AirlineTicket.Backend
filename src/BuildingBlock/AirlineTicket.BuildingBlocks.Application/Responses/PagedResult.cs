@@ -10,7 +10,9 @@ public class PagedResult<TValue> : Result
     public bool HasNextPage => PageNumber < TotalPages;
     public bool HasPreviousPage => PageNumber > 1;
 
-    protected internal PagedResult(
+    [Newtonsoft.Json.JsonConstructor]
+    [System.Text.Json.Serialization.JsonConstructor]
+    public PagedResult(
         IReadOnlyCollection<TValue> items,
         int pageNumber,
         int pageSize,
