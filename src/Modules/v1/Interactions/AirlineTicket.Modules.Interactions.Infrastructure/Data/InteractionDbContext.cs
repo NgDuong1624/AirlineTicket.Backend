@@ -10,6 +10,7 @@ public class InteractionDbContext : DbContext
     }
 
     public DbSet<Review> Reviews => Set<Review>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
