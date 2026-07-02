@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using AirlineTicket.BuildingBlocks.CQRS;
 
 namespace AirlineTicket.Modules.Interactions.Application.Features.Qa;
@@ -5,7 +6,7 @@ namespace AirlineTicket.Modules.Interactions.Application.Features.Qa;
 /// <summary>
 /// Query yêu cầu trả lời câu hỏi liên quan đến vé máy bay.
 /// </summary>
-public record GetAirTicketAnswerQuery(string Question) : IQuery<AirTicketAnswerResponse>;
+public record GetAirTicketAnswerQuery(string Question, IReadOnlyList<ChatMessageDto>? History = null) : IQuery<AirTicketAnswerResponse>;
 
 /// <summary>
 /// Response chứa câu trả lời và siêu dữ liệu đi kèm.
