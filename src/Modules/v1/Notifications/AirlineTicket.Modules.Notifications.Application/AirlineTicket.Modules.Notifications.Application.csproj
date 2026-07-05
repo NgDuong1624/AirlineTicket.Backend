@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Application\AirlineTicket.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\AirlineTicket.Modules.Notifications.Domain\AirlineTicket.Modules.Notifications.Domain.csproj" />
   </ItemGroup>

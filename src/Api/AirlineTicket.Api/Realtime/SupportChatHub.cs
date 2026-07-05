@@ -3,7 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AirlineTicket.Modules.Interactions.Domain.Entities;
+using AirlineTicket.Modules.Interactions.Infrastructure.Data;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicket.Api.Realtime;
 
@@ -25,9 +28,15 @@ public class StaffSession
 
 public class SupportChatHub : Hub
 {
+    private readonly InteractionDbContext _context;
     // In-memory sessions storage (ideal for modular monolith / prototype deployment)
     private static readonly ConcurrentDictionary<string, CustomerChatSession> ActiveCustomers = new();
     private static readonly ConcurrentDictionary<string, StaffSession> OnlineStaff = new();
+
+    public SupportChatHub(InteractionDbContext context)
+    {
+        _context = context;
+    }
 
     /// <summary>
     /// Customers join the chat by selecting an Airline ID.
@@ -115,6 +124,20 @@ public class SupportChatHub : Hub
             await Clients.Client(staffConnectionId).SendAsync("ReceiveMessage", connectionId, "Customer", customer.CustomerName, message);
             await Clients.Caller.SendAsync("ReceiveMessage", connectionId, "Customer", customer.CustomerName, message);
         }
+
+        // Persist the message
+        _context.ChatMessages.Add(new ChatMessage
+        {
+            Id = Guid.NewGuid(),
+            AirlineId = customer.AirlineId,
+            SenderRole = "Customer",
+            SenderName = customer.CustomerName,
+            CustomerConnectionId = connectionId,
+            StaffConnectionId = staffConnectionId,
+            Content = message,
+            SentAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
     }
 
     /// <summary>
@@ -137,7 +160,22 @@ public class SupportChatHub : Hub
         else
         {
             await Clients.Caller.SendAsync("SystemMessage", "Khách hàng này đã ngắt kết nối.");
+            return;
         }
+
+        // Persist the message
+        _context.ChatMessages.Add(new ChatMessage
+        {
+            Id = Guid.NewGuid(),
+            AirlineId = staff.AirlineId,
+            SenderRole = "Staff",
+            SenderName = staff.StaffName,
+            CustomerConnectionId = customerConnectionId,
+            StaffConnectionId = connectionId,
+            Content = message,
+            SentAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -188,9 +226,10 @@ public class SupportChatHub : Hub
             return false;
         }
 
-        // Select staff member with the fewest active chats to distribute load, or just random
-        var random = new Random();
-        var selectedStaff = availableStaff[random.Next(availableStaff.Count)];
+        // Select staff member with the fewest active chats
+        var selectedStaff = availableStaff
+            .OrderBy(s => s.ActiveCustomerConnectionIds.Count)
+            .First();
 
         customer.AssignedStaffConnectionId = selectedStaff.ConnectionId;
         selectedStaff.ActiveCustomerConnectionIds.Add(customer.ConnectionId);

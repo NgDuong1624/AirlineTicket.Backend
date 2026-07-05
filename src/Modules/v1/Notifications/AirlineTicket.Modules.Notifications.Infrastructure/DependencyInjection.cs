@@ -1,4 +1,8 @@
+using AirlineTicket.Modules.Notifications.Application.Contracts;
+using AirlineTicket.Modules.Notifications.Application.BackgroundServices;
 using AirlineTicket.Modules.Notifications.Infrastructure.Data;
+using AirlineTicket.Modules.Notifications.Infrastructure.Data.Repositories;
+using AirlineTicket.Modules.Notifications.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +17,14 @@ public static class DependencyInjection
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
+
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<ITemplateRepository, TemplateRepository>();
+        services.AddScoped<IEmailSender, EmailSender>();
+        services.AddScoped<ISmsSender, SmsSender>();
+        services.AddSingleton<PushSender>();
+        services.AddScoped<INotificationSender, NotificationSender>();
+        services.AddHostedService<NotificationProcessingBackgroundService>();
 
         return services;
     }

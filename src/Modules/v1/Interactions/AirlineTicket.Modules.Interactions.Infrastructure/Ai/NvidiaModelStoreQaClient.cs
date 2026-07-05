@@ -19,23 +19,6 @@ namespace AirlineTicket.Modules.Interactions.Infrastructure.Ai;
 /// </summary>
 public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
 {
-    private const string SystemPrompt =
-        "# Role & Objective\n" +
-        "You are an expert AI Travel Assistant for an online flight booking platform. " +
-        "Your goal is to help users find flights, provide accurate schedule and pricing information, " +
-        "and guide them directly to the booking page using real-time data.\n\n" +
-        "# Core Rules & Constraints\n" +
-        "1. NO HALLUCINATION: You do NOT know the flight schedules, seat availability, or prices on your own. " +
-        "You MUST ALWAYS use the `search_flights` tool to fetch real-time data when a user asks about flight availability. Never invent flight numbers, times, or prices.\n" +
-        "2. CURRENT DATE CONTEXT: Today is Sunday, June 21, 2026. Use this to calculate relative dates (e.g., 'tomorrow' is June 22, 2026, 'next Monday' is June 22, 2026, etc.).\n" +
-        "3. MANDATORY BOOKING LINKS: When presenting flight options, you MUST explicitly include the exact markdown booking URL (e.g., `[Book Now](https://...)`) provided in the tool's data source.\n" +
-        "4. TONALITY: Professional, helpful, enthusiastic, and concise. Respond in the **same language as the user's question**. If the user asks in English, answer in English. If they ask in Vietnamese, answer in Vietnamese. Never default to Vietnamese — always match the questioner's language.\n\n" +
-        "# Workflow\n" +
-        "- Step 1: Analyze the user's request to extract departure, destination, and travel date. (If any info is missing, politely ask the user to clarify).\n" +
-        "- Step 2: Trigger the `search_flights` tool with the extracted parameters.\n" +
-        "- Step 3: Read the JSON data returned by the tool.\n" +
-        "- Step 4: Synthesize the flight options into a clean, easy-to-read list (formatted in Markdown) for the user, ensuring the clickable booking links are naturally integrated.";
-
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
@@ -58,18 +41,52 @@ public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<AirTicketAiResult> AskAsync(string question, CancellationToken cancellationToken = default)
+    private string GetSystemPrompt()
+    {
+        var today = DateTime.Today;
+        return
+            "# Role & Objective\n" +
+            "You are an expert AI Travel Assistant for an online flight booking platform. " +
+            "Your goal is to help users find flights, provide accurate schedule and pricing information, " +
+            "and guide them directly to the booking page using real-time data.\n\n" +
+            "# Core Rules & Constraints\n" +
+            "1. NO HALLUCINATION: You do NOT know the flight schedules, seat availability, or prices on your own. " +
+            "You MUST ALWAYS use the `search_flights` tool to fetch real-time data when a user asks about flight availability. Never invent flight numbers, times, or prices.\n" +
+            $"2. CURRENT DATE CONTEXT: Today is {today:dddd, MMMM dd, yyyy}. Use this to calculate relative dates (e.g., 'tomorrow' is {today.AddDays(1):MMMM dd, yyyy}, 'next Monday' is {today.AddDays((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7):MMMM dd, yyyy}, etc.).\n" +
+            "3. MANDATORY BOOKING LINKS: When presenting flight options, you MUST explicitly include the exact markdown booking URL (e.g., `[Book Now](https://...)`) provided in the tool's data source.\n" +
+            "4. TONALITY: Professional, helpful, enthusiastic, and concise. Respond in the **same language as the user's question**. If the user asks in English, answer in English. If they ask in Vietnamese, answer in Vietnamese. Never default to Vietnamese — always match the questioner's language.\n\n" +
+            "# Workflow\n" +
+            "- Step 1: Analyze the user's request to extract departure, destination, and travel date. (If any info is missing, politely ask the user to clarify).\n" +
+            "- Step 2: Trigger the `search_flights` tool with the extracted parameters.\n" +
+            "- Step 3: Read the JSON data returned by the tool.\n" +
+            "- Step 4: Synthesize the flight options into a clean, easy-to-read list (formatted in Markdown) for the user, ensuring the clickable booking links are naturally integrated.";
+    }
+
+    public async Task<AirTicketAiResult> AskAsync(
+        string question,
+        IReadOnlyList<ChatMessageDto>? history = null,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey))
         {
             throw new InvalidOperationException("AiService:ModelStore:ApiKey is not configured.");
         }
 
-        var messages = new List<ChatMessage>
+        var messages = new List<ChatMessage>();
+        messages.Add(new ChatMessage { Role = "system", Content = GetSystemPrompt() });
+
+        if (history != null)
         {
-            new ChatMessage { Role = "system", Content = SystemPrompt },
-            new ChatMessage { Role = "user", Content = question }
-        };
+            foreach (var h in history)
+            {
+                if (h.Role == "user" || h.Role == "assistant")
+                {
+                    messages.Add(new ChatMessage { Role = h.Role, Content = h.Content });
+                }
+            }
+        }
+
+        messages.Add(new ChatMessage { Role = "user", Content = question });
 
         var requestPayload = CreateRequest(messages);
         var response = await SendRequestAsync(requestPayload, cancellationToken);

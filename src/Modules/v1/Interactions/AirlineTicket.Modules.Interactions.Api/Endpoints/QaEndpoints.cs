@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
@@ -30,7 +31,7 @@ public class QaEndpoints : IEndpoint
 
                 try
                 {
-                    var query = new GetAirTicketAnswerQuery(request.Question);
+                    var query = new GetAirTicketAnswerQuery(request.Question, request.History);
                     var response = await sender.Send(query, ct);
                     return Results.Ok(response);
                 }
@@ -57,4 +58,4 @@ public class QaEndpoints : IEndpoint
     }
 }
 
-public record AskQuestionRequest(string Question);
+public record AskQuestionRequest(string Question, List<ChatMessageDto>? History = null);
