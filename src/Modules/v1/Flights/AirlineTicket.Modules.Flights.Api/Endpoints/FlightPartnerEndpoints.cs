@@ -134,7 +134,7 @@ public class FlightPartnerEndpoints : IEndpoint
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
                 var result = await sender.Send(new GetPartnerFlightsQuery(airlineId), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : result.ToErrorResult();
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
             });
 
         partnerFlights.MapPost("/", async (
@@ -153,24 +153,28 @@ public class FlightPartnerEndpoints : IEndpoint
                     request.ScheduledDeparture,
                     request.ScheduledArrival);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.Created($"/api/partner/flights/{result.Value}", new { Id = result.Value }) : result.ToErrorResult();
+                return result.IsSuccess ? Results.Created($"/api/partner/flights/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             });
 
         partnerFlights.MapPut("/{id:guid}", async (
                 Guid id,
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new UpdatePartnerFlightCommand(id), ct);
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var result = await sender.Send(new UpdatePartnerFlightCommand(id, airlineId), ct);
                 return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             });
 
         partnerFlights.MapDelete("/{id:guid}", async (
                 Guid id,
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new DeletePartnerFlightCommand(id), ct);
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var result = await sender.Send(new DeletePartnerFlightCommand(id, airlineId), ct);
                 return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             });
 
@@ -180,36 +184,44 @@ public class FlightPartnerEndpoints : IEndpoint
             .RequireAuthorization("PartnerOnly");
 
         partnerAircraft.MapGet("/", async (
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new GetPartnerAircraftQuery(), ct);
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var result = await sender.Send(new GetPartnerAircraftQuery(airlineId), ct);
                 return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
             });
 
         partnerAircraft.MapPost("/", async (
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new CreatePartnerAircraftCommand(), ct);
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var result = await sender.Send(new CreatePartnerAircraftCommand(airlineId), ct);
                 return result.IsSuccess ? Results.Created($"/api/partner/aircraft/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             });
 
         partnerAircraft.MapPut("/{id:guid}", async (
                 Guid id,
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new UpdatePartnerAircraftCommand(id), ct);
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var result = await sender.Send(new UpdatePartnerAircraftCommand(id, airlineId), ct);
                 return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             });
 
         partnerAircraft.MapDelete("/{id:guid}", async (
                 Guid id,
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var result = await sender.Send(new DeletePartnerAircraftCommand(id), ct);
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var result = await sender.Send(new DeletePartnerAircraftCommand(id, airlineId), ct);
                 return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             });
 

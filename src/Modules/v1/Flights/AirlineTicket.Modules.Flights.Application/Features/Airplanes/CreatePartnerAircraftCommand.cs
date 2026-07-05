@@ -6,7 +6,7 @@ using AirlineTicket.BuildingBlocks.Responses;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Airplanes;
 
-public record CreatePartnerAircraftCommand() : ICommand<Result<Guid>>;
+public record CreatePartnerAircraftCommand(Guid AirlineId) : ICommand<Result<Guid>>;
 
 internal sealed class CreatePartnerAircraftCommandHandler : ICommandHandler<CreatePartnerAircraftCommand, Result<Guid>>
 {

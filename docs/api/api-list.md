@@ -196,21 +196,21 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 | **PUT** | `/api/partner/airplanes/{id}` | Cập nhật máy bay |
 | **DELETE** | `/api/partner/airplanes/{id}` | Xóa máy bay |
 
-### 10.3. Quản lý Chuyến bay (stub)
+### 10.3. Quản lý Chuyến bay
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | **GET** | `/api/partner/flights` | Danh sách chuyến bay |
-| **POST** | `/api/partner/flights` | Tạo chuyến bay (stub) |
-| **PUT** | `/api/partner/flights/{id}` | Cập nhật chuyến bay (stub) |
-| **DELETE** | `/api/partner/flights/{id}` | Xóa chuyến bay (stub) |
+| **POST** | `/api/partner/flights` | Tạo chuyến bay |
+| **PUT** | `/api/partner/flights/{id}` | Cập nhật chuyến bay |
+| **DELETE** | `/api/partner/flights/{id}` | Xóa chuyến bay |
 
-### 10.4. Quản lý Cấu hình Tàu bay (stub)
+### 10.4. Quản lý Cấu hình Tàu bay
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| **GET** | `/api/partner/aircraft` | Danh sách cấu hình (stub) |
-| **POST** | `/api/partner/aircraft` | Tạo cấu hình (stub) |
-| **PUT** | `/api/partner/aircraft/{id}` | Cập nhật cấu hình (stub) |
-| **DELETE** | `/api/partner/aircraft/{id}` | Xóa cấu hình (stub) |
+| **GET** | `/api/partner/aircraft` | Danh sách cấu hình |
+| **POST** | `/api/partner/aircraft` | Tạo cấu hình |
+| **PUT** | `/api/partner/aircraft/{id}` | Cập nhật cấu hình |
+| **DELETE** | `/api/partner/aircraft/{id}` | Xóa cấu hình |
 
 ### 10.5. Quản lý Coupon
 | Method | Endpoint | Description |
