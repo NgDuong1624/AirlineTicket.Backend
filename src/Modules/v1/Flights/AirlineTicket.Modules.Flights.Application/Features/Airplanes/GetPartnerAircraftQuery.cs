@@ -6,7 +6,7 @@ using AirlineTicket.BuildingBlocks.Responses;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Airplanes;
 
-public record GetPartnerAircraftQuery() : IQuery<Result<List<object>>>;
+public record GetPartnerAircraftQuery(Guid AirlineId) : IQuery<Result<List<object>>>;
 
 internal sealed class GetPartnerAircraftQueryHandler : IQueryHandler<GetPartnerAircraftQuery, Result<List<object>>>
 {

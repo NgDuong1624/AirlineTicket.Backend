@@ -6,7 +6,7 @@ using AirlineTicket.BuildingBlocks.Responses;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Airplanes;
 
-public record DeletePartnerAircraftCommand(Guid Id) : ICommand<Result<bool>>;
+public record DeletePartnerAircraftCommand(Guid Id, Guid AirlineId) : ICommand<Result<bool>>;
 
 internal sealed class DeletePartnerAircraftCommandHandler : ICommandHandler<DeletePartnerAircraftCommand, Result<bool>>
 {

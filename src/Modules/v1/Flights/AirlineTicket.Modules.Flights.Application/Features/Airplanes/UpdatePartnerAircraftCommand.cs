@@ -6,7 +6,7 @@ using AirlineTicket.BuildingBlocks.Responses;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Airplanes;
 
-public record UpdatePartnerAircraftCommand(Guid Id) : ICommand<Result<bool>>;
+public record UpdatePartnerAircraftCommand(Guid Id, Guid AirlineId) : ICommand<Result<bool>>;
 
 internal sealed class UpdatePartnerAircraftCommandHandler : ICommandHandler<UpdatePartnerAircraftCommand, Result<bool>>
 {
