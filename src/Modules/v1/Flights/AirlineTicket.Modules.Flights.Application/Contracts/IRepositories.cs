@@ -55,6 +55,9 @@ public interface IFlightRepository
     Task<List<FlightDto>> GetTrendingAsync(CancellationToken cancellationToken = default);
     Task<List<StaffFlightListItemDto>> GetStaffFlightsAsync(string? search, CancellationToken cancellationToken = default);
     Task<List<FlightDto>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default);
+    Task<List<FlightDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task UpdateAsync(FlightDto flight, Guid? airlineId = null, CancellationToken cancellationToken = default);
+    Task DeleteAsync(Guid id, Guid? airlineId = null, CancellationToken cancellationToken = default);
 }
 
 public interface IAirlineRepository

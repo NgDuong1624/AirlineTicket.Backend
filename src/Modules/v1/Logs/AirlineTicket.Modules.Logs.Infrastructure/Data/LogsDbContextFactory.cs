@@ -3,8 +3,12 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace AirlineTicket.Modules.Logs.Infrastructure.Data;
 
+/// <summary>
+/// Design-time factory for creating instances of <see cref="LogsDbContext"/>.
+/// </summary>
 public class LogsDbContextFactory : IDesignTimeDbContextFactory<LogsDbContext>
 {
+    /// <inheritdoc />
     public LogsDbContext CreateDbContext(string[] args)
     {
         var connectionString = System.Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");

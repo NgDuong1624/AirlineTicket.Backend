@@ -4,8 +4,12 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AirlineTicket.Modules.Logs.Infrastructure.Data.Configurations;
 
+/// <summary>
+/// Entity Framework configuration for the <see cref="SystemLog"/> entity.
+/// </summary>
 public class SystemLogConfiguration : IEntityTypeConfiguration<SystemLog>
 {
+    /// <inheritdoc />
     public void Configure(EntityTypeBuilder<SystemLog> builder)
     {
         builder.HasKey(x => x.Id);
@@ -22,5 +26,8 @@ public class SystemLogConfiguration : IEntityTypeConfiguration<SystemLog>
             
         builder.Property(x => x.IpAddress)
             .HasMaxLength(50);
+
+        builder.HasIndex(x => x.CreatedAt);
+        builder.HasIndex(x => new { x.AirlineId, x.CreatedAt });
     }
 }

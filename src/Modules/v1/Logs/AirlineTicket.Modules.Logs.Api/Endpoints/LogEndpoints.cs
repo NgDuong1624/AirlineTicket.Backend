@@ -1,6 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Auth;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Logs.Application.Features;
 using MediatR;
@@ -11,8 +14,12 @@ using Microsoft.AspNetCore.Routing;
 
 namespace AirlineTicket.Modules.Logs.Api.Endpoints;
 
+/// <summary>
+/// Defines API endpoints for querying system logs.
+/// </summary>
 public class LogEndpoints : IEndpoint
 {
+    /// <inheritdoc />
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         var adminLogs = app.MapGroup("/api/admin/logs")
@@ -20,12 +27,15 @@ public class LogEndpoints : IEndpoint
             .RequireAuthorization("AdminOnly");
 
         adminLogs.MapGet("/", async (
-                [FromQuery] int? pageNumber,
-                [FromQuery] int? pageSize,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] string? level,
+                [FromQuery] string? search,
+                [FromQuery] Guid? airlineId,
+                [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
+                [FromQuery, Range(1, 100)] int pageSize = 10) =>
             {
-                var query = new GetAdminLogsQuery(pageNumber ?? 1, pageSize ?? 10);
+                var query = new GetAdminLogsQuery(pageIndex, pageSize, level, search, airlineId);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
@@ -36,12 +46,20 @@ public class LogEndpoints : IEndpoint
             .RequireAuthorization("PartnerOnly");
 
         partnerLogs.MapGet("/", async (
-                [FromQuery] int? pageNumber,
-                [FromQuery] int? pageSize,
+                ClaimsPrincipal principal,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] string? level,
+                [FromQuery] string? search,
+                [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
+                [FromQuery, Range(1, 100)] int pageSize = 10) =>
             {
-                var query = new GetPartnerLogsQuery(pageNumber ?? 1, pageSize ?? 10);
+                var airlineId = principal.GetAirlineId();
+                if (airlineId == null)
+                {
+                    return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
+                }
+                var query = new GetPartnerLogsQuery(airlineId.Value, pageIndex, pageSize, level, search);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })

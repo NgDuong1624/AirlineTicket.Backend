@@ -158,12 +158,22 @@ public class FlightPartnerEndpoints : IEndpoint
 
         partnerFlights.MapPut("/{id:guid}", async (
                 Guid id,
+                [FromBody] PartnerFlightRequest request,
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var result = await sender.Send(new UpdatePartnerFlightCommand(id, airlineId), ct);
+                var command = new UpdatePartnerFlightCommand(
+                    id,
+                    airlineId,
+                    request.RouteId,
+                    request.AirplaneId,
+                    request.FlightNumber,
+                    request.BasePrice,
+                    request.ScheduledDeparture,
+                    request.ScheduledArrival);
+                var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             });
 
