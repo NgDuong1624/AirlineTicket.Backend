@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<ISeatGenerationService, SeatGenerationService>();
 
         // Register background services
+        services.AddScoped<IFlightGenerator, FlightGenerator>();
         services.AddSingleton<FlightGenerationBackgroundService>();
         services.AddHostedService(sp => sp.GetRequiredService<FlightGenerationBackgroundService>());
 

@@ -1,11 +1,11 @@
 using System;
 
-namespace AirlineTicket.Modules.Logs.Domain.Entities;
+namespace AirlineTicket.Modules.Logs.Application.Contracts;
 
 /// <summary>
-/// Represents a system log entry stored in the database.
+/// Data transfer object representing a system log entry.
 /// </summary>
-public class SystemLog
+public class LogDto
 {
     /// <summary>
     /// Gets or sets the unique identifier of the log entry.
@@ -13,7 +13,7 @@ public class SystemLog
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Gets or sets the severity level of the log (e.g., Info, Warning, Error, Critical).
+    /// Gets or sets the severity level of the log (e.g., Info, Warning, Error).
     /// </summary>
     public string Level { get; set; } = string.Empty;
 
@@ -50,5 +50,5 @@ public class SystemLog
     /// <summary>
     /// Gets or sets the timestamp when the log was created.
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
 }

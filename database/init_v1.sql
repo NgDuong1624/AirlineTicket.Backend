@@ -424,5 +424,7 @@ CREATE INDEX [IX_Bookings_Pnr] ON [bookings].[Bookings]([PnrCode])
 CREATE INDEX [IX_Bookings_User] ON [bookings].[Bookings]([UserId])
 CREATE INDEX [IX_Tickets_Number] ON [bookings].[Tickets]([TicketNumber])
 CREATE INDEX [IX_Notifications_User] ON [notifications].[Notifications]([UserId])
+CREATE INDEX [IX_SystemLogs_CreatedAt] ON [logs].[SystemLogs]([CreatedAt] DESC)
+CREATE INDEX [IX_SystemLogs_AirlineId_CreatedAt] ON [logs].[SystemLogs]([AirlineId], [CreatedAt] DESC)
 GO
 
