@@ -20,6 +20,34 @@ public class BookingRepository : IBookingRepository
         _context = context;
     }
 
+    public async Task<BookingDetailDto?> GetDetailByPnrAsync(string pnrCode, CancellationToken cancellationToken = default)
+    {
+        var booking = await _context.Bookings
+            .AsNoTracking()
+            .Include(b => b.Tickets)
+                .ThenInclude(t => t.Passenger)
+            .FirstOrDefaultAsync(b => b.PnrCode == pnrCode, cancellationToken);
+
+        if (booking == null) return null;
+
+        return new BookingDetailDto
+        {
+            Id = booking.Id,
+            PnrCode = booking.PnrCode,
+            TotalPrice = booking.TotalPrice,
+            Status = booking.Status.ToString(),
+            ContactEmail = booking.ContactEmail,
+            ContactPhone = booking.ContactPhone,
+            Tickets = booking.Tickets.Select(t => new TicketDto
+            {
+                TicketId = t.Id,
+                BookingId = t.BookingId,
+                PassengerName = t.Passenger != null ? $"{t.Passenger.FirstName} {t.Passenger.LastName}" : string.Empty,
+                SeatNumber = t.TicketNumber
+            }).ToList()
+        };
+    }
+
     public async Task<BookingDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();

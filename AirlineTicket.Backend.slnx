@@ -9,6 +9,10 @@
   <Folder Name="/src/Api/">
     <Project Path="src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj" />
   </Folder>
+  <Folder Name="/src/Workers/">
+    <Project Path="src/Workers/AirlineTicket.Workers.FlightCleanup/AirlineTicket.Workers.FlightCleanup.csproj" />
+    <Project Path="src/Workers/AirlineTicket.Workers.FlightGeneration/AirlineTicket.Workers.FlightGeneration.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/" />
   <Folder Name="/src/Modules/v1/" />
   <Folder Name="/src/Modules/v1/Bookings/">

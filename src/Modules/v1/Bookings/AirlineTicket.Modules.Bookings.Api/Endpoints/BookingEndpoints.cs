@@ -132,14 +132,53 @@ public class BookingEndpoints : IEndpoint
             .Produces(204)
             .Produces(400);
 
+        group.MapGet("/search", async (
+                [FromQuery] string pnrCode,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new SearchBookingQuery(pnrCode);
+                var result = await sender.Send(query, ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
+            })
+            .WithName("SearchBooking")
+            .WithSummary("Tìm kiếm đơn đặt chỗ")
+            .Produces(200)
+            .Produces(404)
+            .AllowAnonymous();
+
         // ——————————————————————— Payments & Tickets ————————————————————————————————
         group.MapPost("/{id:guid}/pay", async (
                 Guid id,
                 [FromBody] PayBookingRequest request,
                 [FromServices] ISender sender,
+                HttpContext httpContext,
                 CancellationToken ct) =>
             {
-                var command = new PayBookingCommand(id, request.PaymentMethod, request.Amount);
+                var origin = httpContext.Request.Headers["Origin"].ToString();
+                if (string.IsNullOrEmpty(origin))
+                {
+                    origin = httpContext.Request.Headers["Referer"].ToString();
+                    if (!string.IsNullOrEmpty(origin))
+                    {
+                        // Referer might contain path, extract origin
+                        try
+                        {
+                            var uri = new Uri(origin);
+                            origin = $"{uri.Scheme}://{uri.Authority}";
+                        }
+                        catch
+                        {
+                            // fallback
+                        }
+                    }
+                }
+                if (string.IsNullOrEmpty(origin))
+                {
+                    origin = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+                }
+
+                var command = new PayBookingCommand(id, request.PaymentMethod, request.Amount, origin);
                 var result = await sender.Send(command, ct);
 
                 return result.IsSuccess

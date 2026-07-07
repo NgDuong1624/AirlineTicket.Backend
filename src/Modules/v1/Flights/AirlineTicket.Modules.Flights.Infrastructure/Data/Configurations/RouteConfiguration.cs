@@ -10,14 +10,16 @@ public class RouteConfiguration : IEntityTypeConfiguration<Route>
     {
         builder.HasKey(x => x.Id);
 
-        // Ngăn chặn lỗi multiple cascade paths của SQL Server
+        builder.Property(x => x.DistanceKm)
+            .HasPrecision(18, 2);
+
         builder.HasOne(x => x.OriginAirport)
-            .WithMany()
+            .WithMany(a => a.OriginRoutes)
             .HasForeignKey(x => x.OriginAirportId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.DestinationAirport)
-            .WithMany()
+            .WithMany(a => a.DestinationRoutes)
             .HasForeignKey(x => x.DestinationAirportId)
             .OnDelete(DeleteBehavior.Restrict);
 

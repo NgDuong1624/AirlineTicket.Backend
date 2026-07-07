@@ -32,10 +32,9 @@ public static class DependencyInjection
         services.AddScoped<ISharedFlightSearchService, SharedFlightSearchService>();
         services.AddScoped<ISeatGenerationService, SeatGenerationService>();
 
-        // Register background services
+        // Register flight generator (scoped, consumed by the background worker)
         services.AddScoped<IFlightGenerator, FlightGenerator>();
-        services.AddSingleton<FlightGenerationBackgroundService>();
-        services.AddHostedService(sp => sp.GetRequiredService<FlightGenerationBackgroundService>());
+        services.AddScoped<IFlightCleaner, FlightCleaner>();
 
         return services;
     }
