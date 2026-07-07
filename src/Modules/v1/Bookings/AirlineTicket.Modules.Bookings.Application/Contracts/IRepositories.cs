@@ -20,6 +20,7 @@ public class BookingDto
 public interface IBookingRepository
 {
     Task<BookingDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<BookingDetailDto?> GetDetailByPnrAsync(string pnrCode, CancellationToken cancellationToken = default);
     Task<List<BookingDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<List<BookingDto>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(BookingDto booking, CancellationToken cancellationToken = default);
@@ -59,6 +60,11 @@ public class TicketDto
     public Guid BookingId { get; set; }
     public string PassengerName { get; set; } = string.Empty;
     public string SeatNumber { get; set; } = string.Empty;
+}
+
+public class BookingDetailDto : BookingDto
+{
+    public List<TicketDto> Tickets { get; set; } = new();
 }
 
 public interface ITicketRepository
