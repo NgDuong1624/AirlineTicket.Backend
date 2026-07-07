@@ -20,6 +20,9 @@ public class CouponConfiguration : IEntityTypeConfiguration<Coupon>
         builder.Property(x => x.DiscountValue)
             .HasPrecision(18, 2);
             
+        builder.Property(x => x.MinOrderValue)
+            .HasPrecision(18, 2);
+            
         builder.Property(x => x.MaxDiscountAmount)
             .HasPrecision(18, 2);
     }
