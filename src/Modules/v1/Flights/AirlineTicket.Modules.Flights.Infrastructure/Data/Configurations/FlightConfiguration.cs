@@ -13,14 +13,13 @@ public class FlightConfiguration : IEntityTypeConfiguration<Flight>
         builder.Property(x => x.BasePrice)
             .HasPrecision(18, 2);
 
-        // Ngăn chặn lỗi multiple cascade paths của SQL Server
         builder.HasOne(x => x.Route)
-            .WithMany()
+            .WithMany(r => r.Flights)
             .HasForeignKey(x => x.RouteId)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(x => x.Airplane)
-            .WithMany()
+            .WithMany(a => a.Flights)
             .HasForeignKey(x => x.AirplaneId)
             .OnDelete(DeleteBehavior.Restrict);
     }

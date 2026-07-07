@@ -40,5 +40,11 @@ public class AirportConfiguration : IEntityTypeConfiguration<Airport>
         builder.Property(x => x.Timezone)
             .IsRequired()
             .HasMaxLength(50);
+
+        builder.Property(x => x.Latitude)
+            .HasPrecision(18, 6);
+
+        builder.Property(x => x.Longitude)
+            .HasPrecision(18, 6);
     }
 }
