@@ -61,8 +61,8 @@ public class SharedFlightSearchService : ISharedFlightSearchService
             DepartureTime = f.DepartureTime.ToString("yyyy-MM-dd HH:mm"),
             ArrivalTime = f.ArrivalTime.ToString("yyyy-MM-dd HH:mm"),
             f.BasePrice,
-            Currency = "VND",
-            BookingUrl = $"/bookings/checkout?id={f.Id}&flightNo={f.FlightNumber}&airline={Uri.EscapeDataString(f.AirlineName)}&from={f.OriginCode}&to={f.DestinationCode}&departTime={f.DepartureTime:HH:mm}&arriveTime={f.ArrivalTime:HH:mm}&date={f.DepartureTime:yyyy-MM-dd}&price={f.BasePrice}"
+            Currency = f.Currency,
+            BookingUrl = $"/bookings/checkout?id={f.Id}&flightNo={f.FlightNumber}&airline={Uri.EscapeDataString(f.AirlineName)}&from={f.OriginCode}&to={f.DestinationCode}&departTime={f.DepartureTime:HH:mm}&arriveTime={f.ArrivalTime:HH:mm}&date={f.DepartureTime:yyyy-MM-dd}&price={f.BasePrice}&currency={f.Currency}"
         }).ToList();
 
         return JsonSerializer.Serialize(enrichedFlights, new JsonSerializerOptions
