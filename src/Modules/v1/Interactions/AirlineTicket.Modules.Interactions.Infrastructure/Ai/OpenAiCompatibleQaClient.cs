@@ -17,7 +17,7 @@ namespace AirlineTicket.Modules.Interactions.Infrastructure.Ai;
 /// Cài đặt <see cref="IAirTicketAiClient"/> gọi tới endpoint Chat Completions tương thích OpenAI.
 /// Hỗ trợ Tool Calling (Function Calling) để lấy dữ liệu thực tế từ module Flights.
 /// </summary>
-public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
+public sealed class OpenAiCompatibleQaClient : IAirTicketAiClient
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
     {
@@ -27,13 +27,13 @@ public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
     private readonly HttpClient _httpClient;
     private readonly ModelStoreOptions _options;
     private readonly ISharedFlightSearchService _flightSearchService;
-    private readonly ILogger<NvidiaModelStoreQaClient> _logger;
+    private readonly ILogger<OpenAiCompatibleQaClient> _logger;
 
-    public NvidiaModelStoreQaClient(
+    public OpenAiCompatibleQaClient(
         HttpClient httpClient,
         IOptions<AiServiceOptions> options,
         ISharedFlightSearchService flightSearchService,
-        ILogger<NvidiaModelStoreQaClient> logger)
+        ILogger<OpenAiCompatibleQaClient> logger)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _options = (options ?? throw new ArgumentNullException(nameof(options))).Value.ModelStore;
@@ -41,9 +41,12 @@ public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    private string GetSystemPrompt()
+    private string GetSystemPrompt(string? currency = null)
     {
         var today = DateTime.Today;
+        var currencyLine = string.IsNullOrEmpty(currency)
+            ? ""
+            : $"4. CURRENCY CONTEXT: The user's preferred currency is {currency}. Do NOT attempt to convert prices yourself. Always output the original price and currency returned by the tool in the booking URL (e.g., `price=708.00&currency=USD`). The frontend will automatically convert and display the price in the user's local currency.\n";
         return
             "# Role & Objective\n" +
             "You are an expert AI Travel Assistant for an online flight booking platform. " +
@@ -54,7 +57,8 @@ public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
             "You MUST ALWAYS use the `search_flights` tool to fetch real-time data when a user asks about flight availability. Never invent flight numbers, times, or prices.\n" +
             $"2. CURRENT DATE CONTEXT: Today is {today:dddd, MMMM dd, yyyy}. Use this to calculate relative dates (e.g., 'tomorrow' is {today.AddDays(1):MMMM dd, yyyy}, 'next Monday' is {today.AddDays((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7):MMMM dd, yyyy}, etc.).\n" +
             "3. MANDATORY BOOKING LINKS: When presenting flight options, you MUST explicitly include the exact markdown booking URL (e.g., `[Book Now](https://...)`) provided in the tool's data source.\n" +
-            "4. TONALITY: Professional, helpful, enthusiastic, and concise. Respond in the **same language as the user's question**. If the user asks in English, answer in English. If they ask in Vietnamese, answer in Vietnamese. Never default to Vietnamese — always match the questioner's language.\n\n" +
+            currencyLine +
+            "5. TONALITY: Professional, helpful, enthusiastic, and concise. Respond in the **same language as the user's question**. If the user asks in English, answer in English. If they ask in Vietnamese, answer in Vietnamese. Never default to Vietnamese — always match the questioner's language.\n\n" +
             "# Workflow\n" +
             "- Step 1: Analyze the user's request to extract departure, destination, and travel date. (If any info is missing, politely ask the user to clarify).\n" +
             "- Step 2: Trigger the `search_flights` tool with the extracted parameters.\n" +
@@ -65,6 +69,7 @@ public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
     public async Task<AirTicketAiResult> AskAsync(
         string question,
         IReadOnlyList<ChatMessageDto>? history = null,
+        string? currency = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey))
@@ -73,7 +78,7 @@ public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
         }
 
         var messages = new List<ChatMessage>();
-        messages.Add(new ChatMessage { Role = "system", Content = GetSystemPrompt() });
+        messages.Add(new ChatMessage { Role = "system", Content = GetSystemPrompt(currency) });
 
         if (history != null)
         {
@@ -227,6 +232,17 @@ public sealed class NvidiaModelStoreQaClient : IAirTicketAiClient
             {
                 var body = await response.Content.ReadAsStringAsync(cancellationToken);
                 _logger.LogError("AI service returned {StatusCode}: {Body}", (int)response.StatusCode, body);
+
+                // Rate-limit / quota exceeded → non-retryable via Polly
+                if (body.Contains("ResourceExhausted", StringComparison.OrdinalIgnoreCase) ||
+                    body.Contains("rate_limit", StringComparison.OrdinalIgnoreCase) ||
+                    body.Contains("quota", StringComparison.OrdinalIgnoreCase) ||
+                    body.Contains("InsufficientQuota", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new AiQuotaExceededException(
+                        "AI service quota exceeded. Please wait a moment and try again.");
+                }
+
                 throw new InvalidOperationException($"AI service returned an error ({(int)response.StatusCode}).");
             }
             return response;
