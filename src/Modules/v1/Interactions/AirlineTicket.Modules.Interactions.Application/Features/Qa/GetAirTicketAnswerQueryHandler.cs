@@ -25,7 +25,7 @@ public sealed class GetAirTicketAnswerQueryHandler : IQueryHandler<GetAirTicketA
             throw new ArgumentException("Question cannot be empty.", nameof(request));
         }
 
-        var result = await _aiClient.AskAsync(request.Question.Trim(), request.History, cancellationToken);
+        var result = await _aiClient.AskAsync(request.Question.Trim(), request.History, request.Currency, cancellationToken);
 
         return new AirTicketAnswerResponse(result.Answer, result.Reasoning, result.Model, "Completed");
     }

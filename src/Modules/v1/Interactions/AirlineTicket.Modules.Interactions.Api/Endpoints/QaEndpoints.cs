@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.Modules.Interactions.Application.Features.Qa;
+using AirlineTicket.Modules.Interactions.Infrastructure.Ai;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -31,9 +32,15 @@ public class QaEndpoints : IEndpoint
 
                 try
                 {
-                    var query = new GetAirTicketAnswerQuery(request.Question, request.History);
+                    var query = new GetAirTicketAnswerQuery(request.Question, request.History, request.Currency);
                     var response = await sender.Send(query, ct);
                     return Results.Ok(response);
+                }
+                catch (AiQuotaExceededException ex)
+                {
+                    return Results.Json(
+                        new { Error = "AI service quota exceeded", Details = ex.Message },
+                        statusCode: 429);
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -53,9 +60,10 @@ public class QaEndpoints : IEndpoint
             .WithSummary("Gửi câu hỏi cho AI Travel Assistant")
             .Produces<AirTicketAnswerResponse>(200)
             .Produces(400)
+            .Produces(429)
             .Produces(503)
             .AllowAnonymous();
     }
 }
 
-public record AskQuestionRequest(string Question, List<ChatMessageDto>? History = null);
+public record AskQuestionRequest(string Question, List<ChatMessageDto>? History = null, string? Currency = null);

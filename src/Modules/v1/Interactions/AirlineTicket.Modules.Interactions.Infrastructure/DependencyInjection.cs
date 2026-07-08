@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http.Headers;
 using AirlineTicket.Modules.Interactions.Application.Features.Qa;
 using AirlineTicket.Modules.Interactions.Infrastructure.Ai;
@@ -7,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Extensions.Http;
 
 namespace AirlineTicket.Modules.Interactions.Infrastructure;
 
@@ -24,12 +27,12 @@ public static class DependencyInjection
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
         // Đăng ký AI client dưới dạng typed HttpClient (dùng IHttpClientFactory để quản lý connection pooling).
-        services.AddHttpClient<IAirTicketAiClient, NvidiaModelStoreQaClient>((sp, client) =>
+        services.AddHttpClient<IAirTicketAiClient, OpenAiCompatibleQaClient>((sp, client) =>
         {
             var opts = sp.GetRequiredService<IOptions<AiServiceOptions>>().Value.ModelStore;
 
             var baseUrl = string.IsNullOrWhiteSpace(opts.BaseUrl)
-                ? "https://integrate.api.nvidia.com/v1"
+                ? "https://api.9router.com/v1"
                 : opts.BaseUrl;
             // Đảm bảo có dấu '/' cuối để relative path "chat/completions" nối đúng.
             if (!baseUrl.EndsWith('/'))
@@ -46,7 +49,14 @@ public static class DependencyInjection
             }
 
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        });
+        })
+        .AddPolicyHandler(Policy<HttpResponseMessage>
+            .Handle<HttpRequestException>()
+            .OrResult(msg => msg.StatusCode == HttpStatusCode.RequestTimeout ||
+                             msg.StatusCode == HttpStatusCode.InternalServerError ||
+                             msg.StatusCode == HttpStatusCode.BadGateway ||
+                             msg.StatusCode == HttpStatusCode.GatewayTimeout)
+            .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
         return services;
     }

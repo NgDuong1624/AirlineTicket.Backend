@@ -1,8 +1,8 @@
 namespace AirlineTicket.Modules.Interactions.Application.Features.Qa;
 
 /// <summary>
-/// Cấu hình AI service (Model Store API Key, endpoint, model name, v.v.).
-/// Ánh xạ từ section "AiService" trong appsettings.json / User Secrets.
+/// AI service configuration (Model Store API Key, endpoint, model name, etc.).
+/// Mapped from "AiService" section in appsettings.json / User Secrets.
 /// </summary>
 public sealed class AiServiceOptions
 {
@@ -12,16 +12,16 @@ public sealed class AiServiceOptions
 }
 
 /// <summary>
-/// Cấu hình endpoint Model Store tương thích OpenAI (ví dụ NVIDIA Integrate, OpenAI, Azure OpenAI).
+/// Model Store endpoint configuration compatible with OpenAI (e.g., NVIDIA NIM, OpenAI, Azure OpenAI).
 /// </summary>
 public sealed class ModelStoreOptions
 {
     public const string SectionName = "ModelStore";
 
     /// <summary>
-    /// Base URL của endpoint tương thích OpenAI. Ví dụ: https://integrate.api.nvidia.com/v1
+    /// Base URL của endpoint tương thích OpenAI. Ví dụ: https://api.9router.com/v1
     /// </summary>
-    public string BaseUrl { get; set; } = "https://integrate.api.nvidia.com/v1";
+    public string BaseUrl { get; set; } = "https://api.9router.com/v1";
 
     /// <summary>
     /// API key để truy cập Model Store AI service.

@@ -16,6 +16,7 @@ public interface IAirTicketAiClient
     Task<AirTicketAiResult> AskAsync(
         string question,
         IReadOnlyList<ChatMessageDto>? history = null,
+        string? currency = null,
         CancellationToken cancellationToken = default);
 }
 
