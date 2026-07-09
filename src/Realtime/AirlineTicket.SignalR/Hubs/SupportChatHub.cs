@@ -8,7 +8,7 @@ using AirlineTicket.Modules.Interactions.Infrastructure.Data;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
-namespace AirlineTicket.Api.Realtime;
+namespace AirlineTicket.SignalR.Hubs;
 
 public class CustomerChatSession
 {

@@ -1,4 +1,4 @@
-﻿<Solution>
+<Solution>
   <Folder Name="/src/" />
   <Folder Name="/src/BuildingBlock/">
     <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks.Api/AirlineTicket.BuildingBlocks.Api.csproj" />
@@ -9,9 +9,11 @@
   <Folder Name="/src/Api/">
     <Project Path="src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj" />
   </Folder>
+  <Folder Name="/src/Realtime/">
+    <Project Path="src/Realtime/AirlineTicket.SignalR/AirlineTicket.SignalR.csproj" />
+  </Folder>
   <Folder Name="/src/Workers/">
-    <Project Path="src/Workers/AirlineTicket.Workers.FlightCleanup/AirlineTicket.Workers.FlightCleanup.csproj" />
-    <Project Path="src/Workers/AirlineTicket.Workers.FlightGeneration/AirlineTicket.Workers.FlightGeneration.csproj" />
+    <Project Path="src/Workers/AirlineTicket.Worker/AirlineTicket.Worker.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
   <Folder Name="/src/Modules/v1/" />

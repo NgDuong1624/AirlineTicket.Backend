@@ -22,7 +22,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Scalar.AspNetCore;
 using AirlineTicket.Api;
-using AirlineTicket.Api.Realtime;
 using AirlineTicket.Api.Endpoints;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using Serilog;
@@ -81,7 +80,16 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
-builder.Services.AddControllers(); // Hỗ trợ Controllers từ các Module
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    }); // Hỗ trợ Controllers từ các Module
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
 
 // Cấu hình BuildingBlocks (Logging, Caching, Correlation)
 builder.Services.AddBuildingBlocksInfrastructure();
@@ -148,10 +156,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Custom Dynamic Authorization, Custom Policies and User Context (ICurrentUser)
 builder.Services.AddBuildingBlocksAuth();
 
-// SignalR + cross-module seat reservation (host owns this glue; modules stay decoupled).
-builder.Services.AddSignalR();
-builder.Services.AddScoped<IFlightSeatReservation, FlightSeatReservation>();
-builder.Services.AddScoped<IStaffSalesReader, StaffSalesReader>();
+// Cross-module service implementations (reside in API host to avoid circular refs between modules)
+builder.Services.AddScoped<IFlightSeatReservation, AirlineTicket.Api.Services.FlightSeatReservation>();
+builder.Services.AddScoped<IStaffSalesReader, AirlineTicket.Api.Services.StaffSalesReader>();
 
 builder.Services.AddCors(options =>
 {
@@ -225,7 +232,5 @@ app.UseAuthorization();
 app.MapControllers();   // Định tuyến các Controller từ các Module (vd: QaController)
 app.MapEndpoints();
 app.MapHealthEndpoints();
-app.MapHub<SeatHub>("/hubs/seats");
-app.MapHub<SupportChatHub>("/hubs/support");
 
 app.Run();
