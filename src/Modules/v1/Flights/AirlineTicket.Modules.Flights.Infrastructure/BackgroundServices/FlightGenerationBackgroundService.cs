@@ -7,12 +7,71 @@ using AirlineTicket.Modules.Flights.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace AirlineTicket.Modules.Flights.Infrastructure.BackgroundServices;
 
 public interface IFlightGenerator
 {
     Task GenerateFlightsAsync(DateTime targetDate, CancellationToken ct);
+}
+
+public sealed class FlightGenerationBackgroundService : BackgroundService
+{
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<FlightGenerationBackgroundService> _logger;
+    private readonly IOptions<FlightGenerationOptions> _options;
+
+    public FlightGenerationBackgroundService(
+        IServiceScopeFactory scopeFactory,
+        ILogger<FlightGenerationBackgroundService> logger,
+        IOptions<FlightGenerationOptions>? options = null)
+    {
+        _scopeFactory = scopeFactory;
+        _logger = logger;
+        _options = options ?? Microsoft.Extensions.Options.Options.Create<FlightGenerationOptions>(new());
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        _logger.LogInformation("FlightGenerationBackgroundService started.");
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var flightGenerator = scope.ServiceProvider.GetRequiredService<IFlightGenerator>();
+
+                var today = DateTime.UtcNow.Date;
+                var windowDays = Math.Clamp(_options.Value.GenerationWindowDays, 1, 14);
+
+                for (var dayOffset = 0; dayOffset < windowDays; dayOffset++)
+                {
+                    stoppingToken.ThrowIfCancellationRequested();
+                    var targetDate = today.AddDays(dayOffset);
+                    await flightGenerator.GenerateFlightsAsync(targetDate, stoppingToken);
+                }
+
+                _logger.LogInformation("Flight generation cycle completed successfully.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during flight generation cycle.");
+            }
+
+            // Wait 24 hours before the next cycle
+            await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
+        }
+    }
+}
+
+public class FlightGenerationOptions
+{
+    /// <summary>Number of days ahead to generate flights for. Max 14.</summary>
+    public int GenerationWindowDays { get; set; } = 14;
 }
 
 public class FlightGenerator : IFlightGenerator

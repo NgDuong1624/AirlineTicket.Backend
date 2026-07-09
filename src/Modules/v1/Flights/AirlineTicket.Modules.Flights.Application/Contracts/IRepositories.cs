@@ -19,6 +19,7 @@ public class FlightDto
     public string DestinationCode { get; set; } = string.Empty;
     public string AirlineName { get; set; } = string.Empty;
     public string Currency { get; set; } = "VND";
+    public int Status { get; set; }
 }
 
 public class StaffFlightListItemDto

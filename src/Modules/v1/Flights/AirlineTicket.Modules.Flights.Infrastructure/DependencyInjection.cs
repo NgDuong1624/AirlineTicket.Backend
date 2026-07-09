@@ -36,6 +36,15 @@ public static class DependencyInjection
         services.AddScoped<IFlightGenerator, FlightGenerator>();
         services.AddScoped<IFlightCleaner, FlightCleaner>();
 
+        // Register background services
+        services.AddHostedService<FlightStatusAutomatorJob>();
+        services.AddHostedService<FlightDelayDetectorJob>();
+        services.AddHostedService<CloseFlightSalesJob>();
+        services.AddHostedService<CheckInReminderJob>();
+        services.AddHostedService<DynamicPricingJob>();
+        services.AddHostedService<FlightCleanupBackgroundService>();
+        services.AddHostedService<FlightGenerationBackgroundService>();
+
         return services;
     }
 }

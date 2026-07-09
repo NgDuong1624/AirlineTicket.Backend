@@ -24,7 +24,7 @@ public class FlightRepository : IFlightRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT f.Id, f.DepartureTime, f.ArrivalTime, f.BasePrice as Price, 
+            SELECT f.Id, f.DepartureTime, f.ArrivalTime, f.BasePrice as Price, f.Status,
                    r.OriginAirportId, r.DestinationAirportId, r.AirlineId
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id
@@ -50,7 +50,7 @@ public class FlightRepository : IFlightRepository
         
         var sql = @"
             SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
-                   f.DepartureTime, f.ArrivalTime, f.Currency,
+                   f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
                    oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id
@@ -144,7 +144,7 @@ public class FlightRepository : IFlightRepository
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
             SELECT TOP 5 f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
-                         f.DepartureTime, f.ArrivalTime, f.Currency,
+                         f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
                          oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id
@@ -190,7 +190,7 @@ public class FlightRepository : IFlightRepository
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
             SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice,
-                   f.DepartureTime, f.ArrivalTime, f.Currency,
+                   f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
                    oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id
@@ -208,7 +208,7 @@ public class FlightRepository : IFlightRepository
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
             SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice,
-                   f.DepartureTime, f.ArrivalTime, f.Currency,
+                   f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
                    oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id

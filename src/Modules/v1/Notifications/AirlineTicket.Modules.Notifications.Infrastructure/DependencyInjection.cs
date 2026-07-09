@@ -1,5 +1,6 @@
 using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Application.BackgroundServices;
+using AirlineTicket.Modules.Notifications.Infrastructure.BackgroundServices;
 using AirlineTicket.Modules.Notifications.Infrastructure.Data;
 using AirlineTicket.Modules.Notifications.Infrastructure.Data.Repositories;
 using AirlineTicket.Modules.Notifications.Infrastructure.Services;
@@ -25,6 +26,8 @@ public static class DependencyInjection
         services.AddSingleton<PushSender>();
         services.AddScoped<INotificationSender, NotificationSender>();
         services.AddHostedService<NotificationProcessingBackgroundService>();
+        services.AddHostedService<EmailSmsMassSender>();
+        services.AddHostedService<FlightDelayNotifierJob>();
 
         return services;
     }

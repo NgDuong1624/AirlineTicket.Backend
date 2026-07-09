@@ -1,4 +1,5 @@
 using AirlineTicket.Modules.Bookings.Application.Contracts;
+using AirlineTicket.Modules.Bookings.Infrastructure.BackgroundServices;
 using AirlineTicket.Modules.Bookings.Infrastructure.Data;
 using AirlineTicket.Modules.Bookings.Infrastructure.Data.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,9 @@ public static class DependencyInjection
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<IRevenueRepository, RevenueRepository>();
+
+        services.AddHostedService<CancelExpiredBookingsJob>();
+        services.AddHostedService<BookingRefundProcessor>();
         
         return services;
     }
