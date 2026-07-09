@@ -1,6 +1,7 @@
 using System;
 using System.Net;
 using System.Net.Http.Headers;
+using AirlineTicket.Modules.Interactions.Infrastructure.BackgroundServices;
 using AirlineTicket.Modules.Interactions.Application.Features.Qa;
 using AirlineTicket.Modules.Interactions.Infrastructure.Ai;
 using AirlineTicket.Modules.Interactions.Infrastructure.Data;
@@ -57,6 +58,9 @@ public static class DependencyInjection
                              msg.StatusCode == HttpStatusCode.BadGateway ||
                              msg.StatusCode == HttpStatusCode.GatewayTimeout)
             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
+
+        // Background services
+        services.AddHostedService<ChatbotTimeoutHandler>();
 
         return services;
     }

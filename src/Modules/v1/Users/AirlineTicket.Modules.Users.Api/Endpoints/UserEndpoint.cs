@@ -117,48 +117,37 @@ public class UserEndpoint : IEndpoint
 
         adminGroup.MapPost("/", async (
                 [FromBody] AdminUserRequest request,
-                [FromServices] IUserRepository userRepository,
-                [FromServices] IPasswordHasher passwordHasher,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                if (!await userRepository.IsEmailUniqueAsync(request.Email, ct))
-                    return new Error("BAD_REQUEST", "Email already exists").ToErrorResult();
-
-                var user = new User
-                {
-                    Id = Guid.NewGuid(),
-                    Email = request.Email,
-                    FullName = request.FullName,
-                    Phone = request.Phone,
-                    Role = (UserRoleEnum)(request.RoleId ?? (int)UserRoleEnum.Customer),
-                    IsActive = request.IsActive ?? true,
-                    PasswordHash = passwordHasher.HashPassword(string.IsNullOrEmpty(request.Password) ? "ChangeMe123!" : request.Password)
-                };
-
-                await userRepository.AddAsync(user, ct);
-                return Results.Created($"/api/admin/users/{user.Id}", new { Id = user.Id });
+                var command = new AdminCreateUserCommand(
+                    request.Email, 
+                    request.FullName, 
+                    request.Phone, 
+                    request.RoleId, 
+                    request.IsActive, 
+                    request.Password, 
+                    request.AirlineId);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Created($"/api/admin/users/{result.Value}", new { Id = result.Value }) : result.ToErrorResult();
             });
 
         adminGroup.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] AdminUserRequest request,
-                [FromServices] IUserRepository userRepository,
-                [FromServices] IPasswordHasher passwordHasher,
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var user = await userRepository.GetByIdAsync(id, ct);
-                if (user is null) return Results.NotFound();
-
-                user.FullName = request.FullName;
-                user.Phone = request.Phone;
-                if (request.RoleId.HasValue) user.Role = (UserRoleEnum)request.RoleId.Value;
-                if (request.IsActive.HasValue) user.IsActive = request.IsActive.Value;
-                if (!string.IsNullOrEmpty(request.Password))
-                    user.PasswordHash = passwordHasher.HashPassword(request.Password);
-                user.UpdatedAt = DateTime.UtcNow;
-
-                await userRepository.UpdateAsync(user, ct);
-                return Results.Ok();
+                var command = new AdminUpdateUserCommand(
+                    id, 
+                    request.FullName, 
+                    request.Phone, 
+                    request.RoleId, 
+                    request.IsActive, 
+                    request.Password, 
+                    request.AirlineId);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : result.ToErrorResult();
             });
 
         adminGroup.MapGet("/{id:guid}", async (Guid id, [FromServices] ISender sender, CancellationToken ct) =>
@@ -180,15 +169,18 @@ public class UserEndpoint : IEndpoint
             .WithTags("Admin Permissions")
             .RequireAuthorization("AdminOnly");
 
-        permissionGroup.MapGet("/", async ([FromServices] IPermissionRepository repo, CancellationToken ct) =>
+        permissionGroup.MapGet("/", async ([FromServices] ISender sender, CancellationToken ct) =>
             {
-                var items = await repo.GetAllAsync(ct);
-                return Results.Ok(new { items, totalCount = items.Count });
+                var query = new GetPermissionsQuery();
+                var result = await sender.Send(query, ct);
+                return result.IsSuccess
+                    ? Results.Ok(new { items = result.Value, totalCount = result.Value.Count })
+                    : result.ToErrorResult();
             });
     }
 }
 
 public sealed record RegisterUserRequest(string Email, string Password, string FullName, string Phone);
 public sealed record LoginUserRequest(string Email, string Password);
-public sealed record AdminUserRequest(string Email, string FullName, string? Phone, int? RoleId, bool? IsActive, string? Password);
+public sealed record AdminUserRequest(string Email, string FullName, string? Phone, int? RoleId, bool? IsActive, string? Password, Guid? AirlineId);
 public sealed record AdminPermissionRequest(string Code, string Name, string? Description);

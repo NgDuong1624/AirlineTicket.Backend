@@ -30,6 +30,7 @@ public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, Result<Us
             user.Role.ToString(),
             (int)user.Role,
             user.AirlineId,
+            user.AirlineName,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         );

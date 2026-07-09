@@ -1,6 +1,7 @@
 using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
+using AirlineTicket.Modules.Users.Application.Services;
 using AirlineTicket.Modules.Users.Domain.Enums;
 using MediatR;
 using System;
@@ -12,10 +13,12 @@ namespace AirlineTicket.Modules.Users.Application.Features.Admin;
 public class AdminUpdateUserCommandHandler : ICommandHandler<AdminUpdateUserCommand, Result<Unit>>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public AdminUpdateUserCommandHandler(IUserRepository userRepository)
+    public AdminUpdateUserCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<Result<Unit>> Handle(AdminUpdateUserCommand request, CancellationToken cancellationToken)
@@ -26,11 +29,18 @@ public class AdminUpdateUserCommandHandler : ICommandHandler<AdminUpdateUserComm
 
         user.FullName = request.FullName;
         user.Phone = request.Phone;
-
-        if (Enum.TryParse<AirlineTicket.Modules.Users.Domain.Enums.UserRole>(request.Role, true, out var roleEnum))
-        {
-            user.Role = roleEnum;
-        }
+        
+        if (request.RoleId.HasValue) 
+            user.Role = (UserRole)request.RoleId.Value;
+            
+        if (request.IsActive.HasValue) 
+            user.IsActive = request.IsActive.Value;
+            
+        if (!string.IsNullOrEmpty(request.Password))
+            user.PasswordHash = _passwordHasher.HashPassword(request.Password);
+            
+        user.AirlineId = request.AirlineId;
+        user.UpdatedAt = DateTime.UtcNow;
 
         await _userRepository.UpdateAsync(user, cancellationToken);
         return Result.Success(Unit.Value);

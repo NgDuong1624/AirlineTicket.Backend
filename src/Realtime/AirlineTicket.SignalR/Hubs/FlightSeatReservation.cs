@@ -8,7 +8,7 @@ using AirlineTicket.Modules.Flights.Infrastructure.Data;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
-namespace AirlineTicket.Api.Realtime;
+namespace AirlineTicket.SignalR.Hubs;
 
 /// <summary>
 /// Host-side implementation of the Bookings port. Lives here because the API host is the

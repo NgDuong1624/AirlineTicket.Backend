@@ -1,3 +1,4 @@
+using AirlineTicket.Modules.Promotions.Infrastructure.BackgroundServices;
 using AirlineTicket.Modules.Promotions.Application.Contracts;
 using AirlineTicket.Modules.Promotions.Infrastructure.Data;
 using AirlineTicket.Modules.Promotions.Infrastructure.Data.Repositories;
@@ -18,7 +19,10 @@ public static class DependencyInjection
         
         // Register repositories
         services.AddScoped<IPromotionRepository, PromotionRepository>();
-        
+
+        // Background services
+        services.AddHostedService<PromotionStatusUpdaterJob>();
+
         return services;
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AirlineTicket.Modules.Users.Domain.Entities;
 
@@ -13,6 +14,8 @@ public class User
     public string? Phone { get; set; }
     public Enums.UserRole Role { get; set; } = Enums.UserRole.Customer;
     public Guid? AirlineId { get; set; }
+    [NotMapped]
+    public string? AirlineName { get; set; }
     public string? AvatarUrl { get; set; }
     public string? LanguagePreference { get; set; } = "vi";
     public DateTime? LastLoginAt { get; set; }

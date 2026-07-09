@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-AirlineTicket.Worker-2ff71892-de11-4824-96f2-edeb2d101cae</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Infrastructure\AirlineTicket.Modules.Bookings.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Infrastructure\AirlineTicket.Modules.Flights.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Notifications\AirlineTicket.Modules.Notifications.Infrastructure\AirlineTicket.Modules.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Promotions\AirlineTicket.Modules.Promotions.Infrastructure\AirlineTicket.Modules.Promotions.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Infrastructure\AirlineTicket.Modules.Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Interactions\AirlineTicket.Modules.Interactions.Infrastructure\AirlineTicket.Modules.Interactions.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Infrastructure\AirlineTicket.Modules.Logs.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\CMS\AirlineTicket.Modules.CMS.Infrastructure\AirlineTicket.Modules.CMS.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

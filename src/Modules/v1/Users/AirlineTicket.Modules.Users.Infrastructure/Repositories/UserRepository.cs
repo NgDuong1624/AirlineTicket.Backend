@@ -18,15 +18,21 @@ public class UserRepository : IUserRepository
     public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        var result = await connection.QueryAsync<User>("SELECT * FROM dbo.Users");
+        var result = await connection.QueryAsync<User>(@"
+            SELECT u.*, a.Name as AirlineName 
+            FROM dbo.Users u 
+            LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id");
         return result.ToList();
     }
 
     public async Task<IReadOnlyList<User>> GetByAirlineIdAsync(Guid airlineId, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        var result = await connection.QueryAsync<User>(
-            "SELECT * FROM dbo.Users WHERE AirlineId = @AirlineId AND IsDeleted = 0", 
+        var result = await connection.QueryAsync<User>(@"
+            SELECT u.*, a.Name as AirlineName 
+            FROM dbo.Users u 
+            LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id 
+            WHERE u.AirlineId = @AirlineId AND u.IsDeleted = 0", 
             new { AirlineId = airlineId });
         return result.ToList();
     }
@@ -34,8 +40,11 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        return await connection.QueryFirstOrDefaultAsync<User>(
-            "SELECT * FROM dbo.Users WHERE Id = @Id", 
+        return await connection.QueryFirstOrDefaultAsync<User>(@"
+            SELECT u.*, a.Name as AirlineName 
+            FROM dbo.Users u 
+            LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id 
+            WHERE u.Id = @Id", 
             new { Id = id });
     }
 

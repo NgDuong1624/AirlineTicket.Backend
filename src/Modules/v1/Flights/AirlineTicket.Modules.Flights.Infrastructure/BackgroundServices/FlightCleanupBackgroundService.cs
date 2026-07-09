@@ -1,19 +1,13 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using AirlineTicket.Modules.Flights.Infrastructure.BackgroundServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace AirlineTicket.Workers.FlightCleanup;
+namespace AirlineTicket.Modules.Flights.Infrastructure.BackgroundServices;
 
 public sealed class FlightCleanupBackgroundService : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<FlightCleanupBackgroundService> _logger;
-    private readonly object _lastSuccessLock = new();
-    private DateTime? _lastSuccessTime;
 
     public FlightCleanupBackgroundService(
         IServiceScopeFactory scopeFactory,
@@ -21,11 +15,6 @@ public sealed class FlightCleanupBackgroundService : BackgroundService
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
-    }
-
-    public DateTime? GetLastSuccessTime()
-    {
-        lock (_lastSuccessLock) { return _lastSuccessTime; }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -36,11 +25,11 @@ public sealed class FlightCleanupBackgroundService : BackgroundService
         {
             try
             {
-                await RunCleanupAsync(stoppingToken);
-                lock (_lastSuccessLock)
-                {
-                    _lastSuccessTime = DateTime.UtcNow;
-                }
+                using var scope = _scopeFactory.CreateScope();
+                var flightCleaner = scope.ServiceProvider.GetRequiredService<IFlightCleaner>();
+                await flightCleaner.CleanFlightsAsync(stoppingToken);
+
+                _logger.LogInformation("Flight cleanup cycle completed successfully.");
             }
             catch (Exception ex)
             {
@@ -50,12 +39,5 @@ public sealed class FlightCleanupBackgroundService : BackgroundService
             // Run every 12 hours
             await Task.Delay(TimeSpan.FromHours(12), stoppingToken);
         }
-    }
-
-    private async Task RunCleanupAsync(CancellationToken ct)
-    {
-        using var scope = _scopeFactory.CreateScope();
-        var flightCleaner = scope.ServiceProvider.GetRequiredService<IFlightCleaner>();
-        await flightCleaner.CleanFlightsAsync(ct);
     }
 }

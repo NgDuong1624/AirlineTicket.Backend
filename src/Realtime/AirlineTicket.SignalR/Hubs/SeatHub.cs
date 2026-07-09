@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AirlineTicket.Api.Realtime;
+namespace AirlineTicket.SignalR.Hubs;
 
 /// <summary>
 /// Realtime channel for the staff seat map. Clients join a per-flight group and receive

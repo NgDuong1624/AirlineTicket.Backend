@@ -1,3 +1,4 @@
+using AirlineTicket.Modules.Logs.Infrastructure.BackgroundServices;
 using AirlineTicket.BuildingBlocks.Logging;
 using AirlineTicket.Modules.Logs.Application.Contracts;
 using AirlineTicket.Modules.Logs.Infrastructure.Data;
@@ -29,6 +30,10 @@ public static class DependencyInjection
 
         services.AddScoped<ISystemLogService, SystemLogService>();
         services.AddScoped<ILogRepository, LogRepository>();
+
+        // Background services
+        services.AddHostedService<LogRetentionCleanerJob>();
+        services.AddHostedService<DailySalesReportJob>();
 
         return services;
     }

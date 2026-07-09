@@ -8,7 +8,7 @@ using AirlineTicket.Modules.Bookings.Infrastructure.Data;
 using AirlineTicket.Modules.Flights.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace AirlineTicket.Api.Realtime;
+namespace AirlineTicket.SignalR.Hubs;
 
 /// <summary>
 /// Assembles staff ticket-sales rows by joining the Bookings and Flights data stores.

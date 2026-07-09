@@ -31,6 +31,7 @@ public class GetUserProfileQueryHandler : IQueryHandler<GetUserProfileQuery, Res
             user.Role.ToString(),
             (int)user.Role,
             user.AirlineId,
+            user.AirlineName,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         );

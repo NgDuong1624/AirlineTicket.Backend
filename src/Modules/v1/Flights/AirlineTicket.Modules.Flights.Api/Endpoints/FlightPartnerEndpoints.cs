@@ -8,6 +8,7 @@ using AirlineTicket.Modules.Flights.Application.Features.Routes;
 using AirlineTicket.Modules.Flights.Application.Features.Airplanes;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
 using AirlineTicket.Modules.Flights.Application.Features.Airlines;
+using AirlineTicket.Modules.Flights.Application.Features.AircraftModels;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -84,6 +85,16 @@ public class FlightPartnerEndpoints : IEndpoint
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
                 var result = await sender.Send(new GetAirplanesByAirlineQuery(airlineId), ct);
                 return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+            });
+
+        partnerAirplanes.MapGet("/models", async (
+                [FromServices] ISender sender,
+                CancellationToken ct,
+                [FromQuery] int? pageIndex = 1,
+                [FromQuery] int? pageSize = 100) =>
+            {
+                var result = await sender.Send(new GetAircraftModelsQuery(pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Value.Items, TotalCount = result.Value.TotalCount }) : Results.BadRequest(result.Error);
             });
 
         partnerAirplanes.MapPost("/", async (
