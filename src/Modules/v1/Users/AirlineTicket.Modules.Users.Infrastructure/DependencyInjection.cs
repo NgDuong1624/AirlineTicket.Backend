@@ -1,3 +1,4 @@
+using AirlineTicket.Modules.Users.Infrastructure.BackgroundServices;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
 using AirlineTicket.Modules.Users.Infrastructure.Data;
@@ -22,7 +23,10 @@ public static class DependencyInjection
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtService, JwtService>();
-        
+
+        // Background services
+        services.AddHostedService<CleanExpiredTokensJob>();
+
         return services;
     }
 }

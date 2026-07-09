@@ -5,11 +5,11 @@ using System;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Admin;
 
-public record AdminUpdateUserCommand(
-    Guid Id, 
+public record AdminCreateUserCommand(
+    string Email, 
     string FullName, 
     string? Phone, 
     int? RoleId, 
     bool? IsActive, 
     string? Password, 
-    Guid? AirlineId) : ICommand<Result<Unit>>;
+    Guid? AirlineId) : ICommand<Result<Guid>>;
