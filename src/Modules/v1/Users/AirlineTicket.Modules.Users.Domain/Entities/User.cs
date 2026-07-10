@@ -12,7 +12,7 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string? Phone { get; set; }
-    public Enums.UserRole Role { get; set; } = Enums.UserRole.Customer;
+    public int Role { get; set; } = (int)Enums.UserRole.Customer;
     public Guid? AirlineId { get; set; }
     [NotMapped]
     public string? AirlineName { get; set; }
@@ -28,6 +28,6 @@ public class User
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
 
-    // Navigation properties
-    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    // Navigation property
+    public virtual Role? RoleEntity { get; set; }
 }

@@ -49,7 +49,7 @@ public class GetUserProfileQueryHandlerTests
             Email = "test@example.com",
             FullName = "Test User",
             Phone = "123456789",
-            Role = Domain.Enums.UserRole.Customer
+            Role = (int)Domain.Enums.UserRole.Customer
         };
         var query = new GetUserProfileQuery(userId);
         _userRepositoryMock.Setup(repo => repo.GetByIdAsync(query.UserId, It.IsAny<CancellationToken>()))

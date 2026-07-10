@@ -26,11 +26,13 @@ public class PartnerBookingEndpoints : IEndpoint
 
         group.MapGet("/", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
-                var result = await sender.Send(new GetAllBookingsQuery(), ct);
+                var result = await sender.Send(new GetAllBookingsQuery(pageIndex, pageSize), ct);
                 return result.IsSuccess
-                    ? Results.Ok(new { items = result.Value, totalCount = result.Value.Count })
+                    ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount })
                     : Results.BadRequest(result.Error);
             })
             .WithName("PartnerGetBookings");

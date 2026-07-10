@@ -31,7 +31,7 @@ public class AdminUpdateUserCommandHandler : ICommandHandler<AdminUpdateUserComm
         user.Phone = request.Phone;
         
         if (request.RoleId.HasValue) 
-            user.Role = (UserRole)request.RoleId.Value;
+            user.Role = request.RoleId.Value;
             
         if (request.IsActive.HasValue) 
             user.IsActive = request.IsActive.Value;

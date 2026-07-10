@@ -20,11 +20,13 @@ public class BookingAdminEndpoints : IEndpoint
 
         adminBookings.MapGet("/", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
-                var query = new GetAllBookingsQuery();
+                var query = new GetAllBookingsQuery(pageIndex, pageSize);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetBookings");
 

@@ -141,14 +141,14 @@ public class BookingHandlersTests
             new BookingDto { Id = Guid.NewGuid(), Status = "Cancelled" }
         };
 
-        _bookingRepoMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(bookings);
+        _bookingRepoMock.Setup(x => x.GetAllAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((bookings, 3));
 
         var result = await handler.Handle(new GetAllBookingsQuery(), CancellationToken.None);
 
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(3);
+        result.Items.Should().HaveCount(3);
     }
 
     [Fact]
@@ -156,14 +156,14 @@ public class BookingHandlersTests
     {
         var handler = new GetAllBookingsQueryHandler(_bookingRepoMock.Object);
 
-        _bookingRepoMock.Setup(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<BookingDto>());
+        _bookingRepoMock.Setup(x => x.GetAllAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((new List<BookingDto>(), 0));
 
         var result = await handler.Handle(new GetAllBookingsQuery(), CancellationToken.None);
 
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEmpty();
+        result.Items.Should().BeEmpty();
     }
 
     // ======================= UpdateBookingCommandHandler Tests =======================

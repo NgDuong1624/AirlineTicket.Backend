@@ -34,7 +34,7 @@ public class PartnerStaffEndpoints : IEndpoint
 
                 var users = await repo.GetByAirlineIdAsync(airlineId.Value, ct);
                 var items = users
-                    .Where(u => u.Role == UserRoleEnum.Staff)
+                    .Where(u => u.Role == (int)UserRoleEnum.Staff)
                     .Select(ToDto)
                     .ToList();
                 return Results.Ok(new { items, totalCount = items.Count });
@@ -60,7 +60,7 @@ public class PartnerStaffEndpoints : IEndpoint
                     Email = request.Email,
                     FullName = request.FullName,
                     Phone = request.Phone,
-                    Role = UserRoleEnum.Staff,
+                    Role = (int)UserRoleEnum.Staff,
                     AirlineId = airlineId,
                     IsActive = request.IsActive ?? true,
                     PasswordHash = passwordHasher.HashPassword(string.IsNullOrEmpty(request.Password) ? "ChangeMe123!" : request.Password)
@@ -108,6 +108,26 @@ public class PartnerStaffEndpoints : IEndpoint
                 return Results.NoContent();
             });
 
+        staff.MapPatch("/{id:guid}/status", async (
+                Guid id,
+                [FromBody] UpdateUserStatusRequest request,
+                ClaimsPrincipal principal,
+                [FromServices] IUserRepository repo,
+                CancellationToken ct) =>
+            {
+                var airlineId = principal.GetAirlineId();
+                if (airlineId is null)
+                    return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
+
+                var user = await repo.GetByIdAsync(id, ct);
+                if (user is null || user.AirlineId != airlineId) return Results.NotFound();
+
+                user.IsActive = request.IsActive == 1;
+                user.UpdatedAt = DateTime.UtcNow;
+                await repo.UpdateAsync(user, ct);
+                return Results.Ok();
+            });
+
         staff.MapGet("/my-airline", async (
                 ClaimsPrincipal principal,
                 [FromServices] IUserRepository repo,
@@ -138,3 +158,4 @@ public class PartnerStaffEndpoints : IEndpoint
 }
 
 public sealed record PartnerStaffRequest(string Email, string FullName, string? Phone, bool? IsActive, string? Password);
+public sealed record UpdateUserStatusRequest(int IsActive);

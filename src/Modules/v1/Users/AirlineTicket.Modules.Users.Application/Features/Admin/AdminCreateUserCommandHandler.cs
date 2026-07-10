@@ -33,7 +33,7 @@ public class AdminCreateUserCommandHandler : ICommandHandler<AdminCreateUserComm
             Email = request.Email,
             FullName = request.FullName,
             Phone = request.Phone,
-            Role = (Domain.Enums.UserRole)(request.RoleId ?? (int)Domain.Enums.UserRole.Customer),
+            Role = request.RoleId ?? (int)Domain.Enums.UserRole.Customer,
             IsActive = request.IsActive ?? true,
             PasswordHash = _passwordHasher.HashPassword(string.IsNullOrEmpty(request.Password) ? "ChangeMe123!" : request.Password),
             AirlineId = request.AirlineId

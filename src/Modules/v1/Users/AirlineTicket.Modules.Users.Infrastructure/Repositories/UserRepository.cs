@@ -50,13 +50,12 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        // Keeping EF for this one due to complex includes (UserRoles, Role, RolePermissions, Permission)
+        // Keeping EF for this one due to complex includes (RoleEntity, RolePermissions, Permission)
         // Dapper multi-mapping for 4 levels deep is complex and error-prone.
         return await _context.Users
-            .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-                    .ThenInclude(r => r.RolePermissions)
-                        .ThenInclude(rp => rp.Permission)
+            .Include(u => u.RoleEntity)
+                .ThenInclude(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
             .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
 

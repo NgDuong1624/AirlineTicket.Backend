@@ -29,11 +29,13 @@ public class FlightPartnerEndpoints : IEndpoint
         partnerRoutes.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var result = await sender.Send(new GetRoutesByAirlineQuery(airlineId), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetRoutesByAirlineQuery(airlineId, pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Items, TotalCount = result.TotalCount }) : Results.BadRequest(result.Error);
             });
 
         partnerRoutes.MapPost("/", async (
@@ -80,11 +82,13 @@ public class FlightPartnerEndpoints : IEndpoint
         partnerAirplanes.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var result = await sender.Send(new GetAirplanesByAirlineQuery(airlineId), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetAirplanesByAirlineQuery(airlineId, pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Items, TotalCount = result.TotalCount }) : Results.BadRequest(result.Error);
             });
 
         partnerAirplanes.MapGet("/models", async (
@@ -141,11 +145,13 @@ public class FlightPartnerEndpoints : IEndpoint
         partnerFlights.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var result = await sender.Send(new GetPartnerFlightsQuery(airlineId), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetPartnerFlightsQuery(airlineId, pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Items, TotalCount = result.TotalCount }) : Results.BadRequest(result.Error);
             });
 
         partnerFlights.MapPost("/", async (
@@ -207,11 +213,13 @@ public class FlightPartnerEndpoints : IEndpoint
         partnerAircraft.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
-                var result = await sender.Send(new GetPartnerAircraftQuery(airlineId), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value, TotalCount = result.Value.Count }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetPartnerAircraftQuery(airlineId, pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(new { Items = result.Items, TotalCount = result.TotalCount }) : Results.BadRequest(result.Error);
             });
 
         partnerAircraft.MapPost("/", async (

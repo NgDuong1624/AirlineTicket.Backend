@@ -9,8 +9,7 @@ Tài liệu này chi tiết hóa cấu trúc Cơ sở Dữ liệu của hệ th�
 ```mermaid
 erDiagram
     %% IDENTITY SCHEMA
-    identity_Users ||--o{ identity_UserRoles : "has"
-    identity_Roles ||--o{ identity_UserRoles : "has"
+    identity_Users ||--|| identity_Roles : "has"
     identity_Roles ||--o{ identity_RolePermissions : "has"
     identity_Permissions ||--o{ identity_RolePermissions : "defines"
     identity_Users ||--o{ identity_UserPermissionScopes : "has"
@@ -70,6 +69,7 @@ Lưu trữ thông tin người dùng (Khách hàng, Đối tác, Quản trị vi
 | `PasswordHash` | NVARCHAR(MAX) | NOT NULL | Mật khẩu đã được băm bảo mật |
 | `FullName` | NVARCHAR(255) | NOT NULL | Họ và tên đầy đủ |
 | `PhoneNumber` | NVARCHAR(20) | NULL | Số điện thoại liên lạc |
+| `Role` | INT | FOREIGN KEY -> Roles(Id), NOT NULL | Vai trò người dùng (0: Admin, 1: Staff, 2: Customer) |
 | `AvatarUrl` | NVARCHAR(500) | NULL | Đường dẫn ảnh đại diện |
 | `LanguagePreference` | NVARCHAR(10) | DEFAULT 'vi' | Ngôn ngữ ưu tiên (vi, en,...) |
 | `LastLoginAt` | DATETIME2 | NULL | Thời gian đăng nhập cuối cùng |
@@ -96,14 +96,6 @@ Danh mục các chức năng/quyền hạn trong hệ thống.
 | `Code` | NVARCHAR(50) | UNIQUE, NOT NULL | Mã quyền (Ví dụ: 'SELL_TICKET') |
 | `Name` | NVARCHAR(100) | NOT NULL | Tên quyền hiển thị |
 | `Description` | NVARCHAR(255) | NULL | Mô tả chi tiết quyền |
-
-#### Bảng `identity.UserRoles`
-Bảng trung gian liên kết người dùng và vai trò.
-
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
-| :--- | :--- | :--- | :--- |
-| `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Users(Id) | Liên kết người dùng |
-| `RoleId` | INT | FOREIGN KEY -> Roles(Id) | Liên kết vai trò |
 
 #### Bảng `identity.RolePermissions`
 Cấu hình quyền mặc định thuộc về từng Role.

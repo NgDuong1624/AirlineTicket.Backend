@@ -4,13 +4,9 @@ using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.BuildingBlocks.Exceptions;
-using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Features.Admin;
 using AirlineTicket.Modules.Users.Application.Repositories;
-using AirlineTicket.Modules.Users.Application.Services;
-using AirlineTicket.Modules.Users.Domain.Entities;
-using UserRoleEnum = AirlineTicket.Modules.Users.Domain.Enums.UserRole;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -162,6 +158,21 @@ public class UserEndpoint : IEndpoint
                 var command = new DeleteUserCommand(id);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
+            });
+
+        adminGroup.MapPatch("/{id:guid}/status", async (
+                Guid id,
+                [FromBody] UpdateUserStatusRequest request,
+                [FromServices] IUserRepository repo,
+                CancellationToken ct) =>
+            {
+                var user = await repo.GetByIdAsync(id, ct);
+                if (user is null) return Results.NotFound();
+
+                user.IsActive = request.IsActive == 1;
+                user.UpdatedAt = DateTime.UtcNow;
+                await repo.UpdateAsync(user, ct);
+                return Results.Ok();
             });
 
         // ——————————————————————— Admin Permission Management ————————————————————————————————

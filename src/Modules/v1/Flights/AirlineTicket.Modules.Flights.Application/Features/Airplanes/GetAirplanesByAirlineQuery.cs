@@ -9,9 +9,9 @@ using AirlineTicket.Modules.Flights.Domain.Entities;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Airplanes;
 
-public record GetAirplanesByAirlineQuery(Guid AirlineId) : IQuery<Result<List<Airplane>>>;
+public record GetAirplanesByAirlineQuery(Guid AirlineId, int PageIndex = 1, int PageSize = 10) : IQuery<PagedResult<Airplane>>;
 
-internal sealed class GetAirplanesByAirlineQueryHandler : IQueryHandler<GetAirplanesByAirlineQuery, Result<List<Airplane>>>
+internal sealed class GetAirplanesByAirlineQueryHandler : IQueryHandler<GetAirplanesByAirlineQuery, PagedResult<Airplane>>
 {
     private readonly IAirplaneRepository _airplaneRepository;
 
@@ -20,9 +20,9 @@ internal sealed class GetAirplanesByAirlineQueryHandler : IQueryHandler<GetAirpl
         _airplaneRepository = airplaneRepository;
     }
 
-    public async Task<Result<List<Airplane>>> Handle(GetAirplanesByAirlineQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<Airplane>> Handle(GetAirplanesByAirlineQuery request, CancellationToken cancellationToken)
     {
-        var airplanes = await _airplaneRepository.GetByAirlineAsync(request.AirlineId, cancellationToken);
-        return Result.Success(airplanes);
+        var (items, totalCount) = await _airplaneRepository.GetByAirlineAsync(request.AirlineId, request.PageIndex, request.PageSize, cancellationToken);
+        return PagedResult<Airplane>.Success(items.AsReadOnly(), request.PageIndex, request.PageSize, totalCount);
     }
 }
