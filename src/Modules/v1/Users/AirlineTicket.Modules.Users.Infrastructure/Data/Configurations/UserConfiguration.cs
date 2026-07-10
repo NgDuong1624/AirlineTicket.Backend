@@ -16,5 +16,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             
         builder.HasIndex(x => x.Email)
             .IsUnique();
+
+        builder.HasOne(x => x.RoleEntity)
+            .WithMany()
+            .HasForeignKey(x => x.Role)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

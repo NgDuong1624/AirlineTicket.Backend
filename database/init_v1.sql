@@ -69,16 +69,6 @@ GO
 -- TẠO CÁC BẢNG TRUNG GIAN & PHÂN QUYỀN (RELATIONSHIP & SCOPE TABLES)
 -- ==================================================================
 
--- Bảng UserRoles (Liên kết giữa Người dùng và Vai trò)
-CREATE TABLE [identity].[UserRoles] (
-    [UserId] UNIQUEIDENTIFIER NOT NULL,
-    [RoleId] INT NOT NULL,
-    PRIMARY KEY ([UserId], [RoleId]),
-    CONSTRAINT [FK_UserRoles_Users] FOREIGN KEY ([UserId]) REFERENCES [identity].[Users]([Id]) ON DELETE CASCADE,
-    CONSTRAINT [FK_UserRoles_Roles] FOREIGN KEY ([RoleId]) REFERENCES [identity].[Roles]([Id]) ON DELETE CASCADE
-);
-GO
-
 -- Bảng RolePermissions (Cấu hình quyền mặc định thuộc về từng Role)
 CREATE TABLE [identity].[RolePermissions] (
     [RoleId] INT NOT NULL,

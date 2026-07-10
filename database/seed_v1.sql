@@ -43,21 +43,8 @@ INSERT INTO [dbo].[Users] ([Id], [Email], [EmailConfirmed], [PasswordHash], [Ful
 ('C3F3E2D4-BCDE-4F01-2345-6789ABCDEF93', 'admin.qh@airlineticket.com', 1, '$2b$12$d7mwUGX/x5jcRrxdNAFqJekces0IQ2f9F4mC24iVGZUpwM2pF1Qly', N'Admin QH', '0333333333', 1, 0, GETUTCDATE(), GETUTCDATE(), 1);
 GO
 
--- Liên kết User và Roles (Admin và Client)
-INSERT INTO [dbo].[UserRoles] ([UserId], [RoleId]) VALUES
-('D4B0F2A8-9B2F-4A9B-89E3-4E80D77BC901', 0), -- System Admin
-('E2E3F4C5-1A2B-3C4D-5E6F-7A8B9C0D1E2F', 3), -- User (Client)
-('A1F3E2D4-BCDE-4F01-2345-6789ABCDEF91', 1), -- Airline Admin (VNA)
-('B2F3E2D4-BCDE-4F01-2345-6789ABCDEF92', 1), -- Airline Admin (VJ)
-('C3F3E2D4-BCDE-4F01-2345-6789ABCDEF93', 1); -- Airline Admin (QH)
-GO
-
 -- Phân quyền quản trị cho các Airline Admin
 INSERT INTO [dbo].[UserPermissionScopes] ([Id], [UserId], [PermissionId], [AirlineId], [ScopeDescription], [CreatedAt]) VALUES
-(NEWID(), 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF91', 3, 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', N'Vietnam Airlines Administration', GETUTCDATE()),
-(NEWID(), 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF91', 5, 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', N'VNA Flight Administration', GETUTCDATE()),
-(NEWID(), 'B2F3E2D4-BCDE-4F01-2345-6789ABCDEF92', 3, 'B2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', N'VietJet Air Administration', GETUTCDATE()),
-(NEWID(), 'B2F3E2D4-BCDE-4F01-2345-6789ABCDEF92', 5, 'B2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', N'VJ Flight Administration', GETUTCDATE()),
 (NEWID(), 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF93', 3, 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF03', N'Bamboo Airways Administration', GETUTCDATE()),
 (NEWID(), 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF93', 5, 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF03', N'QH Flight Administration', GETUTCDATE());
 GO

@@ -9,9 +9,9 @@ using AirlineTicket.Modules.Flights.Application.Contracts;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Airplanes;
 
-public record GetPartnerAircraftQuery(Guid AirlineId) : IQuery<Result<List<object>>>;
+public record GetPartnerAircraftQuery(Guid AirlineId, int PageIndex = 1, int PageSize = 10) : IQuery<PagedResult<object>>;
 
-internal sealed class GetPartnerAircraftQueryHandler : IQueryHandler<GetPartnerAircraftQuery, Result<List<object>>>
+internal sealed class GetPartnerAircraftQueryHandler : IQueryHandler<GetPartnerAircraftQuery, PagedResult<object>>
 {
     private readonly IAirplaneRepository _airplaneRepository;
 
@@ -20,9 +20,9 @@ internal sealed class GetPartnerAircraftQueryHandler : IQueryHandler<GetPartnerA
         _airplaneRepository = airplaneRepository;
     }
 
-    public async Task<Result<List<object>>> Handle(GetPartnerAircraftQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<object>> Handle(GetPartnerAircraftQuery request, CancellationToken cancellationToken)
     {
-        var airplanes = await _airplaneRepository.GetByAirlineAsync(request.AirlineId, cancellationToken);
-        return Result.Success(airplanes.Cast<object>().ToList());
+        var (airplanes, totalCount) = await _airplaneRepository.GetByAirlineAsync(request.AirlineId, request.PageIndex, request.PageSize, cancellationToken);
+        return PagedResult<object>.Success(airplanes.Cast<object>().ToList().AsReadOnly(), request.PageIndex, request.PageSize, totalCount);
     }
 }

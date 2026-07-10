@@ -185,7 +185,7 @@ public class FlightRepository : IFlightRepository
         return result.ToList();
     }
 
-    public async Task<List<FlightDto>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<(List<FlightDto> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
@@ -197,10 +197,19 @@ public class FlightRepository : IFlightRepository
             JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
             JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
             JOIN dbo.Airlines a ON r.AirlineId = a.Id
+            WHERE r.AirlineId = @AirlineId AND f.IsDeleted = 0 AND r.IsDeleted = 0
+            ORDER BY f.DepartureTime DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+        const string countSql = @"
+            SELECT COUNT(*)
+            FROM dbo.Flights f
+            JOIN dbo.Routes r ON f.RouteId = r.Id
             WHERE r.AirlineId = @AirlineId AND f.IsDeleted = 0 AND r.IsDeleted = 0";
 
-        var result = await connection.QueryAsync<FlightDto>(sql, new { AirlineId = airlineId });
-        return result.ToList();
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { AirlineId = airlineId });
+        var result = await connection.QueryAsync<FlightDto>(sql, new { AirlineId = airlineId, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
+        return (result.ToList(), totalCount);
     }
 
     public async Task<List<FlightDto>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -350,13 +359,20 @@ public class RouteRepository : IRouteRepository
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<Route>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<(List<Route> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Routes
+        var query = _context.Routes
             .Where(r => r.AirlineId == airlineId && !r.IsDeleted)
             .Include(r => r.OriginAirport)
-            .Include(r => r.DestinationAirport)
+            .Include(r => r.DestinationAirport);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 
     public async Task<Guid> CreateAsync(Route route, CancellationToken cancellationToken = default)
@@ -402,11 +418,18 @@ public class AirplaneRepository : IAirplaneRepository
         _context = context;
     }
 
-    public async Task<List<Airplane>> GetByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<(List<Airplane> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Airplanes
-            .Where(a => a.AirlineId == airlineId && !a.IsDeleted)
+        var query = _context.Airplanes
+            .Where(a => a.AirlineId == airlineId && !a.IsDeleted);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var items = await query
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 
     public async Task<Guid> CreateAsync(Airplane airplane, CancellationToken cancellationToken = default)

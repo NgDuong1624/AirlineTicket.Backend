@@ -35,7 +35,7 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
     public async Task<Result<Guid>> Handle(CreatePartnerFlightCommand request, CancellationToken cancellationToken)
     {
         // 1. Validate if the route belongs to the partner's airline
-        var routes = await _routeRepository.GetByAirlineAsync(request.AirlineId, cancellationToken);
+        var (routes, _) = await _routeRepository.GetByAirlineAsync(request.AirlineId, 1, 1000, cancellationToken);
         var routeExists = routes.Exists(r => r.Id == request.RouteId);
         if (!routeExists)
         {
@@ -43,7 +43,7 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
         }
 
         // 2. Validate if the airplane belongs to the partner's airline
-        var airplanes = await _airplaneRepository.GetByAirlineAsync(request.AirlineId, cancellationToken);
+        var (airplanes, _) = await _airplaneRepository.GetByAirlineAsync(request.AirlineId, 1, 1000, cancellationToken);
         var airplaneExists = airplanes.Exists(a => a.Id == request.AirplaneId);
         if (!airplaneExists)
         {

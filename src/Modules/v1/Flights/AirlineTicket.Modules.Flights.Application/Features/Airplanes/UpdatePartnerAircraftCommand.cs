@@ -21,7 +21,7 @@ internal sealed class UpdatePartnerAircraftCommandHandler : ICommandHandler<Upda
 
     public async Task<Result<bool>> Handle(UpdatePartnerAircraftCommand request, CancellationToken cancellationToken)
     {
-        var airplanes = await _airplaneRepository.GetByAirlineAsync(request.AirlineId, cancellationToken);
+        var (airplanes, _) = await _airplaneRepository.GetByAirlineAsync(request.AirlineId, 1, 1000, cancellationToken);
         var airplane = airplanes.FirstOrDefault(a => a.Id == request.Id);
         if (airplane is null)
         {

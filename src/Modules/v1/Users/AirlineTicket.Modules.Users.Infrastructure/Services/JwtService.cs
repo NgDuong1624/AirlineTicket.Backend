@@ -28,7 +28,7 @@ public class JwtService : IJwtService
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(AuthConstants.Claims.Role, user.Role.ToString()),
+            new Claim(AuthConstants.Claims.Role, ((AirlineTicket.Modules.Users.Domain.Enums.UserRole)user.Role).ToString()),
             new Claim(AuthConstants.Claims.FullName, user.FullName)
         };
 
@@ -37,12 +37,10 @@ public class JwtService : IJwtService
 
         // Inject user permissions as claims so dynamic permission policies can evaluate them
         // without a separate database round-trip on every request.
-        // Permissions are derived from UserRoles -> Role -> RolePermissions -> Permission.
-        if (user.UserRoles is { Count: > 0 })
+        // Permissions are derived from RoleEntity -> RolePermissions -> Permission.
+        if (user.RoleEntity?.RolePermissions is { Count: > 0 })
         {
-            var uniqueCodes = user.UserRoles
-                .Where(ur => ur.Role != null && ur.Role.RolePermissions != null)
-                .SelectMany(ur => ur.Role.RolePermissions)
+            var uniqueCodes = user.RoleEntity.RolePermissions
                 .Where(rp => rp.Permission != null)
                 .Select(rp => rp.Permission.Code)
                 .Distinct();

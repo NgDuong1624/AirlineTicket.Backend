@@ -51,11 +51,13 @@ public class BookingEndpoints : IEndpoint
 
         group.MapGet("/", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
-                var query = new GetAllBookingsQuery();
+                var query = new GetAllBookingsQuery(pageIndex, pageSize);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
+                return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : result.ToErrorResult();
             })
             .WithName("GetAllBookings")
             .WithSummary("Lấy danh sách tất cả đặt vé")
