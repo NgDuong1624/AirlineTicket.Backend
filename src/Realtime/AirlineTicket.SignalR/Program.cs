@@ -8,6 +8,7 @@ using AirlineTicket.SignalR.Hubs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,7 +72,7 @@ if (!string.IsNullOrEmpty(redisConn))
 {
     signalRBuilder.AddStackExchangeRedis(redisConn, options =>
     {
-        options.Configuration.ChannelPrefix = "AirlineTicketSignalR";
+        options.Configuration.ChannelPrefix = RedisChannel.Literal("AirlineTicketSignalR");
     });
 }
 
