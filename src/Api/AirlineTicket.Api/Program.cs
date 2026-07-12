@@ -6,24 +6,28 @@ using AirlineTicket.BuildingBlocks.Infrastructure;
 using AirlineTicket.BuildingBlocks.Behaviors;
 using AirlineTicket.BuildingBlocks.Api.Middleware;
 using AirlineTicket.Modules.Flights.Infrastructure;
-using AirlineTicket.Modules.Flights.Application.Features.Airports;
+using AirlineTicket.Modules.Flights.Infrastructure.Data;
 using AirlineTicket.Modules.Bookings.Infrastructure;
-using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using AirlineTicket.Modules.Users.Infrastructure;
-using AirlineTicket.Modules.Users.Application.Features.Users;
 using AirlineTicket.Modules.Promotions.Infrastructure;
-using AirlineTicket.Modules.Promotions.Application.Features.Admin;
 using AirlineTicket.Modules.CMS.Infrastructure;
 using AirlineTicket.Modules.Interactions.Infrastructure;
 using AirlineTicket.Modules.Notifications.Infrastructure;
 using AirlineTicket.Modules.Logs.Infrastructure;
+using AirlineTicket.Modules.Bookings.Application;
+using AirlineTicket.Modules.Flights.Application;
+using AirlineTicket.Modules.Promotions.Application;
+using AirlineTicket.Modules.Users.Application;
+using AirlineTicket.Modules.Interactions.Application;
+using AirlineTicket.Modules.CMS.Application;
+using AirlineTicket.Modules.Notifications.Application;
+using AirlineTicket.Modules.Logs.Application;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Scalar.AspNetCore;
-using AirlineTicket.Api;
-using AirlineTicket.Api.Endpoints;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 // Set up Serilog Bootstrap Logger
@@ -175,7 +179,17 @@ var runtimeAssemblies = AppDomain.CurrentDomain.GetAssemblies()
     .ToArray();
 
 // Các assemblies chứa handlers của ứng dụng
-var applicationAssemblies = ModuleRegistration.ApplicationAssemblies;
+var applicationAssemblies = new Assembly[]
+{
+    typeof(BookingsApplicationMarker).Assembly,
+    typeof(FlightsApplicationMarker).Assembly,
+    typeof(PromotionsApplicationMarker).Assembly,
+    typeof(UsersApplicationMarker).Assembly,
+    typeof(InteractionsApplicationMarker).Assembly,
+    typeof(CMSApplicationMarker).Assembly,
+    typeof(NotificationsApplicationMarker).Assembly,
+    typeof(LogsApplicationMarker).Assembly,
+};
 
 // 2. Đăng ký MediatR cho toàn bộ các Modules
 builder.Services.AddMediatR(cfg =>
@@ -231,6 +245,29 @@ app.UseAuthorization();
 
 app.MapControllers();   // Định tuyến các Controller từ các Module (vd: QaController)
 app.MapEndpoints();
-app.MapHealthEndpoints();
+
+app.MapGet("/api/health/live", () => Results.Ok(new { status = "Healthy", server = "Running", timestamp = DateTime.UtcNow }))
+    .WithName("GetHealthLiveness")
+    .WithTags("Health");
+
+app.MapGet("/api/health", async (FlightDbContext dbContext) =>
+{
+    var database = "Unknown";
+    var status = "Healthy";
+    try
+    {
+        var canConnect = await dbContext.Database.CanConnectAsync();
+        database = canConnect ? "Connected" : "Disconnected";
+        if (!canConnect) status = "Degraded";
+    }
+    catch
+    {
+        status = "Degraded";
+        database = "Unreachable";
+    }
+    return Results.Ok(new { status, server = "Running", database, timestamp = DateTime.UtcNow });
+})
+.WithName("GetHealth")
+.WithTags("Health");
 
 app.Run();
