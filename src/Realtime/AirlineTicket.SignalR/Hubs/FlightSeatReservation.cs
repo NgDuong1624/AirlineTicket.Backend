@@ -4,9 +4,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
-using AirlineTicket.Modules.Flights.Infrastructure.Data;
+using AirlineTicket.Modules.Flights.Application.Contracts;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicket.SignalR.Hubs;
 
@@ -17,12 +16,14 @@ namespace AirlineTicket.SignalR.Hubs;
 /// </summary>
 public class FlightSeatReservation : IFlightSeatReservation
 {
-    private readonly FlightDbContext _flightContext;
+    private readonly IFlightSeatRepository _flightSeatRepository;
+    private readonly IFlightRepository _flightRepository;
     private readonly IHubContext<SeatHub> _hub;
 
-    public FlightSeatReservation(FlightDbContext flightContext, IHubContext<SeatHub> hub)
+    public FlightSeatReservation(IFlightSeatRepository flightSeatRepository, IFlightRepository flightRepository, IHubContext<SeatHub> hub)
     {
-        _flightContext = flightContext;
+        _flightSeatRepository = flightSeatRepository;
+        _flightRepository = flightRepository;
         _hub = hub;
     }
 
@@ -33,33 +34,22 @@ public class FlightSeatReservation : IFlightSeatReservation
     {
         var wanted = seatNumbers.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
-        // Read seat metadata (ids/prices/existence) up front for a friendly error + the result.
-        var seats = await _flightContext.FlightSeats
-            .AsNoTracking()
-            .Where(fs => fs.FlightId == flightId && wanted.Contains(fs.SeatNumber))
-            .ToListAsync(cancellationToken);
+        var seats = await _flightSeatRepository.GetSeatsByNumbersAsync(flightId, wanted, cancellationToken);
 
         var found = seats.Select(s => s.SeatNumber).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var missing = wanted.Where(w => !found.Contains(w)).ToList();
         if (missing.Count > 0)
             throw new SeatUnavailableException($"Seat(s) not found on this flight: {string.Join(", ", missing)}.");
 
-        var basePrice = await _flightContext.Flights
-            .Where(f => f.Id == flightId)
-            .Select(f => (decimal?)f.BasePrice)
-            .FirstOrDefaultAsync(cancellationToken) ?? 0m;
+        var basePrice = await _flightSeatRepository.GetFlightBasePriceAsync(flightId, cancellationToken);
 
-        // Atomic compare-and-set per seat: the UPDATE only matches rows still IsAvailable,
-        // so concurrent requests for the same seat are serialized by row locks and exactly
-        // one wins (affected == 1). This prevents double-booking without a rowversion column.
+        // Atomic compare-and-set per seat
         var won = new List<string>();
         var conflicts = new List<string>();
         foreach (var seatNumber in wanted)
         {
             var sn = seatNumber;
-            var affected = await _flightContext.FlightSeats
-                .Where(fs => fs.FlightId == flightId && fs.SeatNumber == sn && fs.IsAvailable)
-                .ExecuteUpdateAsync(s => s.SetProperty(fs => fs.IsAvailable, false), cancellationToken);
+            var affected = await _flightSeatRepository.ReserveSeatAsync(flightId, sn, cancellationToken);
 
             if (affected == 1) won.Add(sn);
             else conflicts.Add(sn);
@@ -67,12 +57,9 @@ public class FlightSeatReservation : IFlightSeatReservation
 
         if (conflicts.Count > 0)
         {
-            // Roll back only the seats this request actually claimed.
             if (won.Count > 0)
             {
-                await _flightContext.FlightSeats
-                    .Where(fs => fs.FlightId == flightId && won.Contains(fs.SeatNumber))
-                    .ExecuteUpdateAsync(s => s.SetProperty(fs => fs.IsAvailable, true), cancellationToken);
+                await _flightSeatRepository.ReleaseSeatsAsync(flightId, won, cancellationToken);
             }
             throw new SeatUnavailableException($"Seat(s) already booked: {string.Join(", ", conflicts)}.");
         }
@@ -92,9 +79,7 @@ public class FlightSeatReservation : IFlightSeatReservation
     {
         var wanted = seatNumbers.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
-        await _flightContext.FlightSeats
-            .Where(fs => fs.FlightId == flightId && wanted.Contains(fs.SeatNumber))
-            .ExecuteUpdateAsync(s => s.SetProperty(fs => fs.IsAvailable, true), cancellationToken);
+        await _flightSeatRepository.ReleaseSeatsAsync(flightId, wanted, cancellationToken);
 
         await BroadcastAsync(flightId, wanted, isAvailable: true, cancellationToken);
     }
