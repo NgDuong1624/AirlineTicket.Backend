@@ -175,6 +175,40 @@ public class BookingRepository : IBookingRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<List<StaffSaleBookingDto>> GetStaffSalesBookingsAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Bookings
+            .AsNoTracking()
+            .OrderByDescending(b => b.CreatedAt)
+            .Select(b => new StaffSaleBookingDto
+            {
+                Id = b.Id,
+                PnrCode = b.PnrCode,
+                TotalPrice = b.TotalPrice,
+                Status = b.Status.ToString(),
+                CreatedAt = b.CreatedAt,
+                PassengerName = b.Passengers.Select(p => p.FirstName + " " + p.LastName).FirstOrDefault() ?? string.Empty,
+                FlightId = b.Tickets.Select(t => (Guid?)t.FlightId).FirstOrDefault(),
+                SeatId = b.Tickets.Select(t => (Guid?)t.SeatId).FirstOrDefault()
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<BookingConfirmedDetailsDto?> GetBookingConfirmedDetailsAsync(Guid bookingId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Bookings
+            .AsNoTracking()
+            .Where(b => b.Id == bookingId)
+            .Select(b => new BookingConfirmedDetailsDto
+            {
+                Id = b.Id,
+                PnrCode = b.PnrCode,
+                ContactEmail = b.ContactEmail,
+                FlightId = b.Tickets.Select(t => (Guid?)t.FlightId).FirstOrDefault()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     private static BookingDto MapToDto(Booking b) => new()
     {
         Id = b.Id,

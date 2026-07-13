@@ -266,6 +266,31 @@ public class FlightRepository : IFlightRepository
 
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<bool> CanConnectAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Database.CanConnectAsync(cancellationToken);
+    }
+
+    public async Task<List<FlightDto>> GetByIdsAsync(List<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids == null || !ids.Any()) return new List<FlightDto>();
+
+        var connection = _context.Database.GetDbConnection();
+        const string sql = @"
+            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice,
+                   f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
+                   oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
+            FROM dbo.Flights f
+            JOIN dbo.Routes r ON f.RouteId = r.Id
+            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
+            JOIN dbo.Airlines a ON r.AirlineId = a.Id
+            WHERE f.Id IN @Ids AND f.IsDeleted = 0 AND r.IsDeleted = 0";
+
+        var result = await connection.QueryAsync<FlightDto>(sql, new { Ids = ids });
+        return result.ToList();
+    }
 }
 
 public class AirportRepository : IAirportRepository
@@ -463,6 +488,28 @@ public class AirplaneRepository : IAirplaneRepository
         existing.IsDeleted = true;
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task GenerateSeatsFromTemplateAsync(Guid airplaneId, Guid aircraftModelId, CancellationToken cancellationToken = default)
+    {
+        var templates = await _context.AircraftModelSeatTemplates
+            .Where(t => t.AircraftModelId == aircraftModelId)
+            .ToListAsync(cancellationToken);
+
+        var seats = templates.Select(t => new AirplaneSeat
+        {
+            Id = Guid.NewGuid(),
+            AirplaneId = airplaneId,
+            SeatNumber = t.SeatNumber,
+            SeatRow = t.SeatRow,
+            SeatColumn = t.SeatColumn,
+            SeatClass = t.SeatClass,
+            IsExtraLegroom = t.IsExtraLegroom,
+            PriceMultiplier = t.PriceMultiplier
+        }).ToList();
+
+        _context.AirplaneSeats.AddRange(seats);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }
 
 public class FlightSeatRepository : IFlightSeatRepository
@@ -479,6 +526,47 @@ public class FlightSeatRepository : IFlightSeatRepository
         return await _context.FlightSeats
             .Where(fs => fs.FlightId == flightId)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<FlightSeat>> GetSeatsByNumbersAsync(Guid flightId, IReadOnlyCollection<string> seatNumbers, CancellationToken cancellationToken = default)
+    {
+        return await _context.FlightSeats
+            .AsNoTracking()
+            .Where(fs => fs.FlightId == flightId && seatNumbers.Contains(fs.SeatNumber))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<decimal> GetFlightBasePriceAsync(Guid flightId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Flights
+            .Where(f => f.Id == flightId)
+            .Select(f => (decimal?)f.BasePrice)
+            .FirstOrDefaultAsync(cancellationToken) ?? 0m;
+    }
+
+    public async Task<int> ReserveSeatAsync(Guid flightId, string seatNumber, CancellationToken cancellationToken = default)
+    {
+        return await _context.FlightSeats
+            .Where(fs => fs.FlightId == flightId && fs.SeatNumber == seatNumber && fs.IsAvailable)
+            .ExecuteUpdateAsync(s => s.SetProperty(fs => fs.IsAvailable, false), cancellationToken);
+    }
+
+    public async Task<int> ReleaseSeatsAsync(Guid flightId, IReadOnlyCollection<string> seatNumbers, CancellationToken cancellationToken = default)
+    {
+        return await _context.FlightSeats
+            .Where(fs => fs.FlightId == flightId && seatNumbers.Contains(fs.SeatNumber))
+            .ExecuteUpdateAsync(s => s.SetProperty(fs => fs.IsAvailable, true), cancellationToken);
+    }
+
+    public async Task<Dictionary<Guid, string>> GetSeatClassesAsync(List<Guid> seatIds, CancellationToken cancellationToken = default)
+    {
+        if (seatIds == null || !seatIds.Any()) return new Dictionary<Guid, string>();
+
+        return await _context.FlightSeats
+            .AsNoTracking()
+            .Where(s => seatIds.Contains(s.Id))
+            .Select(s => new { s.Id, s.SeatClass })
+            .ToDictionaryAsync(s => s.Id, s => s.SeatClass.ToString(), cancellationToken);
     }
 }
 public class AirlineRepository : IAirlineRepository

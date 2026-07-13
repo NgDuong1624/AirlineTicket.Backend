@@ -59,6 +59,8 @@ public interface IFlightRepository
     Task<List<FlightDto>> GetAllAsync(CancellationToken cancellationToken = default);
     Task UpdateAsync(FlightDto flight, Guid? airlineId = null, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, Guid? airlineId = null, CancellationToken cancellationToken = default);
+    Task<bool> CanConnectAsync(CancellationToken cancellationToken = default);
+    Task<List<FlightDto>> GetByIdsAsync(List<Guid> ids, CancellationToken cancellationToken = default);
 }
 
 public interface IAirlineRepository
@@ -94,6 +96,7 @@ public interface IAirplaneRepository
     Task<Guid> CreateAsync(Airplane airplane, CancellationToken cancellationToken = default);
     Task UpdateAsync(Airplane airplane, Guid airlineId, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
+    Task GenerateSeatsFromTemplateAsync(Guid airplaneId, Guid aircraftModelId, CancellationToken cancellationToken = default);
 }
 
 public interface IAircraftModelRepository
@@ -108,4 +111,9 @@ public interface IAircraftModelRepository
 public interface IFlightSeatRepository
 {
     Task<List<FlightSeat>> GetByFlightIdAsync(Guid flightId, CancellationToken cancellationToken = default);
+    Task<List<FlightSeat>> GetSeatsByNumbersAsync(Guid flightId, IReadOnlyCollection<string> seatNumbers, CancellationToken cancellationToken = default);
+    Task<decimal> GetFlightBasePriceAsync(Guid flightId, CancellationToken cancellationToken = default);
+    Task<int> ReserveSeatAsync(Guid flightId, string seatNumber, CancellationToken cancellationToken = default);
+    Task<int> ReleaseSeatsAsync(Guid flightId, IReadOnlyCollection<string> seatNumbers, CancellationToken cancellationToken = default);
+    Task<Dictionary<Guid, string>> GetSeatClassesAsync(List<Guid> seatIds, CancellationToken cancellationToken = default);
 }
