@@ -17,6 +17,26 @@ public class BookingDto
     public string ContactPhone { get; set; } = string.Empty;
 }
 
+public class StaffSaleBookingDto
+{
+    public Guid Id { get; set; }
+    public string PnrCode { get; set; } = string.Empty;
+    public decimal TotalPrice { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public string PassengerName { get; set; } = string.Empty;
+    public Guid? FlightId { get; set; }
+    public Guid? SeatId { get; set; }
+}
+
+public class BookingConfirmedDetailsDto
+{
+    public Guid Id { get; set; }
+    public string PnrCode { get; set; } = string.Empty;
+    public string ContactEmail { get; set; } = string.Empty;
+    public Guid? FlightId { get; set; }
+}
+
 public interface IBookingRepository
 {
     Task<BookingDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
@@ -29,6 +49,8 @@ public interface IBookingRepository
 
     /// <summary>Persists a full booking (booking + passengers + tickets) in one transaction.</summary>
     Task CreateFullBookingAsync(NewBooking booking, CancellationToken cancellationToken = default);
+    Task<List<StaffSaleBookingDto>> GetStaffSalesBookingsAsync(CancellationToken cancellationToken = default);
+    Task<BookingConfirmedDetailsDto?> GetBookingConfirmedDetailsAsync(Guid bookingId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Input model for persisting a complete staff booking graph.</summary>

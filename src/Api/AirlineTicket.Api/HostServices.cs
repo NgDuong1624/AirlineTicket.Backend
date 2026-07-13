@@ -5,12 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Application.Events;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
-using AirlineTicket.Modules.Bookings.Infrastructure.Data;
-using AirlineTicket.Modules.Flights.Infrastructure.Data;
+using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Domain.Entities;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicket.Api.Services;
 
@@ -22,11 +20,13 @@ namespace AirlineTicket.Api.Services;
 /// </summary>
 public class FlightSeatReservation : IFlightSeatReservation
 {
-    private readonly FlightDbContext _flightContext;
+    private readonly IFlightSeatRepository _flightSeatRepository;
+    private readonly IFlightRepository _flightRepository;
 
-    public FlightSeatReservation(FlightDbContext flightContext)
+    public FlightSeatReservation(IFlightSeatRepository flightSeatRepository, IFlightRepository flightRepository)
     {
-        _flightContext = flightContext;
+        _flightSeatRepository = flightSeatRepository;
+        _flightRepository = flightRepository;
     }
 
     public async Task<IReadOnlyDictionary<string, ReservedSeat>> ReserveSeatsAsync(
@@ -36,20 +36,14 @@ public class FlightSeatReservation : IFlightSeatReservation
     {
         var wanted = seatNumbers.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
-        var seats = await _flightContext.FlightSeats
-            .AsNoTracking()
-            .Where(fs => fs.FlightId == flightId && wanted.Contains(fs.SeatNumber))
-            .ToListAsync(cancellationToken);
+        var seats = await _flightSeatRepository.GetSeatsByNumbersAsync(flightId, wanted, cancellationToken);
 
         var found = seats.Select(s => s.SeatNumber).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var missing = wanted.Where(w => !found.Contains(w)).ToList();
         if (missing.Count > 0)
             throw new SeatUnavailableException($"Seat(s) not found on this flight: {string.Join(", ", missing)}.");
 
-        var basePrice = await _flightContext.Flights
-            .Where(f => f.Id == flightId)
-            .Select(f => (decimal?)f.BasePrice)
-            .FirstOrDefaultAsync(cancellationToken) ?? 0m;
+        var basePrice = await _flightSeatRepository.GetFlightBasePriceAsync(flightId, cancellationToken);
 
         // Atomic compare-and-set per seat
         var won = new List<string>();
@@ -57,9 +51,7 @@ public class FlightSeatReservation : IFlightSeatReservation
         foreach (var seatNumber in wanted)
         {
             var sn = seatNumber;
-            var affected = await _flightContext.FlightSeats
-                .Where(fs => fs.FlightId == flightId && fs.SeatNumber == sn && fs.IsAvailable)
-                .ExecuteUpdateAsync(s => s.SetProperty(fs => fs.IsAvailable, false), cancellationToken);
+            var affected = await _flightSeatRepository.ReserveSeatAsync(flightId, sn, cancellationToken);
 
             if (affected == 1) won.Add(sn);
             else conflicts.Add(sn);
@@ -69,9 +61,7 @@ public class FlightSeatReservation : IFlightSeatReservation
         {
             if (won.Count > 0)
             {
-                await _flightContext.FlightSeats
-                    .Where(fs => fs.FlightId == flightId && won.Contains(fs.SeatNumber))
-                    .ExecuteUpdateAsync(s => s.SetProperty(fs => fs.IsAvailable, true), cancellationToken);
+                await _flightSeatRepository.ReleaseSeatsAsync(flightId, won, cancellationToken);
             }
             throw new SeatUnavailableException($"Seat(s) already booked: {string.Join(", ", conflicts)}.");
         }
@@ -90,9 +80,7 @@ public class FlightSeatReservation : IFlightSeatReservation
     {
         var wanted = seatNumbers.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
-        await _flightContext.FlightSeats
-            .Where(fs => fs.FlightId == flightId && wanted.Contains(fs.SeatNumber))
-            .ExecuteUpdateAsync(s => s.SetProperty(fs => fs.IsAvailable, true), cancellationToken);
+        await _flightSeatRepository.ReleaseSeatsAsync(flightId, wanted, cancellationToken);
     }
 }
 
@@ -102,54 +90,32 @@ public class FlightSeatReservation : IFlightSeatReservation
 /// </summary>
 public class StaffSalesReader : IStaffSalesReader
 {
-    private readonly BookingDbContext _bookingContext;
-    private readonly FlightDbContext _flightContext;
+    private readonly IBookingRepository _bookingRepository;
+    private readonly IFlightRepository _flightRepository;
+    private readonly IFlightSeatRepository _flightSeatRepository;
 
-    public StaffSalesReader(BookingDbContext bookingContext, FlightDbContext flightContext)
+    public StaffSalesReader(
+        IBookingRepository bookingRepository,
+        IFlightRepository flightRepository,
+        IFlightSeatRepository flightSeatRepository)
     {
-        _bookingContext = bookingContext;
-        _flightContext = flightContext;
+        _bookingRepository = bookingRepository;
+        _flightRepository = flightRepository;
+        _flightSeatRepository = flightSeatRepository;
     }
 
     public async Task<List<StaffSaleDto>> GetSalesAsync(CancellationToken cancellationToken = default)
     {
-        var bookings = await _bookingContext.Bookings
-            .AsNoTracking()
-            .OrderByDescending(b => b.CreatedAt)
-            .Select(b => new
-            {
-                b.Id,
-                b.PnrCode,
-                b.TotalPrice,
-                b.Status,
-                b.CreatedAt,
-                Passenger = b.Passengers.Select(p => p.FirstName + " " + p.LastName).FirstOrDefault(),
-                Ticket = b.Tickets
-                    .Select(t => new { t.FlightId, t.SeatId })
-                    .FirstOrDefault()
-            })
-            .ToListAsync(cancellationToken);
+        var bookings = await _bookingRepository.GetStaffSalesBookingsAsync(cancellationToken);
 
-        var flightIds = bookings.Where(b => b.Ticket != null).Select(b => b.Ticket!.FlightId).Distinct().ToList();
-        var seatIds = bookings.Where(b => b.Ticket != null).Select(b => b.Ticket!.SeatId).Distinct().ToList();
+        var bookingIdsWithTickets = bookings.Where(b => b.FlightId.HasValue).ToList();
+        var flightIds = bookingIdsWithTickets.Select(b => b.FlightId!.Value).Distinct().ToList();
+        var seatIds = bookingIdsWithTickets.Where(b => b.SeatId.HasValue).Select(b => b.SeatId!.Value).Distinct().ToList();
 
-        var flights = await _flightContext.Flights
-            .AsNoTracking()
-            .Where(f => flightIds.Contains(f.Id))
-            .Select(f => new
-            {
-                f.Id,
-                f.FlightNumber,
-                Origin = f.Route.OriginAirport.IataCode,
-                Destination = f.Route.DestinationAirport.IataCode
-            })
-            .ToDictionaryAsync(f => f.Id, cancellationToken);
+        var flights = await _flightRepository.GetByIdsAsync(flightIds, cancellationToken);
+        var flightsDict = flights.ToDictionary(f => f.Id);
 
-        var seatClasses = await _flightContext.FlightSeats
-            .AsNoTracking()
-            .Where(s => seatIds.Contains(s.Id))
-            .Select(s => new { s.Id, s.SeatClass })
-            .ToDictionaryAsync(s => s.Id, s => s.SeatClass, cancellationToken);
+        var seatClasses = await _flightSeatRepository.GetSeatClassesAsync(seatIds, cancellationToken);
 
         return bookings.Select(b =>
         {
@@ -157,29 +123,26 @@ public class StaffSalesReader : IStaffSalesReader
             string route = string.Empty;
             string seatClass = string.Empty;
 
-            if (b.Ticket != null)
+            if (b.FlightId.HasValue && flightsDict.TryGetValue(b.FlightId.Value, out var f))
             {
-                if (flights.TryGetValue(b.Ticket.FlightId, out var f))
-                {
-                    flightNumber = f.FlightNumber;
-                    route = $"{f.Origin} → {f.Destination}";
-                }
-                if (seatClasses.TryGetValue(b.Ticket.SeatId, out var sc))
-                {
-                    seatClass = sc.ToString();
-                }
+                flightNumber = f.FlightNumber;
+                route = $"{f.OriginCode} → {f.DestinationCode}";
+            }
+            if (b.SeatId.HasValue && seatClasses.TryGetValue(b.SeatId.Value, out var sc))
+            {
+                seatClass = sc;
             }
 
             return new StaffSaleDto
             {
                 Id = b.PnrCode,
                 BookingId = b.Id,
-                PassengerName = b.Passenger ?? string.Empty,
+                PassengerName = b.PassengerName,
                 FlightNumber = flightNumber,
                 Route = route,
                 SeatClass = seatClass,
                 Amount = b.TotalPrice,
-                Status = b.Status.ToString(),
+                Status = b.Status,
                 BookedAt = b.CreatedAt
             };
         }).ToList();
@@ -188,48 +151,36 @@ public class StaffSalesReader : IStaffSalesReader
 
 public class BookingConfirmedEventHandler : INotificationHandler<BookingConfirmedEvent>
 {
-    private readonly BookingDbContext _bookingDbContext;
-    private readonly FlightDbContext _flightDbContext;
+    private readonly IBookingRepository _bookingRepository;
+    private readonly IFlightRepository _flightRepository;
     private readonly INotificationRepository _notificationRepository;
 
     public BookingConfirmedEventHandler(
-        BookingDbContext bookingDbContext,
-        FlightDbContext flightDbContext,
+        IBookingRepository bookingRepository,
+        IFlightRepository flightRepository,
         INotificationRepository notificationRepository)
     {
-        _bookingDbContext = bookingDbContext;
-        _flightDbContext = flightDbContext;
+        _bookingRepository = bookingRepository;
+        _flightRepository = flightRepository;
         _notificationRepository = notificationRepository;
     }
 
     public async Task Handle(BookingConfirmedEvent notification, CancellationToken cancellationToken)
     {
-        var booking = await _bookingDbContext.Bookings
-            .Include(b => b.Passengers)
-            .Include(b => b.Tickets)
-            .FirstOrDefaultAsync(b => b.Id == notification.BookingId, cancellationToken);
+        var bookingDetails = await _bookingRepository.GetBookingConfirmedDetailsAsync(notification.BookingId, cancellationToken);
 
-        if (booking == null) return;
+        if (bookingDetails == null || !bookingDetails.FlightId.HasValue) return;
 
-        var ticket = booking.Tickets.FirstOrDefault();
-        if (ticket == null) return;
-
-        var flight = await _flightDbContext.Flights
-            .Include(f => f.Route)
-            .ThenInclude(r => r.OriginAirport)
-            .Include(f => f.Route)
-            .ThenInclude(r => r.DestinationAirport)
-            .FirstOrDefaultAsync(f => f.Id == ticket.FlightId, cancellationToken);
-
+        var flight = await _flightRepository.GetByIdAsync(bookingDetails.FlightId.Value, cancellationToken);
         if (flight == null) return;
 
-        var emailContent = $"Booking confirmed! View details: {notification.Origin}/bookings/detail/{booking.PnrCode}";
+        var emailContent = $"Booking confirmed! View details: {notification.Origin}/bookings/detail/{bookingDetails.PnrCode}";
 
         var notificationEntity = new Notification
         {
             Type = 0, // Email
             Status = 0, // Pending
-            Recipient = booking.ContactEmail,
+            Recipient = bookingDetails.ContactEmail,
             Content = emailContent
         };
 

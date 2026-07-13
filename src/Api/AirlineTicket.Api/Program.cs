@@ -6,7 +6,6 @@ using AirlineTicket.BuildingBlocks.Infrastructure;
 using AirlineTicket.BuildingBlocks.Behaviors;
 using AirlineTicket.BuildingBlocks.Api.Middleware;
 using AirlineTicket.Modules.Flights.Infrastructure;
-using AirlineTicket.Modules.Flights.Infrastructure.Data;
 using AirlineTicket.Modules.Bookings.Infrastructure;
 using AirlineTicket.Modules.Users.Infrastructure;
 using AirlineTicket.Modules.Promotions.Infrastructure;
@@ -27,6 +26,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Scalar.AspNetCore;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
+using AirlineTicket.Modules.Flights.Application.Contracts;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -84,6 +84,7 @@ builder.Services.AddOpenApi(options =>
         return Task.CompletedTask;
     });
 });
+
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -250,13 +251,13 @@ app.MapGet("/api/health/live", () => Results.Ok(new { status = "Healthy", server
     .WithName("GetHealthLiveness")
     .WithTags("Health");
 
-app.MapGet("/api/health", async (FlightDbContext dbContext) =>
+app.MapGet("/api/health", async (IFlightRepository flightRepository) =>
 {
     var database = "Unknown";
     var status = "Healthy";
     try
     {
-        var canConnect = await dbContext.Database.CanConnectAsync();
+        var canConnect = await flightRepository.CanConnectAsync();
         database = canConnect ? "Connected" : "Disconnected";
         if (!canConnect) status = "Degraded";
     }

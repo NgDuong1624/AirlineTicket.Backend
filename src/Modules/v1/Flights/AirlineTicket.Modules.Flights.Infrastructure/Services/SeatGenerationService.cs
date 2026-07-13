@@ -1,41 +1,20 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using AirlineTicket.Modules.Flights.Application.Contracts;
-using AirlineTicket.Modules.Flights.Domain.Entities;
-using AirlineTicket.Modules.Flights.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicket.Modules.Flights.Infrastructure.Services;
 
 public class SeatGenerationService : ISeatGenerationService
 {
-    private readonly FlightDbContext _context;
+    private readonly IAirplaneRepository _airplaneRepository;
 
-    public SeatGenerationService(FlightDbContext context)
+    public SeatGenerationService(IAirplaneRepository airplaneRepository)
     {
-        _context = context;
+        _airplaneRepository = airplaneRepository;
     }
 
     public async Task GenerateSeatsAsync(Guid airplaneId, Guid aircraftModelId)
     {
-        var templates = await _context.AircraftModelSeatTemplates
-            .Where(t => t.AircraftModelId == aircraftModelId)
-            .ToListAsync();
-
-        var seats = templates.Select(t => new AirplaneSeat
-        {
-            Id = Guid.NewGuid(),
-            AirplaneId = airplaneId,
-            SeatNumber = t.SeatNumber,
-            SeatRow = t.SeatRow,
-            SeatColumn = t.SeatColumn,
-            SeatClass = t.SeatClass,
-            IsExtraLegroom = t.IsExtraLegroom,
-            PriceMultiplier = t.PriceMultiplier
-        }).ToList();
-
-        _context.AirplaneSeats.AddRange(seats);
-        await _context.SaveChangesAsync();
+        await _airplaneRepository.GenerateSeatsFromTemplateAsync(airplaneId, aircraftModelId);
     }
 }
