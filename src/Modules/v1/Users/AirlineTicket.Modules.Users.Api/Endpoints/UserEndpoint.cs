@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Api.Extensions;
-using AirlineTicket.BuildingBlocks.Exceptions;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Features.Admin;
 using AirlineTicket.Modules.Users.Application.Repositories;
@@ -28,20 +27,13 @@ public class UserEndpoint : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
+                var command = new LoginUserCommand(request.Email, request.Password);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
                 {
-                    var command = new LoginUserCommand(request.Email, request.Password);
-                    var result = await sender.Send(command, ct);
-                    if (result.IsFailure)
-                    {
-                        return result.ToErrorResult(statusCode: 401);
-                    }
-                    return Results.Ok(new { Token = result.Value });
+                    return result.ToErrorResult(statusCode: 401);
                 }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "UNAUTHORIZED", Message = ex.Message }, statusCode: 401);
-                }
+                return Results.Ok(new { Token = result.Value });
             })
             .WithName("Login")
             .WithSummary("Đăng nhập người dùng")
@@ -52,27 +44,13 @@ public class UserEndpoint : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                try
+                var command = new RegisterUserCommand(request.Email, request.Password, request.FullName, request.Phone);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
                 {
-                    var command = new RegisterUserCommand(request.Email, request.Password, request.FullName, request.Phone);
-                    var result = await sender.Send(command, ct);
-                    if (result.IsFailure)
-                    {
-                        return result.ToErrorResult();
-                    }
-                    return Results.Ok(new { UserId = result.Value });
+                    return result.ToErrorResult();
                 }
-                catch (ValidationException ex)
-                {
-                    // Trả về chi tiết từng field bị lỗi thay vì thông báo chung chung
-                    return Results.Json(
-                        new { Code = "BAD_REQUEST", Message = ex.Message, Errors = ex.Errors },
-                        statusCode: 400);
-                }
-                catch (Exception ex)
-                {
-                    return Results.Json(new { Code = "BAD_REQUEST", Message = ex.Message }, statusCode: 400);
-                }
+                return Results.Ok(new { UserId = result.Value });
             })
             .WithName("Register")
             .WithSummary("Đăng ký tài khoản mới")

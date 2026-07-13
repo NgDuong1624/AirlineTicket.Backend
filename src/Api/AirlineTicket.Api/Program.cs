@@ -218,6 +218,7 @@ builder.Services.AddEndpoints(runtimeAssemblies);
 var app = builder.Build();
 
 // Đăng ký Middleware cho Correlation ID & Logging HTTP
+app.UseGlobalExceptionHandlingMiddleware();
 app.UseMiddleware<CorrelationMiddleware>();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
 app.UseSystemLogMiddleware();
