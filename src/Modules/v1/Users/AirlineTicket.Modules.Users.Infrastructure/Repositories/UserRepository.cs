@@ -61,10 +61,11 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        return await connection.QueryFirstOrDefaultAsync<User>(
-            "SELECT * FROM dbo.Users WHERE RefreshToken = @RefreshToken", 
-            new { RefreshToken = refreshToken });
+        return await _context.Users
+            .Include(u => u.RoleEntity)
+                .ThenInclude(r => r.RolePermissions)
+                    .ThenInclude(rp => rp.Permission)
+            .FirstOrDefaultAsync(x => x.RefreshToken == refreshToken, cancellationToken);
     }
 
     public async Task AddAsync(User user, CancellationToken cancellationToken = default)

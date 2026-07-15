@@ -70,7 +70,7 @@ public class LoginUserCommandHandlerTests
         // Arrange
         var command = new LoginUserCommand("test@test.com", "correct_password");
         var user = new User { Email = "test@test.com", PasswordHash = "correct_hash" };
-        var expectedToken = "jwt.token.string";
+        var expectedTokenResponse = new TokenResponse("jwt.token.string", "refresh.token.string");
 
         _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -79,13 +79,13 @@ public class LoginUserCommandHandlerTests
             .Returns(true);
 
         _jwtServiceMock.Setup(jwt => jwt.GenerateToken(user))
-            .Returns(expectedToken);
+            .Returns(expectedTokenResponse);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(expectedToken);
+        result.Value.Should().Be(expectedTokenResponse);
     }
 }
