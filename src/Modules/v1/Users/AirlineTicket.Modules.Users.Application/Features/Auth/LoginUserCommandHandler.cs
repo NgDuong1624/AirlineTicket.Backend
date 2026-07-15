@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<string>>
+public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<TokenResponse>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -21,16 +21,20 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<
         _jwtService = jwtService;
     }
 
-    public async Task<Result<string>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TokenResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
         if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
-            return Result.Failure<string>(new Error("UNAUTHORIZED", "Invalid email or password."));
+            return Result.Failure<TokenResponse>(new Error("UNAUTHORIZED", "Invalid email or password."));
         }
 
-        var token = _jwtService.GenerateToken(user);
-        return Result.Success(token);
+        var tokens = _jwtService.GenerateToken(user);
+
+        // Persist refresh token into DB
+        await _userRepository.UpdateAsync(user, cancellationToken);
+
+        return Result.Success(tokens);
     }
 }

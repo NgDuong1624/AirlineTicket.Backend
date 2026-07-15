@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AirlineTicket.Modules.Users.Domain.Entities;
@@ -18,6 +17,11 @@ public class User
     public string? AirlineName { get; set; }
     public string? AvatarUrl { get; set; }
     public string? LanguagePreference { get; set; } = "vi";
+
+    // OAuth support
+    public string? GoogleId { get; set; }
+    public string? AuthProvider { get; set; } // "Email", "Google"
+
     public DateTime? LastLoginAt { get; set; }
     public bool IsActive { get; set; } = true;
     public bool IsDeleted { get; set; }

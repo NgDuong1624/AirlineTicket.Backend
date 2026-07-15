@@ -17,6 +17,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(x => x.Email)
             .IsUnique();
 
+        builder.Property(x => x.GoogleId)
+            .HasMaxLength(100);
+
+        builder.HasIndex(x => x.GoogleId)
+            .IsUnique()
+            .HasFilter("[GoogleId] IS NOT NULL");
+
+        builder.Property(x => x.AuthProvider)
+            .HasMaxLength(50);
+
         builder.HasOne(x => x.RoleEntity)
             .WithMany()
             .HasForeignKey(x => x.Role)
