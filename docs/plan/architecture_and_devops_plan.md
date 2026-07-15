@@ -98,4 +98,20 @@ app.UseCors(builder => builder
 ```c
 builder.Services.AddSignalR().AddStackExchangeRedis("CẤU_HÌNH_TRÚC_REDIS");
 ```
+### 4. Cấu hình Môi trường (Environment Variables)
+
+Hệ thống yêu cầu các biến môi trường sau để vận hành:
+
+- **Backend**:
+  - `GOOGLE_CLIENT_ID`: Client ID của Google OAuth.
+  - `DB_CONNECTION_STRING`: Chuỗi kết nối SQL Server.
+  - `REDIS_CONNECTION_STRING`: Chuỗi kết nối Redis.
+  - `CORS_ORIGINS`: Danh sách các domain được phép truy cập API.
+  - `AI_SERVICE_API_KEY`, `AI_SERVICE_BASE_URL`, ...: Cấu hình dịch vụ AI.
+  - `LUCKY_PENNY_MEDIATR_LICENSE_KEY`: License key cho MediatR.
+
+- **Frontend**:
+  - `NEXT_PUBLIC_BACKEND_URL`: URL của Backend API.
+  - `NEXT_PUBLIC_API_URL`: URL của API Gateway.
+  - `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Client ID của Google OAuth (dùng cho client-side).
 

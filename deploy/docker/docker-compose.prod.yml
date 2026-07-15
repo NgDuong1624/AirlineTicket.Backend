@@ -21,6 +21,7 @@ services:
       - AiService__ModelStore__EnableThinking=${AI_SERVICE_ENABLE_THINKING}
       - AiService__ModelStore__ReasoningEffort=${AI_SERVICE_REASONING_EFFORT}
       - LuckyPenny__MediatR__LicenseKey=${LUCKY_PENNY_MEDIATR_LICENSE_KEY}
+      - Google__ClientId=${GOOGLE_CLIENT_ID}
     depends_on:
       - sqlserver
     restart: unless-stopped
