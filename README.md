@@ -70,7 +70,7 @@ The system follows a **Modular Monolith** architecture with 8 independent busine
 
 The system exposes **100+ REST API endpoints** across 12 sections:
 
-1. **Authentication** — Login, Register, Me
+1. **Authentication** — Login, Register, Me, Google Login
 2. **Flights (Public)** — Search (one-way, round-trip), Details, Trending, Seats
 3. **Airports, Airlines & Routes** — List, Search
 4. **Bookings** — Create, Pay, History, Update, Cancel
@@ -100,6 +100,7 @@ Full interactive API documentation available at `/scalar/v1` when running.
 dotnet user-secrets set "Jwt:Secret" "your-secret-key-minimum-32-characters"
 dotnet user-secrets set "LuckyPenny:MediatR:LicenseKey" "your-mediatr-license-key"
 dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-nvidia-api-key"
+dotnet user-secrets set "Google:ClientId" "your-google-client-id"
 ```
 
 Update `src/Api/AirlineTicket.Api/appsettings.json` with your SQL Server connection string.
@@ -136,9 +137,10 @@ docker-compose -f deploy/docker/docker-compose.prod.yml up -d --build
 | `DB_CONNECTION_STRING` | SQL Server connection string |
 | `REDIS_CONNECTION_STRING` | Redis connection string |
 | `CORS_ORIGINS` | Allowed CORS origins (frontend URL) |
-| `AI_SERVICE_API_KEY` | NVIDIA API key |
-| `AI_SERVICE_BASE_URL` | NVIDIA API base URL |
+| `AI_SERVICE_API_KEY` | AI API key |
+| `AI_SERVICE_BASE_URL` | AI API base URL |
 | `AI_SERVICE_MODEL` | AI model name (e.g., DeepSeek V4 Flash) |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
 | `LUCKY_PENNY_MEDIATR_LICENSE_KEY` | MediatR license key |
 
 ## Testing
