@@ -28,9 +28,9 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, R
             return Result.Failure<LoginResponse>(new Error("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token."));
         }
 
-        var accessToken = _jwtService.GenerateToken(user);
+        var tokens = _jwtService.GenerateToken(user);
+        await _userRepository.UpdateAsync(user, cancellationToken);
 
-        // Return the same refreshToken (no rotation) — only accessToken is renewed.
-        return Result.Success(new LoginResponse(accessToken, request.RefreshToken));
+        return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken));
     }
 }

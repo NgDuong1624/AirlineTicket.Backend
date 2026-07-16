@@ -8,7 +8,6 @@ using Moq;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using Xunit;
 
 namespace AirlineTicket.Modules.Users.Application.UnitTests;
@@ -18,7 +17,6 @@ public class LoginUserCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<IJwtService> _jwtServiceMock;
-    private readonly Mock<IConfiguration> _configurationMock;
     private readonly LoginUserCommandHandler _handler;
 
     public LoginUserCommandHandlerTests()
@@ -26,17 +24,11 @@ public class LoginUserCommandHandlerTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _jwtServiceMock = new Mock<IJwtService>();
-        _configurationMock = new Mock<IConfiguration>();
-        
-        var configSectionMock = new Mock<IConfigurationSection>();
-        configSectionMock.Setup(x => x.Value).Returns("2");
-        _configurationMock.Setup(x => x.GetSection("Jwt:RefreshTokenExpiryHours")).Returns(configSectionMock.Object);
 
         _handler = new LoginUserCommandHandler(
             _userRepositoryMock.Object, 
             _passwordHasherMock.Object, 
-            _jwtServiceMock.Object,
-            _configurationMock.Object);
+            _jwtServiceMock.Object);
     }
 
     [Fact]
@@ -83,6 +75,7 @@ public class LoginUserCommandHandlerTests
         var command = new LoginUserCommand("test@test.com", "correct_password");
         var user = new User { Email = "test@test.com", PasswordHash = "correct_hash" };
         var expectedToken = "jwt.token.string";
+        var expectedRefresh = "refresh-token-value";
 
         _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -91,7 +84,7 @@ public class LoginUserCommandHandlerTests
             .Returns(true);
 
         _jwtServiceMock.Setup(jwt => jwt.GenerateToken(user))
-            .Returns(expectedToken);
+            .Returns(new TokenResponse(expectedToken, expectedRefresh));
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -99,7 +92,7 @@ public class LoginUserCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().Be(expectedToken);
-        result.Value.RefreshToken.Should().NotBeNullOrEmpty();
+        result.Value.RefreshToken.Should().Be(expectedRefresh);
         _userRepositoryMock.Verify(repo => repo.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

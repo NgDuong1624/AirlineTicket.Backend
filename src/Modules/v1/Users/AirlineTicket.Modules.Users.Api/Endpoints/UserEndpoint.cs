@@ -56,6 +56,23 @@ public class UserEndpoint : IEndpoint
             .WithSummary("Đăng nhập người dùng")
             .AllowAnonymous();
 
+        authGroup.MapPost("/google", async (
+                [FromBody] GoogleLoginRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new GoogleLoginCommand(request.IdToken);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                {
+                    return result.ToErrorResult(statusCode: 401);
+                }
+                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
+            })
+            .WithName("GoogleLogin")
+            .WithSummary("Đăng nhập bằng Google")
+            .AllowAnonymous();
+
         authGroup.MapPost("/register", async (
                 [FromBody] RegisterUserRequest request,
                 [FromServices] ISender sender,
@@ -188,6 +205,7 @@ public class UserEndpoint : IEndpoint
 
 public sealed record RegisterUserRequest(string Email, string Password, string FullName, string Phone);
 public sealed record LoginUserRequest(string Email, string Password);
+public sealed record GoogleLoginRequest(string IdToken);
 public sealed record RefreshTokenRequest(string RefreshToken);
 public sealed record AdminUserRequest(string Email, string FullName, string? Phone, int? RoleId, bool? IsActive, string? Password, Guid? AirlineId);
 public sealed record AdminPermissionRequest(string Code, string Name, string? Description);
