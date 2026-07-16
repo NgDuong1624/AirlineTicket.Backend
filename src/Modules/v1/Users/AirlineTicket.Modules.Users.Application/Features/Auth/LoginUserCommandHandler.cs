@@ -1,14 +1,16 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
 using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<TokenResponse>>
+public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<LoginResponse>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -21,20 +23,18 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<
         _jwtService = jwtService;
     }
 
-    public async Task<Result<TokenResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<LoginResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
 
         if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
-            return Result.Failure<TokenResponse>(new Error("UNAUTHORIZED", "Invalid email or password."));
+            return Result.Failure<LoginResponse>(new Error("UNAUTHORIZED", "Invalid email or password."));
         }
 
         var tokens = _jwtService.GenerateToken(user);
-
-        // Persist refresh token into DB
         await _userRepository.UpdateAsync(user, cancellationToken);
 
-        return Result.Success(tokens);
+        return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken));
     }
 }

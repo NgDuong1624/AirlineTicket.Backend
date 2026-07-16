@@ -24,7 +24,11 @@ public class LoginUserCommandHandlerTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _jwtServiceMock = new Mock<IJwtService>();
-        _handler = new LoginUserCommandHandler(_userRepositoryMock.Object, _passwordHasherMock.Object, _jwtServiceMock.Object);
+
+        _handler = new LoginUserCommandHandler(
+            _userRepositoryMock.Object, 
+            _passwordHasherMock.Object, 
+            _jwtServiceMock.Object);
     }
 
     [Fact]
@@ -70,7 +74,8 @@ public class LoginUserCommandHandlerTests
         // Arrange
         var command = new LoginUserCommand("test@test.com", "correct_password");
         var user = new User { Email = "test@test.com", PasswordHash = "correct_hash" };
-        var expectedTokenResponse = new TokenResponse("jwt.token.string", "refresh.token.string");
+        var expectedToken = "jwt.token.string";
+        var expectedRefresh = "refresh-token-value";
 
         _userRepositoryMock.Setup(repo => repo.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -79,13 +84,15 @@ public class LoginUserCommandHandlerTests
             .Returns(true);
 
         _jwtServiceMock.Setup(jwt => jwt.GenerateToken(user))
-            .Returns(expectedTokenResponse);
+            .Returns(new TokenResponse(expectedToken, expectedRefresh));
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(expectedTokenResponse);
+        result.Value.AccessToken.Should().Be(expectedToken);
+        result.Value.RefreshToken.Should().Be(expectedRefresh);
+        _userRepositoryMock.Verify(repo => repo.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
