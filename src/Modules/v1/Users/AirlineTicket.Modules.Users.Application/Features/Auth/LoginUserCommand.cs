@@ -5,7 +5,7 @@ using FluentValidation;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public record LoginUserCommand(string Email, string Password) : ICommand<Result<TokenResponse>>;
+public record LoginUserCommand(string Email, string Password) : ICommand<Result<LoginResponse>>;
 
 public class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
 {

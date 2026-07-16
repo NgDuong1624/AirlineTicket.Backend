@@ -22,27 +22,6 @@ public class UserEndpoint : IEndpoint
         var authGroup = app.MapGroup("/api/auth")
             .WithTags("Authentication");
 
-        authGroup.MapPost("/login", async (
-                [FromBody] LoginUserRequest request,
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                var command = new LoginUserCommand(request.Email, request.Password);
-                var result = await sender.Send(command, ct);
-                if (result.IsFailure)
-                {
-                    return result.ToErrorResult(statusCode: 401);
-                }
-                return Results.Ok(new
-                {
-                    AccessToken = result.Value.AccessToken,
-                    RefreshToken = result.Value.RefreshToken
-                });
-            })
-            .WithName("Login")
-            .WithSummary("Đăng nhập người dùng")
-            .AllowAnonymous();
-
         authGroup.MapPost("/refresh", async (
                 [FromBody] RefreshTokenRequest request,
                 [FromServices] ISender sender,
@@ -54,14 +33,27 @@ public class UserEndpoint : IEndpoint
                 {
                     return result.ToErrorResult(statusCode: 401);
                 }
-                return Results.Ok(new
-                {
-                    AccessToken = result.Value.AccessToken,
-                    RefreshToken = result.Value.RefreshToken
-                });
+                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
             })
-            .WithName("RefreshToken")
+            .WithName("Refresh")
             .WithSummary("Làm mới token")
+            .AllowAnonymous();
+
+        authGroup.MapPost("/login", async (
+                [FromBody] LoginUserRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new LoginUserCommand(request.Email, request.Password);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                {
+                    return result.ToErrorResult(statusCode: 401);
+                }
+                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
+            })
+            .WithName("Login")
+            .WithSummary("Đăng nhập người dùng")
             .AllowAnonymous();
 
         authGroup.MapPost("/register", async (
@@ -100,28 +92,6 @@ public class UserEndpoint : IEndpoint
             .WithSummary("Lấy thông tin tài khoản đang đăng nhập")
             .RequireAuthorization();
 
-        // ——————————————————————— Google OAuth ————————————————————————————————
-        authGroup.MapPost("/google", async (
-                [FromBody] GoogleLoginRequest request,
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                var command = new GoogleLoginCommand(request.IdToken);
-                var result = await sender.Send(command, ct);
-                if (result.IsFailure)
-                {
-                    return result.ToErrorResult(statusCode: 401);
-                }
-                return Results.Ok(new
-                {
-                    AccessToken = result.Value.AccessToken,
-                    RefreshToken = result.Value.RefreshToken
-                });
-            })
-            .WithName("GoogleLogin")
-            .WithSummary("Đăng nhập bằng Google")
-            .AllowAnonymous();
-
         // ——————————————————————— Admin User Management ————————————————————————————————
         var adminGroup = app.MapGroup("/api/admin/users")
             .WithTags("Admin Users")
@@ -142,12 +112,12 @@ public class UserEndpoint : IEndpoint
                 CancellationToken ct) =>
             {
                 var command = new AdminCreateUserCommand(
-                    request.Email,
-                    request.FullName,
-                    request.Phone,
-                    request.RoleId,
-                    request.IsActive,
-                    request.Password,
+                    request.Email, 
+                    request.FullName, 
+                    request.Phone, 
+                    request.RoleId, 
+                    request.IsActive, 
+                    request.Password, 
                     request.AirlineId);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Created($"/api/admin/users/{result.Value}", new { Id = result.Value }) : result.ToErrorResult();
@@ -160,12 +130,12 @@ public class UserEndpoint : IEndpoint
                 CancellationToken ct) =>
             {
                 var command = new AdminUpdateUserCommand(
-                    id,
-                    request.FullName,
-                    request.Phone,
-                    request.RoleId,
-                    request.IsActive,
-                    request.Password,
+                    id, 
+                    request.FullName, 
+                    request.Phone, 
+                    request.RoleId, 
+                    request.IsActive, 
+                    request.Password, 
                     request.AirlineId);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Ok() : result.ToErrorResult();
@@ -219,6 +189,5 @@ public class UserEndpoint : IEndpoint
 public sealed record RegisterUserRequest(string Email, string Password, string FullName, string Phone);
 public sealed record LoginUserRequest(string Email, string Password);
 public sealed record RefreshTokenRequest(string RefreshToken);
-public sealed record GoogleLoginRequest(string IdToken);
 public sealed record AdminUserRequest(string Email, string FullName, string? Phone, int? RoleId, bool? IsActive, string? Password, Guid? AirlineId);
 public sealed record AdminPermissionRequest(string Code, string Name, string? Description);

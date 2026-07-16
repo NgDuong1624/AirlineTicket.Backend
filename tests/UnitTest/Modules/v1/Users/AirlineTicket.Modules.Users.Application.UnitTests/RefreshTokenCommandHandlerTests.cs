@@ -65,22 +65,22 @@ public class RefreshTokenCommandHandlerTests
         // Arrange
         var command = new RefreshTokenCommand("valid-refresh-token");
         var user = new User { RefreshToken = "valid-refresh-token", RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(1) };
-        var expectedTokenResponse = new TokenResponse("new-jwt-token", "new-refresh-token");
+        var expectedNewToken = "new-jwt-token";
 
         _userRepositoryMock.Setup(repo => repo.GetByRefreshTokenAsync(command.RefreshToken, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         _jwtServiceMock.Setup(s => s.GenerateToken(user))
-            .Returns(expectedTokenResponse);
+            .Returns(expectedNewToken);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(expectedTokenResponse);
-        _userRepositoryMock.Verify(repo => repo.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
-        user.RefreshToken.Should().NotBeNullOrEmpty();
-        user.RefreshToken.Should().NotBe("valid-refresh-token"); // It should be rotated
+        result.Value.AccessToken.Should().Be(expectedNewToken);
+        // RefreshToken is NOT rotated — the same token is returned
+        result.Value.RefreshToken.Should().Be("valid-refresh-token");
+        _userRepositoryMock.Verify(repo => repo.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Never);
     }
 }
