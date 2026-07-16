@@ -1,5 +1,4 @@
 using AirlineTicket.BuildingBlocks.Auth;
-using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Services;
 using AirlineTicket.Modules.Users.Domain.Entities;
 using Microsoft.Extensions.Configuration;
@@ -19,7 +18,7 @@ public class JwtService : IJwtService
         _configuration = configuration;
     }
 
-    public TokenResponse GenerateToken(User user)
+    public string GenerateToken(User user)
     {
         var secret = _configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!";
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
@@ -56,18 +55,10 @@ public class JwtService : IJwtService
             issuer: _configuration["Jwt:Issuer"] ?? "AirlineTicketApi",
             audience: _configuration["Jwt:Audience"] ?? "AirlineTicketClient",
             claims: claims,
-            expires: DateTime.Now.AddMinutes(15), // AccessToken: 15 min
+            expires: DateTime.UtcNow.AddMinutes(
+                _configuration.GetValue<int>("Jwt:AccessTokenExpiryMinutes", 15)),
             signingCredentials: credentials);
 
-        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-        // RefreshToken: opaque random string
-        var refreshToken = Guid.NewGuid().ToString("N");
-
-        // Save refresh token to user entity
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-
-        return new TokenResponse(accessToken, refreshToken);
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }
