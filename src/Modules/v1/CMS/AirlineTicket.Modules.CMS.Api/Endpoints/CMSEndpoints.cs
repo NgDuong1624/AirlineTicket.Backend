@@ -1,3 +1,5 @@
+using System;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
@@ -32,9 +34,11 @@ public class CMSEndpoints : IEndpoint
         // ——————————————————————— Partner Dashboard ————————————————————————————————
         app.MapGet("/api/partner/dashboard", async (
                 [FromServices] ISender sender,
+                ClaimsPrincipal principal,
                 CancellationToken ct) =>
             {
-                var query = new GetPartnerDashboardQuery();
+                if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
+                var query = new GetPartnerDashboardQuery(airlineId);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
@@ -67,4 +71,14 @@ public class CMSEndpoints : IEndpoint
             })
             .WithName("AdminUpdateSettings");
     }
+
+    private static bool TryGetAirlineId(ClaimsPrincipal principal, out Guid airlineId)
+    {
+        airlineId = Guid.Empty;
+        var claimValue = principal.FindFirst("AirlineId")?.Value;
+        return Guid.TryParse(claimValue, out airlineId);
+    }
+
+    private static IResult Forbidden() =>
+        Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 }

@@ -62,7 +62,7 @@ public class BookingEndpoints : IEndpoint
             .WithName("GetAllBookings")
             .WithSummary("Lấy danh sách tất cả đặt vé")
             .Produces(200)
-            .RequireAuthorization("AdminOrStaff");
+            .RequireAuthorization("PartnerOrStaff");
 
         group.MapGet("/{id:guid}", async (
                 Guid id,

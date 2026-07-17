@@ -43,6 +43,11 @@ public static class ClaimsPrincipalExtensions
         return user.GetRole() == AuthConstants.Roles.Admin;
     }
 
+    public static bool IsPartner(this ClaimsPrincipal user)
+    {
+        return user.GetRole() == AuthConstants.Roles.Partner;
+    }
+
     public static bool IsStaff(this ClaimsPrincipal user)
     {
         return user.GetRole() == AuthConstants.Roles.Staff;

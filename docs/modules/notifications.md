@@ -23,9 +23,9 @@ Handles outbound multi-channel communication (Email, SMS, Push) for the platform
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | GET | `/api/v1/notifications` | - | Status check |
-| GET | `/api/v1/notifications/manage` | AdminOrStaff | List sent notifications (last 100) |
-| GET | `/api/v1/notifications/manage/templates` | AdminOrStaff | List templates |
-| POST | `/api/v1/notifications/manage/templates` | AdminOrStaff | Create template |
+| GET | `/api/v1/notifications/manage` | PartnerOrStaff | List sent notifications (last 100) |
+| GET | `/api/v1/notifications/manage/templates` | PartnerOrStaff | List templates |
+| POST | `/api/v1/notifications/manage/templates` | PartnerOrStaff | Create template |
 
 ## Sender Configuration (appsettings.json)
 ```json

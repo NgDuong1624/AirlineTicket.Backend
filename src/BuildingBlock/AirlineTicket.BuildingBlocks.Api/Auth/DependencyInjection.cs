@@ -33,16 +33,18 @@ public static class DependencyInjection
             options.AddPolicy(AuthConstants.Policies.AdminOnly, policy =>
                 policy.RequireClaim(AuthConstants.Claims.Role, AuthConstants.Roles.Admin));
 
-            options.AddPolicy(AuthConstants.Policies.StaffOnly, policy =>
-                policy.RequireClaim(AuthConstants.Claims.Role, AuthConstants.Roles.Staff));
-
-            options.AddPolicy(AuthConstants.Policies.AdminOrStaff, policy =>
-                policy.RequireClaim(AuthConstants.Claims.Role, AuthConstants.Roles.Admin, AuthConstants.Roles.Staff));
-
             options.AddPolicy(AuthConstants.Policies.PartnerOnly, policy =>
+                policy.RequireClaim(AuthConstants.Claims.Role, AuthConstants.Roles.Partner)
+                      .RequireClaim(AuthConstants.Claims.AirlineId));
+
+            options.AddPolicy(AuthConstants.Policies.StaffOnly, policy =>
                 policy.RequireClaim(AuthConstants.Claims.Role, AuthConstants.Roles.Staff)
                       .RequireClaim(AuthConstants.Claims.AirlineId));
 
+            options.AddPolicy(AuthConstants.Policies.PartnerOrStaff, policy =>
+                policy.RequireClaim(AuthConstants.Claims.Role, AuthConstants.Roles.Partner, AuthConstants.Roles.Staff)
+                      .RequireClaim(AuthConstants.Claims.AirlineId));
+            
             options.AddPolicy(AuthConstants.Policies.AirlineBound, policy =>
                 policy.AddRequirements(new AirlineResourceRequirement()));
         });

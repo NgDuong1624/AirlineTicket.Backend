@@ -198,7 +198,7 @@ public class FlightEndpoints : IEndpoint
             .Produces(201)
             .Produces(400)
             .Produces(500)
-            .RequireAuthorization("AdminOrStaff");
+            .RequireAuthorization("PartnerOrStaff");
     }
 }
 

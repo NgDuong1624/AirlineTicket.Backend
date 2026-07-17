@@ -93,7 +93,7 @@
 - `GET /api/partner/dashboard` — Thống kê doanh thu, vé bán ra
 - `GET /api/partner/logs` — Nhật ký hoạt động (phân trang: pageNumber, pageSize)
 
-## 3. Phân hệ Nhân viên hãng bay (Staff APIs - Role: AdminOrStaff)
+## 3. Phân hệ Nhân viên hãng bay (Staff APIs - Role: PartnerOrStaff)
 
 ### 3.1. Quản lý Chuyến bay
 - `GET /api/staff/flights?search=` — Danh sách chuyến bay (có tìm kiếm theo từ khóa)
@@ -194,5 +194,5 @@
 - Tất cả endpoint được triển khai dưới dạng Minimal API (IEndpoint) và tự động đăng ký qua `AddEndpoints()`.
 - Module CMS (`AirlineTicket.Modules.CMS.*`) tồn tại nhưng chỉ phục vụ Dashboard và Settings — không có endpoint Articles hay Reviews.
 - Module Interactions ngoài AI Q&A còn có endpoint status; module Reviews chưa được triển khai.
-- Authorization sử dụng custom policies: `AdminOnly`, `PartnerOnly`, `AdminOrStaff`, và policy mặc định `RequireAuthorization()`.
+- Authorization sử dụng custom policies: `AdminOnly`, `PartnerOnly`, `PartnerOrStaff`, và policy mặc định `RequireAuthorization()`.
 - JWT claim `AirlineId` được dùng để scoping dữ liệu cho Partner APIs.

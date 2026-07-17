@@ -33,6 +33,8 @@ public class CurrentUser : ICurrentUser
 
     public bool IsAdmin => User?.IsAdmin() ?? false;
 
+    public bool IsPartner => User?.IsPartner() ?? false;
+
     public bool IsStaff => User?.IsStaff() ?? false;
 
     public bool HasPermission(string permissionCode) => User?.HasPermission(permissionCode) ?? false;
