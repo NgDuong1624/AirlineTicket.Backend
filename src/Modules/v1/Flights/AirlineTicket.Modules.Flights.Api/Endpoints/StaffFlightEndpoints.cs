@@ -16,7 +16,7 @@ public class StaffFlightEndpoints : IEndpoint
     {
         var group = app.MapGroup("/api/staff/flights")
             .WithTags("Staff Flights")
-            .RequireAuthorization("AdminOrStaff");
+            .RequireAuthorization("PartnerOrStaff");
 
         // GET /api/staff/flights — flight list with route/schedule/seat summary
         group.MapGet("/", async (

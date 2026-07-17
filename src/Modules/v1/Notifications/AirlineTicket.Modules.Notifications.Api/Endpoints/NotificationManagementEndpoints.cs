@@ -19,7 +19,7 @@ public class NotificationManagementEndpoints : IEndpoint
     {
         var group = app.MapGroup("/api/v1/notifications/manage")
             .WithTags("Notifications Management")
-            .RequireAuthorization("AdminOrStaff");
+            .RequireAuthorization("PartnerOrStaff");
 
         group.MapGet("/templates", async ([FromServices] ISender sender, CancellationToken ct) =>
         {

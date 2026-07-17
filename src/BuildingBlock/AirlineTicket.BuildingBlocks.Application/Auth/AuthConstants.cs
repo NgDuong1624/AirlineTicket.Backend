@@ -20,6 +20,7 @@ public static class AuthConstants
     public static class Roles
     {
         public const string Admin = "Admin";
+        public const string Partner = "Partner";
         public const string Staff = "Staff";
         public const string Customer = "Customer";
     }
@@ -27,9 +28,9 @@ public static class AuthConstants
     public static class Policies
     {
         public const string AdminOnly = "AdminOnly";
-        public const string StaffOnly = "StaffOnly";
-        public const string AdminOrStaff = "AdminOrStaff";
         public const string PartnerOnly = "PartnerOnly";
+        public const string StaffOnly = "StaffOnly";
+        public const string PartnerOrStaff = "PartnerOrStaff";
 
         // Dynamic policy prefix
         public const string PermissionPrefix = "Permission:";

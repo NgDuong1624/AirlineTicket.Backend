@@ -41,7 +41,7 @@ Hệ thống bán vé máy bay toàn cầu, đóng vai trò là nền tảng tru
 | :--- | :--- | :--- |
 | **Customer** | Tìm kiếm, đặt vé, thanh toán, xem lịch sử, đánh giá hãng bay, sử dụng AI Q&A | Đăng ký tự do |
 | **Partner** | Quản lý tuyến bay, máy bay, chuyến bay, coupon, campaign, nhân viên, cài đặt hãng | `PartnerOnly` |
-| **Staff** | Đặt vé hộ khách hàng qua điện thoại, xem sơ đồ ghế realtime, bán vé, live chat hỗ trợ | `AdminOrStaff` |
+| **Staff** | Đặt vé hộ khách hàng qua điện thoại, xem sơ đồ ghế realtime, bán vé, live chat hỗ trợ | `PartnerOrStaff` |
 | **Admin** | Quản trị toàn bộ hệ thống: người dùng, sân bay, hãng bay, quyền hạn, dashboard, cấu hình | `AdminOnly` |
 
 ## 6. Tính năng nổi bật

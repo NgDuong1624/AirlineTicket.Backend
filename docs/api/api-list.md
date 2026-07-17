@@ -41,7 +41,7 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | **POST** | `/api/bookings` | Tạo đơn đặt chỗ (flightId, passengers: [{firstName, lastName, identityCard, seatNumber}]) | Anonymous |
-| **GET** | `/api/bookings` | Danh sách tất cả đặt vé | AdminOrStaff |
+| **GET** | `/api/bookings` | Danh sách tất cả đặt vé | PartnerOrStaff |
 | **GET** | `/api/bookings/{id}` | Chi tiết đơn đặt chỗ | Anonymous |
 | **GET** | `/api/bookings/my-bookings` | Lịch sử đặt vé người dùng | Bearer JWT |
 | **PUT** | `/api/bookings/{id}` | Cập nhật thông tin đặt vé (passengers?, contactEmail?, contactPhone?) | — |
@@ -76,7 +76,7 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 
 ---
 
-## 8. Staff APIs (Nhân viên hãng bay - Role: AdminOrStaff)
+## 8. Staff APIs (Nhân viên hãng bay - Role: PartnerOrStaff)
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |

@@ -158,7 +158,7 @@ public class FlightRepository : IFlightRepository
         return result.ToList();
     }
 
-    public async Task<List<StaffFlightListItemDto>> GetStaffFlightsAsync(string? search, CancellationToken cancellationToken = default)
+    public async Task<List<StaffFlightListItemDto>> GetStaffFlightsAsync(string? search, Guid? airlineId = null, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
         var sql = @"
@@ -177,6 +177,12 @@ public class FlightRepository : IFlightRepository
         {
             sql += " AND (f.FlightNumber LIKE @Search OR oa.IataCode LIKE @Search OR da.IataCode LIKE @Search)";
             parameters.Add("Search", $"%{search.Trim()}%");
+        }
+
+        if (airlineId.HasValue)
+        {
+            sql += " AND r.AirlineId = @AirlineId";
+            parameters.Add("AirlineId", airlineId.Value);
         }
 
         sql += " ORDER BY f.DepartureTime";

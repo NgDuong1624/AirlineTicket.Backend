@@ -22,23 +22,6 @@ public class UserEndpoint : IEndpoint
         var authGroup = app.MapGroup("/api/auth")
             .WithTags("Authentication");
 
-        authGroup.MapPost("/refresh", async (
-                [FromBody] RefreshTokenRequest request,
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                var command = new RefreshTokenCommand(request.RefreshToken);
-                var result = await sender.Send(command, ct);
-                if (result.IsFailure)
-                {
-                    return result.ToErrorResult(statusCode: 401);
-                }
-                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
-            })
-            .WithName("Refresh")
-            .WithSummary("Làm mới token")
-            .AllowAnonymous();
-
         authGroup.MapPost("/login", async (
                 [FromBody] LoginUserRequest request,
                 [FromServices] ISender sender,
@@ -108,6 +91,23 @@ public class UserEndpoint : IEndpoint
             .WithName("GetMe")
             .WithSummary("Lấy thông tin tài khoản đang đăng nhập")
             .RequireAuthorization();
+
+        authGroup.MapPost("/refresh", async (
+                [FromBody] RefreshTokenRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new RefreshTokenCommand(request.RefreshToken);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                {
+                    return result.ToErrorResult(statusCode: 401);
+                }
+                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
+            })
+            .WithName("Refresh")
+            .WithSummary("Làm mới token")
+            .AllowAnonymous();
 
         // ——————————————————————— Admin User Management ————————————————————————————————
         var adminGroup = app.MapGroup("/api/admin/users")
