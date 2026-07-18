@@ -104,7 +104,12 @@ public class StaffSalesReader : IStaffSalesReader
         _flightSeatRepository = flightSeatRepository;
     }
 
-    public async Task<List<StaffSaleDto>> GetSalesAsync(CancellationToken cancellationToken = default)
+    public async Task<(List<StaffSaleDto> Items, int TotalCount)> GetSalesAsync(
+        int pageIndex,
+        int pageSize,
+        string? search = null,
+        string? status = null,
+        CancellationToken cancellationToken = default)
     {
         var bookings = await _bookingRepository.GetStaffSalesBookingsAsync(cancellationToken);
 
@@ -117,16 +122,18 @@ public class StaffSalesReader : IStaffSalesReader
 
         var seatClasses = await _flightSeatRepository.GetSeatClassesAsync(seatIds, cancellationToken);
 
-        return bookings.Select(b =>
+        var allSales = bookings.Select(b =>
         {
             string flightNumber = string.Empty;
             string route = string.Empty;
             string seatClass = string.Empty;
+            DateTime? departureAt = null;
 
             if (b.FlightId.HasValue && flightsDict.TryGetValue(b.FlightId.Value, out var f))
             {
                 flightNumber = f.FlightNumber;
                 route = $"{f.OriginCode} → {f.DestinationCode}";
+                departureAt = f.DepartureTime;
             }
             if (b.SeatId.HasValue && seatClasses.TryGetValue(b.SeatId.Value, out var sc))
             {
@@ -143,9 +150,37 @@ public class StaffSalesReader : IStaffSalesReader
                 SeatClass = seatClass,
                 Amount = b.TotalPrice,
                 Status = b.Status,
-                BookedAt = b.CreatedAt
+                BookedAt = b.CreatedAt,
+                DepartureAt = departureAt
             };
-        }).ToList();
+        });
+
+        // Apply filtering
+        if (!string.IsNullOrWhiteSpace(status) && !status.Equals("All", StringComparison.OrdinalIgnoreCase))
+        {
+            allSales = allSales.Where(s => s.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var cleanSearch = search.Trim().ToLower();
+            allSales = allSales.Where(s =>
+                s.Id.ToLower().Contains(cleanSearch) ||
+                s.PassengerName.ToLower().Contains(cleanSearch) ||
+                s.FlightNumber.ToLower().Contains(cleanSearch) ||
+                s.Route.ToLower().Contains(cleanSearch)
+            );
+        }
+
+        var filteredList = allSales.ToList();
+        var totalCount = filteredList.Count;
+
+        var pagedItems = filteredList
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return (pagedItems, totalCount);
     }
 }
 
