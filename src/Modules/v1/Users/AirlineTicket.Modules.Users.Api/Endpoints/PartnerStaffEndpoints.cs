@@ -26,18 +26,20 @@ public class PartnerStaffEndpoints : IEndpoint
         staff.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] IUserRepository repo,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10) =>
             {
                 var airlineId = principal.GetAirlineId();
                 if (airlineId is null)
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 
-                var users = await repo.GetByAirlineIdAsync(airlineId.Value, ct);
+                var (users, totalCount) = await repo.GetByAirlineIdAsync(airlineId.Value, pageIndex, pageSize, ct);
                 var items = users
                     .Where(u => u.Role == (int)UserRoleEnum.Staff)
                     .Select(ToDto)
                     .ToList();
-                return Results.Ok(new { items, totalCount = items.Count });
+                return Results.Ok(new { items, totalCount });
             });
 
         staff.MapPost("/", async (
@@ -131,15 +133,17 @@ public class PartnerStaffEndpoints : IEndpoint
         staff.MapGet("/my-airline", async (
                 ClaimsPrincipal principal,
                 [FromServices] IUserRepository repo,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10) =>
             {
                 var airlineId = principal.GetAirlineId();
                 if (airlineId is null)
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 
-                var users = await repo.GetByAirlineIdAsync(airlineId.Value, ct);
+                var (users, totalCount) = await repo.GetByAirlineIdAsync(airlineId.Value, pageIndex, pageSize, ct);
                 var items = users.Select(ToDto).ToList();
-                return Results.Ok(new { airlineId, items, totalCount = items.Count });
+                return Results.Ok(new { airlineId, items, totalCount });
             });
     }
 

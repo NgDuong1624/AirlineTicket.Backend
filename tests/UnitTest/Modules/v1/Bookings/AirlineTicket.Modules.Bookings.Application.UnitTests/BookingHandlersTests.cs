@@ -119,14 +119,14 @@ public class BookingHandlersTests
             new BookingDto { Id = Guid.NewGuid(), UserId = userId, Status = "Pending" }
         };
 
-        _bookingRepoMock.Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(bookings);
+        _bookingRepoMock.Setup(x => x.GetByUserIdAsync(userId, 1, 10, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((bookings, 2));
 
         var result = await handler.Handle(new GetMyBookingsQuery(userId), CancellationToken.None);
 
         result.Should().NotBeNull();
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().HaveCount(2);
+        result.Value.Items.Should().HaveCount(2);
     }
 
     // ======================= GetAllBookingsQueryHandler Tests =======================

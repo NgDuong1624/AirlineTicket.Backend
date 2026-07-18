@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Domain.Entities;
+using AirlineTicket.Modules.Flights.Domain.Enums;
 
 namespace AirlineTicket.Modules.Flights.Infrastructure.Data.Repositories;
 
@@ -24,8 +25,8 @@ public class FlightRepository : IFlightRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT f.Id, f.DepartureTime, f.ArrivalTime, f.BasePrice as Price, f.Status,
-                   r.OriginAirportId, r.DestinationAirportId, r.AirlineId
+            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
+                   r.AirlineId
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id
             WHERE f.Id = @Id AND f.IsDeleted = 0 AND r.IsDeleted = 0";
@@ -33,7 +34,7 @@ public class FlightRepository : IFlightRepository
         return await connection.QueryFirstOrDefaultAsync<FlightDto>(sql, new { Id = id });
     }
 
-    public async Task<List<FlightDto>> SearchAsync(
+    public async Task<(List<FlightDto> Items, int TotalCount)> SearchAsync(
         string origin,
         string destination,
         DateTime date,
@@ -44,14 +45,13 @@ public class FlightRepository : IFlightRepository
         int? maxStops = null,
         string? sortBy = null,
         string currency = "VND",
+        int pageIndex = 1,
+        int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
         
-        var sql = @"
-            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
-                   f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
-                   oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
+        var baseSql = @"
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id
             JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
@@ -69,32 +69,49 @@ public class FlightRepository : IFlightRepository
 
         if (airlines != null && airlines.Any())
         {
-            sql += " AND a.Name IN @Airlines";
+            baseSql += " AND a.Name IN @Airlines";
             parameters.Add("Airlines", airlines);
         }
 
         if (priceRangeMin.HasValue)
         {
-            sql += " AND f.BasePrice >= @MinPrice";
+            baseSql += " AND f.BasePrice >= @MinPrice";
             parameters.Add("MinPrice", priceRangeMin.Value);
         }
         
         if (priceRangeMax.HasValue)
         {
-            sql += " AND f.BasePrice <= @MaxPrice";
+            baseSql += " AND f.BasePrice <= @MaxPrice";
             parameters.Add("MaxPrice", priceRangeMax.Value);
         }
+
+        var countSql = "SELECT COUNT(*) " + baseSql;
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
+
+        var selectSql = @"
+            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
+                   f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
+                   oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName"
+            + baseSql;
 
         if (!string.IsNullOrEmpty(sortBy))
         {
             if (sortBy.Equals("price_asc", StringComparison.OrdinalIgnoreCase))
-                sql += " ORDER BY f.BasePrice ASC";
+                selectSql += " ORDER BY f.BasePrice ASC";
             else if (sortBy.Equals("price_desc", StringComparison.OrdinalIgnoreCase))
-                sql += " ORDER BY f.BasePrice DESC";
+                selectSql += " ORDER BY f.BasePrice DESC";
+        }
+        else
+        {
+            selectSql += " ORDER BY f.DepartureTime";
         }
 
-        var result = await connection.QueryAsync<FlightDto>(sql, parameters);
-        return result.ToList();
+        selectSql += " OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+        parameters.Add("Offset", (pageIndex - 1) * pageSize);
+        parameters.Add("PageSize", pageSize);
+
+        var result = await connection.QueryAsync<FlightDto>(selectSql, parameters);
+        return (result.ToList(), totalCount);
     }
 
     public async Task<Guid> CreateAsync(FlightDto flightDto, CancellationToken cancellationToken = default)
@@ -106,8 +123,8 @@ public class FlightRepository : IFlightRepository
             AirplaneId = flightDto.AirplaneId,
             FlightNumber = flightDto.FlightNumber,
             BasePrice = flightDto.BasePrice,
-            DepartureTime = DateTime.UtcNow.AddDays(1),
-            ArrivalTime = DateTime.UtcNow.AddDays(1).AddHours(2),
+            DepartureTime = flightDto.DepartureTime,
+            ArrivalTime = flightDto.ArrivalTime,
             Status = AirlineTicket.Modules.Flights.Domain.Enums.FlightStatus.Scheduled
         };
 
@@ -158,14 +175,10 @@ public class FlightRepository : IFlightRepository
         return result.ToList();
     }
 
-    public async Task<List<StaffFlightListItemDto>> GetStaffFlightsAsync(string? search, Guid? airlineId = null, CancellationToken cancellationToken = default)
+    public async Task<(List<StaffFlightListItemDto> Items, int TotalCount)> GetStaffFlightsAsync(string? search, Guid? airlineId = null, int pageIndex = 1, int pageSize = 10, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        var sql = @"
-            SELECT f.Id, f.FlightNumber, f.DepartureTime, f.ArrivalTime, f.BasePrice, f.Currency, f.Status,
-                   oa.IataCode as OriginCode, da.IataCode as DestinationCode,
-                   (SELECT COUNT(*) FROM dbo.FlightSeats WHERE FlightId = f.Id) as TotalSeats,
-                   (SELECT COUNT(*) FROM dbo.FlightSeats WHERE FlightId = f.Id AND IsAvailable = 1) as AvailableSeats
+        var baseSql = @"
             FROM dbo.Flights f
             JOIN dbo.Routes r ON f.RouteId = r.Id
             JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
@@ -175,20 +188,32 @@ public class FlightRepository : IFlightRepository
         var parameters = new DynamicParameters();
         if (!string.IsNullOrWhiteSpace(search))
         {
-            sql += " AND (f.FlightNumber LIKE @Search OR oa.IataCode LIKE @Search OR da.IataCode LIKE @Search)";
+            baseSql += " AND (f.FlightNumber LIKE @Search OR oa.IataCode LIKE @Search OR da.IataCode LIKE @Search)";
             parameters.Add("Search", $"%{search.Trim()}%");
         }
 
         if (airlineId.HasValue)
         {
-            sql += " AND r.AirlineId = @AirlineId";
+            baseSql += " AND r.AirlineId = @AirlineId";
             parameters.Add("AirlineId", airlineId.Value);
         }
 
-        sql += " ORDER BY f.DepartureTime";
+        var countSql = "SELECT COUNT(*) " + baseSql;
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
+
+        var sql = @"
+            SELECT f.Id, f.FlightNumber, f.DepartureTime, f.ArrivalTime, f.BasePrice, f.Currency, f.Status,
+                   oa.IataCode as OriginCode, da.IataCode as DestinationCode,
+                   (SELECT COUNT(*) FROM dbo.FlightSeats WHERE FlightId = f.Id) as TotalSeats,
+                   (SELECT COUNT(*) FROM dbo.FlightSeats WHERE FlightId = f.Id AND IsAvailable = 1) as AvailableSeats "
+            + baseSql
+            + " ORDER BY f.DepartureTime DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+        parameters.Add("Offset", (pageIndex - 1) * pageSize);
+        parameters.Add("PageSize", pageSize);
 
         var result = await connection.QueryAsync<StaffFlightListItemDto>(sql, parameters);
-        return result.ToList();
+        return (result.ToList(), totalCount);
     }
 
     public async Task<(List<FlightDto> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
@@ -218,7 +243,7 @@ public class FlightRepository : IFlightRepository
         return (result.ToList(), totalCount);
     }
 
-    public async Task<List<FlightDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(List<FlightDto> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
@@ -230,10 +255,19 @@ public class FlightRepository : IFlightRepository
             JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
             JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
             JOIN dbo.Airlines a ON r.AirlineId = a.Id
+            WHERE f.IsDeleted = 0 AND r.IsDeleted = 0
+            ORDER BY f.DepartureTime DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+        const string countSql = @"
+            SELECT COUNT(*)
+            FROM dbo.Flights f
+            JOIN dbo.Routes r ON f.RouteId = r.Id
             WHERE f.IsDeleted = 0 AND r.IsDeleted = 0";
 
-        var result = await connection.QueryAsync<FlightDto>(sql);
-        return result.ToList();
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+        var result = await connection.QueryAsync<FlightDto>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
+        return (result.ToList(), totalCount);
     }
 
     public async Task UpdateAsync(FlightDto flightDto, Guid? airlineId = null, CancellationToken cancellationToken = default)
@@ -247,10 +281,15 @@ public class FlightRepository : IFlightRepository
 
         if (flight is null) return;
 
-        flight.FlightNumber = flightDto.FlightNumber;
-        flight.BasePrice = flightDto.BasePrice;
+        // Only update allowed fields (DepartureTime, ArrivalTime, Status)
         flight.DepartureTime = flightDto.DepartureTime;
         flight.ArrivalTime = flightDto.ArrivalTime;
+
+        if (flightDto.Status != 0)
+        {
+            flight.Status = (FlightStatus)flightDto.Status;
+        }
+
         flight.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -379,6 +418,12 @@ public class RouteRepository : IRouteRepository
     public RouteRepository(FlightDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<Route?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Routes
+            .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted, cancellationToken);
     }
 
     public async Task<List<Route>> GetAllAsync(CancellationToken cancellationToken = default)

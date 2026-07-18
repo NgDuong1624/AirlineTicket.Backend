@@ -10,13 +10,13 @@ using AirlineTicket.Modules.Flights.Domain.Entities;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Routes;
 
-public record GetRoutesQuery() : IQuery<Result<List<Route>>>, ICacheableRequest
+public record GetRoutesQuery(int PageIndex = 1, int PageSize = 100) : IQuery<Result<PagedResult<Route>>>, ICacheableRequest
 {
-    public string CacheKey => CacheKeyBuilder.ForQuery<GetRoutesQuery>("all");
+    public string CacheKey => CacheKeyBuilder.ForQuery<GetRoutesQuery>($"{PageIndex}_{PageSize}");
     public int CacheDurationMinutes => 30;
 }
 
-internal sealed class GetRoutesQueryHandler : IQueryHandler<GetRoutesQuery, Result<List<Route>>>
+internal sealed class GetRoutesQueryHandler : IQueryHandler<GetRoutesQuery, Result<PagedResult<Route>>>
 {
     private readonly IRouteRepository _routeRepository;
 
@@ -25,9 +25,14 @@ internal sealed class GetRoutesQueryHandler : IQueryHandler<GetRoutesQuery, Resu
         _routeRepository = routeRepository;
     }
 
-    public async Task<Result<List<Route>>> Handle(GetRoutesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<Route>>> Handle(GetRoutesQuery request, CancellationToken cancellationToken)
     {
         var routes = await _routeRepository.GetAllAsync(cancellationToken);
-        return Result.Success(routes);
+        var totalCount = routes.Count;
+        var items = routes
+            .Skip((request.PageIndex - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToList();
+        return Result.Success(PagedResult<Route>.Success(items, request.PageIndex, request.PageSize, totalCount));
     }
 }

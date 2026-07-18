@@ -1,4 +1,6 @@
 using System.Text;
+using AirlineTicket.BuildingBlocks.Api.Auth;
+using AirlineTicket.BuildingBlocks.Infrastructure;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using AirlineTicket.Modules.Bookings.Infrastructure;
 using AirlineTicket.Modules.Flights.Infrastructure;
@@ -24,6 +26,31 @@ builder.Logging.AddSerilog(Log.Logger);
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? new[] { "http://localhost:3000" };
 const string WebCorsPolicy = "WebClient";
+
+// Configure BuildingBlocks (Logging, Caching, Correlation, Auth)
+builder.Services.AddBuildingBlocksInfrastructure();
+builder.Services.AddBuildingBlocksAuth();
+
+// Configure cache provider (Redis or MemoryCache fallback)
+var redisConn = builder.Configuration.GetConnectionString("Redis");
+if (!string.IsNullOrEmpty(redisConn))
+{
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConn;
+        options.InstanceName = "AirlineTicket:";
+    });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
+}
+
+// MediatR — required by SharedFlightSearchService (registered via AddFlightsInfrastructure)
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(AirlineTicket.Modules.Flights.Application.Features.Flights.CreatePartnerFlightCommand).Assembly);
+});
 
 // Configure Database & Infrastructure for required modules
 builder.Services.AddFlightsInfrastructure(builder.Configuration);
@@ -67,7 +94,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // SignalR + Redis Backplane
 var signalRBuilder = builder.Services.AddSignalR();
-var redisConn = builder.Configuration.GetConnectionString("Redis");
 if (!string.IsNullOrEmpty(redisConn))
 {
     signalRBuilder.AddStackExchangeRedis(redisConn, options =>

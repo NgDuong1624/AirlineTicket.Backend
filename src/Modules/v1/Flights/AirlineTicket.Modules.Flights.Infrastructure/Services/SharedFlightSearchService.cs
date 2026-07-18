@@ -43,7 +43,7 @@ public class SharedFlightSearchService : ISharedFlightSearchService
         );
 
         var result = await _sender.Send(query, cancellationToken);
-        if (result.IsFailure || result.Value is null || !result.Value.Any())
+        if (result.IsFailure || result.Value?.Items is null || !result.Value.Items.Any())
         {
             return "[]";
         }
@@ -51,7 +51,7 @@ public class SharedFlightSearchService : ISharedFlightSearchService
         // Map each flight to include a booking URL enriched with flight details.
         // The URL follows the format: /bookings/checkout?flightId=...&from=...&to=... etc.
         // The frontend will read these params on the checkout page.
-        var enrichedFlights = result.Value.Select(f => new
+        var enrichedFlights = result.Value.Items.Select(f => new
         {
             f.Id,
             f.FlightNumber,

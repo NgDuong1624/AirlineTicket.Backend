@@ -25,16 +25,15 @@ public class PartnerPromotionEndpoints : IEndpoint
         coupons.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
 
-                var query = new GetCouponsPartnerQuery(airlineId);
+                var query = new GetCouponsPartnerQuery(airlineId, pageIndex, pageSize);
                 var result = await sender.Send(query, ct);
-                if (result.IsFailure)
-                    return Results.BadRequest(result.Error);
-
-                return Results.Ok(new { items = result.Value, totalCount = result.Value.Count });
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             });
 
         coupons.MapPost("/", async (
@@ -117,16 +116,15 @@ public class PartnerPromotionEndpoints : IEndpoint
         campaigns.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10) =>
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
 
-                var query = new GetCampaignsPartnerQuery(airlineId);
+                var query = new GetCampaignsPartnerQuery(airlineId, pageIndex, pageSize);
                 var result = await sender.Send(query, ct);
-                if (result.IsFailure)
-                    return Results.BadRequest(result.Error);
-
-                return Results.Ok(new { items = result.Value, totalCount = result.Value.Count });
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             });
 
         campaigns.MapPost("/", async (

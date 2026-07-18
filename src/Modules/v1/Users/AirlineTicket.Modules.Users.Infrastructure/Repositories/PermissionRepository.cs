@@ -15,11 +15,17 @@ public class PermissionRepository : IPermissionRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<Permission>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<Permission> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        var result = await connection.QueryAsync<Permission>("SELECT * FROM dbo.Permissions");
-        return result.ToList();
+        const string sql = @"
+            SELECT * FROM dbo.Permissions
+            ORDER BY Id
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+        const string countSql = "SELECT COUNT(*) FROM dbo.Permissions";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+        var result = await connection.QueryAsync<Permission>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
+        return (result.ToList(), totalCount);
     }
 
     public async Task<Permission?> GetByIdAsync(int id, CancellationToken cancellationToken = default)

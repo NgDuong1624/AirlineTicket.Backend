@@ -43,25 +43,37 @@ public class PromotionRepository : IPromotionRepository
         return result.ToList();
     }
 
-    public async Task<List<Campaign>> GetAllCampaignsAsync(CancellationToken cancellationToken = default)
+    public async Task<(List<Campaign> Items, int TotalCount)> GetAllCampaignsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        const string sql = "SELECT * FROM dbo.Campaigns ORDER BY StartDate DESC";
-        
-        var result = await connection.QueryAsync<Campaign>(sql);
-        return result.ToList();
+        const string sql = @"
+            SELECT * FROM dbo.Campaigns 
+            ORDER BY StartDate DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+        const string countSql = "SELECT COUNT(*) FROM dbo.Campaigns";
+
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+        var result = await connection.QueryAsync<Campaign>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
+        return (result.ToList(), totalCount);
     }
 
-    public async Task<List<Coupon>> GetAllCouponsAsync(CancellationToken cancellationToken = default)
+    public async Task<(List<Coupon> Items, int TotalCount)> GetAllCouponsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
             SELECT * FROM dbo.Coupons 
             WHERE AirlineId IS NULL AND IsDeleted = 0
-            ORDER BY StartDate DESC";
-        
-        var result = await connection.QueryAsync<Coupon>(sql);
-        return result.ToList();
+            ORDER BY StartDate DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+        const string countSql = @"
+            SELECT COUNT(*) FROM dbo.Coupons 
+            WHERE AirlineId IS NULL AND IsDeleted = 0";
+
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+        var result = await connection.QueryAsync<Coupon>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
+        return (result.ToList(), totalCount);
     }
 
     public async Task<Guid> CreateAsync(PromotionDto promotion, CancellationToken cancellationToken = default)
@@ -147,12 +159,20 @@ public class PromotionRepository : IPromotionRepository
 
     // ——————————————————————— Airline-scoped (partner) promotions ————————————————————————————————
 
-    public async Task<List<Coupon>> GetCouponsByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<(List<Coupon> Items, int TotalCount)> GetCouponsByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Coupons
-            .Where(c => c.AirlineId == airlineId && !c.IsDeleted)
+        var query = _context.Coupons
+            .Where(c => c.AirlineId == airlineId && !c.IsDeleted);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .OrderByDescending(c => c.StartDate)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 
     public async Task<Guid> CreateCouponAsync(Coupon coupon, CancellationToken cancellationToken = default)
@@ -194,11 +214,19 @@ public class PromotionRepository : IPromotionRepository
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<List<Campaign>> GetCampaignsByAirlineAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<(List<Campaign> Items, int TotalCount)> GetCampaignsByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Campaigns
-            .Where(c => c.AirlineId == airlineId && !c.IsDeleted)
+        var query = _context.Campaigns
+            .Where(c => c.AirlineId == airlineId && !c.IsDeleted);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
             .OrderByDescending(c => c.StartDate)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
     }
 }

@@ -9,13 +9,13 @@ using AirlineTicket.Modules.Flights.Application.Contracts;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Flights;
 
-public record GetTrendingFlightsQuery : IQuery<Result<List<FlightDto>>>, ICacheableRequest
+public record GetTrendingFlightsQuery(int PageIndex = 1, int PageSize = 5) : IQuery<Result<PagedResult<FlightDto>>>, ICacheableRequest
 {
     public string CacheKey => CacheKeyBuilder.ForQuery<GetTrendingFlightsQuery>("all");
     public int CacheDurationMinutes => 10;
 }
 
-public class GetTrendingFlightsQueryHandler : IQueryHandler<GetTrendingFlightsQuery, Result<List<FlightDto>>>
+public class GetTrendingFlightsQueryHandler : IQueryHandler<GetTrendingFlightsQuery, Result<PagedResult<FlightDto>>>
 {
     private readonly IFlightRepository _flightRepository;
 
@@ -24,9 +24,14 @@ public class GetTrendingFlightsQueryHandler : IQueryHandler<GetTrendingFlightsQu
         _flightRepository = flightRepository;
     }
 
-    public async Task<Result<List<FlightDto>>> Handle(GetTrendingFlightsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<FlightDto>>> Handle(GetTrendingFlightsQuery request, CancellationToken cancellationToken)
     {
         var flights = await _flightRepository.GetTrendingAsync(cancellationToken);
-        return Result.Success(flights);
+        var totalCount = flights.Count;
+        var items = flights
+            .Skip((request.PageIndex - 1) * request.PageSize)
+            .Take(request.PageSize)
+            .ToList();
+        return Result.Success(PagedResult<FlightDto>.Success(items, request.PageIndex, request.PageSize, totalCount));
     }
 }

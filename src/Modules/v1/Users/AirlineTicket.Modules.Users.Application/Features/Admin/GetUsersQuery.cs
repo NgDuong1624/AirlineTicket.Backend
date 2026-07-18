@@ -5,4 +5,4 @@ using System.Collections.Generic;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Admin;
 
-public record GetUsersQuery : IQuery<Result<List<UserDto>>>;
+public record GetUsersQuery(int PageIndex = 1, int PageSize = 10) : IQuery<Result<PagedResult<UserDto>>>;

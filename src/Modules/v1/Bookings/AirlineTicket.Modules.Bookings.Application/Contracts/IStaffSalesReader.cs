@@ -11,7 +11,12 @@ namespace AirlineTicket.Modules.Bookings.Application.Contracts;
 /// </summary>
 public interface IStaffSalesReader
 {
-    Task<List<StaffSaleDto>> GetSalesAsync(CancellationToken cancellationToken = default);
+    Task<(List<StaffSaleDto> Items, int TotalCount)> GetSalesAsync(
+        int pageIndex,
+        int pageSize,
+        string? search = null,
+        string? status = null,
+        CancellationToken cancellationToken = default);
 }
 
 public class StaffSaleDto

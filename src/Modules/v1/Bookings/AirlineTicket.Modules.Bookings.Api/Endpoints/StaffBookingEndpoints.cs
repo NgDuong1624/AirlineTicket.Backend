@@ -55,9 +55,13 @@ public class StaffBookingEndpoints : IEndpoint
         // GET /api/staff/sales — ticket-sales board data (real bookings)
         app.MapGet("/api/staff/sales", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                [FromQuery] string? search = null,
+                [FromQuery] string? status = null,
+                CancellationToken ct = default) =>
             {
-                var result = await sender.Send(new GetStaffSalesQuery(), ct);
+                var result = await sender.Send(new GetStaffSalesQuery(pageIndex, pageSize, search, status), ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithTags("Staff Bookings")

@@ -20,6 +20,7 @@ public class FlightDto
     public string AirlineName { get; set; } = string.Empty;
     public string Currency { get; set; } = "VND";
     public int Status { get; set; }
+    public Guid AirlineId { get; set; }
 }
 
 public class StaffFlightListItemDto
@@ -40,7 +41,7 @@ public class StaffFlightListItemDto
 public interface IFlightRepository
 {
     Task<FlightDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
-    Task<List<FlightDto>> SearchAsync(
+    Task<(List<FlightDto> Items, int TotalCount)> SearchAsync(
         string origin,
         string destination,
         DateTime date,
@@ -51,12 +52,14 @@ public interface IFlightRepository
         int? maxStops = null,
         string? sortBy = null,
         string currency = "VND",
+        int pageIndex = 1,
+        int pageSize = 10,
         CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(FlightDto flight, CancellationToken cancellationToken = default);
     Task<List<FlightDto>> GetTrendingAsync(CancellationToken cancellationToken = default);
-    Task<List<StaffFlightListItemDto>> GetStaffFlightsAsync(string? search, Guid? airlineId = null, CancellationToken cancellationToken = default);
+    Task<(List<StaffFlightListItemDto> Items, int TotalCount)> GetStaffFlightsAsync(string? search, Guid? airlineId = null, int pageIndex = 1, int pageSize = 10, CancellationToken cancellationToken = default);
     Task<(List<FlightDto> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
-    Task<List<FlightDto>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<(List<FlightDto> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task UpdateAsync(FlightDto flight, Guid? airlineId = null, CancellationToken cancellationToken = default);
     Task DeleteAsync(Guid id, Guid? airlineId = null, CancellationToken cancellationToken = default);
     Task<bool> CanConnectAsync(CancellationToken cancellationToken = default);
@@ -83,6 +86,7 @@ public interface IAirportRepository
 
 public interface IRouteRepository
 {
+    Task<Route?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<List<Route>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<(List<Route> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(Route route, CancellationToken cancellationToken = default);
