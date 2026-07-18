@@ -43,15 +43,17 @@ public class FlightHandlersTests
             It.IsAny<int?>(),
             It.IsAny<string?>(),
             It.IsAny<string>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(mockResult);
+            .ReturnsAsync((mockResult, 2));
 
         var result = await handler.Handle(query, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Should().HaveCount(2);
-        result.Value.Should().Contain(f => f.FlightNumber == "VN123");
+        result.Value.Items.Should().HaveCount(2);
+        result.Value.Items.Should().Contain(f => f.FlightNumber == "VN123");
     }
 
     [Fact]
@@ -71,14 +73,16 @@ public class FlightHandlersTests
             It.IsAny<int?>(),
             It.IsAny<string?>(),
             It.IsAny<string>(),
+            It.IsAny<int>(),
+            It.IsAny<int>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<FlightDto>());
+            .ReturnsAsync((new List<FlightDto>(), 0));
 
         var result = await handler.Handle(query, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Should().BeEmpty();
+        result.Value.Items.Should().BeEmpty();
     }
 
     [Fact]
@@ -95,7 +99,9 @@ public class FlightHandlersTests
             PriceRangeMax: 1000m,
             MaxStops: 0,
             SortBy: "price_asc",
-            Currency: "USD");
+            Currency: "USD",
+            PageIndex: 1,
+            PageSize: 10);
 
         _flightRepoMock.Setup(x => x.SearchAsync(
             "SGN", "HAN",
@@ -107,8 +113,10 @@ public class FlightHandlersTests
             0,
             "price_asc",
             "USD",
+            1,
+            10,
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<FlightDto>());
+            .ReturnsAsync((new List<FlightDto>(), 0));
 
         var result = await handler.Handle(query, CancellationToken.None);
 
@@ -124,6 +132,8 @@ public class FlightHandlersTests
             0,
             "price_asc",
             "USD",
+            1,
+            10,
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -145,8 +155,8 @@ public class FlightHandlersTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull();
-        result.Value.Should().HaveCount(2);
-        result.Value.Should().Contain(f => f.FlightNumber == "VN100");
+        result.Value.Items.Should().HaveCount(2);
+        result.Value.Items.Should().Contain(f => f.FlightNumber == "VN100");
     }
 
     // ======================= GetFlightByIdQueryHandler Tests =======================

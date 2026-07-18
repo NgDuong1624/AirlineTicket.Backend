@@ -48,14 +48,12 @@ public class PromotionEndpoints : IEndpoint
 
         adminCouponsGroup.MapGet("/", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
-                var query = new GetPromotionsAdminQuery();
-                var result = await sender.Send(query, ct);
-                if (result.IsFailure)
-                    return Results.BadRequest(result.Error);
-
-                return Results.Ok(new { items = result.Value, totalCount = result.Value.Count });
+                var result = await sender.Send(new GetPromotionsAdminQuery(pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetCoupons")
             .Produces(200);
@@ -99,14 +97,12 @@ public class PromotionEndpoints : IEndpoint
 
         adminCampaignsGroup.MapGet("/", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
-                var query = new GetCampaignsAdminQuery();
-                var result = await sender.Send(query, ct);
-                if (result.IsFailure)
-                    return Results.BadRequest(result.Error);
-
-                return Results.Ok(new { items = result.Value, totalCount = result.Value.Count });
+                var result = await sender.Send(new GetCampaignsAdminQuery(pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetCampaigns")
             .Produces(200);

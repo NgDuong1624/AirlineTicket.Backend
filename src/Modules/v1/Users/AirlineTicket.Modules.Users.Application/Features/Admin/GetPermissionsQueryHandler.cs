@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Admin;
 
-public class GetPermissionsQueryHandler : IQueryHandler<GetPermissionsQuery, Result<IReadOnlyList<Permission>>>
+public class GetPermissionsQueryHandler : IQueryHandler<GetPermissionsQuery, Result<PagedResult<Permission>>>
 {
     private readonly IPermissionRepository _repo;
 
@@ -16,9 +16,9 @@ public class GetPermissionsQueryHandler : IQueryHandler<GetPermissionsQuery, Res
         _repo = repo;
     }
 
-    public async Task<Result<IReadOnlyList<Permission>>> Handle(GetPermissionsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<Permission>>> Handle(GetPermissionsQuery request, CancellationToken cancellationToken)
     {
-        var items = await _repo.GetAllAsync(cancellationToken);
-        return Result.Success(items);
+        var (items, totalCount) = await _repo.GetAllAsync(request.PageIndex, request.PageSize, cancellationToken);
+        return Result.Success(PagedResult<Permission>.Success(items, request.PageIndex, request.PageSize, totalCount));
     }
 }

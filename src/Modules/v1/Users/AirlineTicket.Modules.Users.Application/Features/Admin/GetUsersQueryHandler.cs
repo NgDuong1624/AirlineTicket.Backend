@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Admin;
 
-public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<List<UserDto>>>
+public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<PagedResult<UserDto>>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -18,9 +18,9 @@ public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<List<Use
         _userRepository = userRepository;
     }
 
-    public async Task<Result<List<UserDto>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<UserDto>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
-        var users = await _userRepository.GetAllAsync(cancellationToken);
+        var (users, totalCount) = await _userRepository.GetAllAsync(request.PageIndex, request.PageSize, cancellationToken);
 
         var userDtos = users.Select(user => new UserDto(
             user.Id,
@@ -35,6 +35,6 @@ public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<List<Use
             user.CreatedAt.ToString("yyyy-MM-dd")
         )).ToList();
 
-        return Result.Success(userDtos);
+        return Result.Success(PagedResult<UserDto>.Success(userDtos, request.PageIndex, request.PageSize, totalCount));
     }
 }

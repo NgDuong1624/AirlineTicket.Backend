@@ -114,12 +114,15 @@ public class UserEndpoint : IEndpoint
             .WithTags("Admin Users")
             .RequireAuthorization("AdminOnly");
 
-        adminGroup.MapGet("/", async ([FromServices] ISender sender, CancellationToken ct) =>
+        adminGroup.MapGet("/", async (
+                [FromServices] ISender sender,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
-                var query = new GetUsersQuery();
-                var result = await sender.Send(query, ct);
+                var result = await sender.Send(new GetUsersQuery(pageIndex, pageSize), ct);
                 return result.IsSuccess
-                    ? Results.Ok(new { items = result.Value, totalCount = result.Value.Count })
+                    ? Results.Ok(result.Value)
                     : result.ToErrorResult();
             });
 
@@ -192,12 +195,15 @@ public class UserEndpoint : IEndpoint
             .WithTags("Admin Permissions")
             .RequireAuthorization("AdminOnly");
 
-        permissionGroup.MapGet("/", async ([FromServices] ISender sender, CancellationToken ct) =>
+        adminGroup.MapGet("/permissions", async (
+                [FromServices] ISender sender,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
-                var query = new GetPermissionsQuery();
-                var result = await sender.Send(query, ct);
+                var result = await sender.Send(new GetPermissionsQuery(pageIndex, pageSize), ct);
                 return result.IsSuccess
-                    ? Results.Ok(new { items = result.Value, totalCount = result.Value.Count })
+                    ? Results.Ok(result.Value)
                     : result.ToErrorResult();
             });
     }

@@ -15,26 +15,37 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        var result = await connection.QueryAsync<User>(@"
+        const string countSql = "SELECT COUNT(*) FROM dbo.Users";
+        const string sql = @"
             SELECT u.*, a.Name as AirlineName 
             FROM dbo.Users u 
-            LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id");
-        return result.ToList();
+            LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id
+            ORDER BY u.CreatedAt DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+        var result = await connection.QueryAsync<User>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
+        return (result.ToList(), totalCount);
     }
 
-    public async Task<IReadOnlyList<User>> GetByAirlineIdAsync(Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetByAirlineIdAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        var result = await connection.QueryAsync<User>(@"
+        const string countSql = "SELECT COUNT(*) FROM dbo.Users WHERE AirlineId = @AirlineId AND IsDeleted = 0";
+        const string sql = @"
             SELECT u.*, a.Name as AirlineName 
             FROM dbo.Users u 
             LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id 
-            WHERE u.AirlineId = @AirlineId AND u.IsDeleted = 0", 
-            new { AirlineId = airlineId });
-        return result.ToList();
+            WHERE u.AirlineId = @AirlineId AND u.IsDeleted = 0
+            ORDER BY u.CreatedAt DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { AirlineId = airlineId });
+        var result = await connection.QueryAsync<User>(sql, new { AirlineId = airlineId, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
+        return (result.ToList(), totalCount);
     }
 
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
