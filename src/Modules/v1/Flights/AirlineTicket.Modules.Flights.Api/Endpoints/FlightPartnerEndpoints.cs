@@ -98,7 +98,7 @@ public class FlightPartnerEndpoints : IEndpoint
                 [FromQuery] int? pageSize = 100) =>
             {
                 var result = await sender.Send(new GetAircraftModelsQuery(pageIndex, pageSize), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value.Items, TotalCount = result.Value.TotalCount }) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             });
 
         partnerAirplanes.MapPost("/", async (
@@ -167,8 +167,7 @@ public class FlightPartnerEndpoints : IEndpoint
                     request.AirplaneId,
                     request.FlightNumber,
                     request.BasePrice,
-                    request.ScheduledDeparture,
-                    request.ScheduledArrival);
+                    request.DepartureTime);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Created($"/api/partner/flights/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             });
@@ -184,12 +183,7 @@ public class FlightPartnerEndpoints : IEndpoint
                 var command = new UpdatePartnerFlightCommand(
                     id,
                     airlineId,
-                    request.RouteId,
-                    request.AirplaneId,
-                    request.FlightNumber,
-                    request.BasePrice,
-                    request.ScheduledDeparture,
-                    request.ScheduledArrival);
+                    request.DepartureTime);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             });
@@ -303,4 +297,4 @@ public class FlightPartnerEndpoints : IEndpoint
 public sealed record PartnerRouteRequest(Guid OriginAirportId, Guid DestinationAirportId, decimal? DistanceKm, int? EstimatedDurationMinutes);
 public sealed record PartnerAirplaneRequest(Guid? AircraftModelId, string Model, string RegistrationNumber, int TotalCapacity);
 public sealed record PartnerSettingsRequest(string? AirlineName, string? Address, string? SupportEmail, string? SupportPhone);
-public sealed record PartnerFlightRequest(Guid RouteId, Guid AirplaneId, string FlightNumber, decimal BasePrice, DateTime ScheduledDeparture, DateTime ScheduledArrival);
+public sealed record PartnerFlightRequest(Guid RouteId, Guid AirplaneId, string FlightNumber, decimal BasePrice, DateTime DepartureTime);

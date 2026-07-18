@@ -153,9 +153,11 @@ public class FlightAdminEndpoints : IEndpoint
 
         adminFlights.MapGet("/", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10,
+                CancellationToken ct = default) =>
             {
-                var result = await sender.Send(new GetAdminFlightsQuery(), ct);
+                var result = await sender.Send(new GetAdminFlightsQuery(pageIndex, pageSize), ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetFlights");
@@ -210,7 +212,7 @@ public class FlightAdminEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var result = await sender.Send(new GetAircraftModelsQuery(pageIndex, pageSize), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value.Items, TotalCount = result.Value.TotalCount }) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAircraftModels");
 

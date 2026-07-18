@@ -58,7 +58,7 @@ public class SearchRoundTripFlightsQueryHandler : IQueryHandler<SearchRoundTripF
             request.MaxStops,
             request.SortBy,
             request.Currency,
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         var returnSearchTask = _flightRepository.SearchAsync(
             request.DestinationCode,
@@ -71,14 +71,14 @@ public class SearchRoundTripFlightsQueryHandler : IQueryHandler<SearchRoundTripF
             request.MaxStops,
             request.SortBy,
             request.Currency,
-            cancellationToken);
+            cancellationToken: cancellationToken);
 
         await Task.WhenAll(outboundSearchTask, returnSearchTask);
 
         var result = new RoundTripFlightResult
         {
-            OutboundFlights = await outboundSearchTask,
-            ReturnFlights = await returnSearchTask
+            OutboundFlights = (await outboundSearchTask).Items,
+            ReturnFlights = (await returnSearchTask).Items
         };
 
         return Result.Success(result);

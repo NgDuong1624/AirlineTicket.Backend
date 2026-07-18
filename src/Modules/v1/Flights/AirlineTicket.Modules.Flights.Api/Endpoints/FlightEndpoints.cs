@@ -60,9 +60,11 @@ public class FlightEndpoints : IEndpoint
             .WithTags("Routes Module")
             .MapGet("/", async (
                     [FromServices] ISender sender,
-                    CancellationToken ct) =>
+                    CancellationToken ct,
+                    [FromQuery] int pageIndex = 1,
+                    [FromQuery] int pageSize = 100) =>
                 {
-                    var query = new GetRoutesQuery();
+                    var query = new GetRoutesQuery(pageIndex, pageSize);
                     var result = await sender.Send(query, ct);
                     return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
                 })
@@ -91,7 +93,9 @@ public class FlightEndpoints : IEndpoint
                     request.PriceRangeMax,
                     request.MaxStops,
                     request.SortBy,
-                    request.Currency);
+                    request.Currency,
+                    request.PageIndex ?? 1,
+                    request.PageSize ?? 10);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
@@ -149,9 +153,11 @@ public class FlightEndpoints : IEndpoint
         // GET /api/flights/trending
         flightsGroup.MapGet("/trending", async (
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 5) =>
             {
-                var query = new GetTrendingFlightsQuery();
+                var query = new GetTrendingFlightsQuery(pageIndex, pageSize);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
@@ -213,7 +219,9 @@ public record FlightSearchRequest(
     decimal? PriceRangeMax = null,
     int? MaxStops = null,
     string? SortBy = null,
-    string Currency = "VND");
+    string Currency = "VND",
+    int? PageIndex = null,
+    int? PageSize = null);
 
 public record RoundTripFlightSearchRequest(
     string OriginCode,

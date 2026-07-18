@@ -20,11 +20,13 @@ public class StaffFlightEndpoints : IEndpoint
 
         // GET /api/staff/flights — flight list with route/schedule/seat summary
         group.MapGet("/", async (
-                [FromQuery] string? search,
                 [FromServices] ISender sender,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] string? search,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10) =>
             {
-                var result = await sender.Send(new GetStaffFlightsQuery(search), ct);
+                var result = await sender.Send(new GetStaffFlightsQuery(search, pageIndex, pageSize), ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("StaffGetFlights")

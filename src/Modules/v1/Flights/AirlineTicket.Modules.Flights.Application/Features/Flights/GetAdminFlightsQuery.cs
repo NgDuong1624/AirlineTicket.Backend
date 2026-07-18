@@ -7,9 +7,9 @@ using AirlineTicket.Modules.Flights.Application.Contracts;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Flights;
 
-public record GetAdminFlightsQuery() : IQuery<Result<List<FlightDto>>>;
+public record GetAdminFlightsQuery(int PageIndex = 1, int PageSize = 10) : IQuery<Result<PagedResult<FlightDto>>>;
 
-internal sealed class GetAdminFlightsQueryHandler : IQueryHandler<GetAdminFlightsQuery, Result<List<FlightDto>>>
+internal sealed class GetAdminFlightsQueryHandler : IQueryHandler<GetAdminFlightsQuery, Result<PagedResult<FlightDto>>>
 {
     private readonly IFlightRepository _flightRepository;
 
@@ -18,9 +18,9 @@ internal sealed class GetAdminFlightsQueryHandler : IQueryHandler<GetAdminFlight
         _flightRepository = flightRepository;
     }
 
-    public async Task<Result<List<FlightDto>>> Handle(GetAdminFlightsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<FlightDto>>> Handle(GetAdminFlightsQuery request, CancellationToken cancellationToken)
     {
-        var flights = await _flightRepository.GetAllAsync(cancellationToken);
-        return Result.Success(flights);
+        var (items, totalCount) = await _flightRepository.GetAllAsync(request.PageIndex, request.PageSize, cancellationToken);
+        return Result.Success(PagedResult<FlightDto>.Success(items, request.PageIndex, request.PageSize, totalCount));
     }
 }

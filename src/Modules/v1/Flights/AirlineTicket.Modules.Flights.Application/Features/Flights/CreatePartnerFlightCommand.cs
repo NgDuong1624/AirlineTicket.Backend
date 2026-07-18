@@ -13,8 +13,7 @@ public record CreatePartnerFlightCommand(
     Guid AirplaneId,
     string FlightNumber,
     decimal BasePrice,
-    DateTime ScheduledDeparture,
-    DateTime ScheduledArrival) : ICommand<Result<Guid>>;
+    DateTime DepartureTime) : ICommand<Result<Guid>>;
 
 internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<CreatePartnerFlightCommand, Result<Guid>>
 {
@@ -35,11 +34,15 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
     public async Task<Result<Guid>> Handle(CreatePartnerFlightCommand request, CancellationToken cancellationToken)
     {
         // 1. Validate if the route belongs to the partner's airline
-        var (routes, _) = await _routeRepository.GetByAirlineAsync(request.AirlineId, 1, 1000, cancellationToken);
-        var routeExists = routes.Exists(r => r.Id == request.RouteId);
-        if (!routeExists)
+        var route = await _routeRepository.GetByIdAsync(request.RouteId, cancellationToken);
+        if (route is null || route.AirlineId != request.AirlineId)
         {
             return Result.Failure<Guid>(new Error("ROUTE_NOT_FOUND", "The specified route does not exist or does not belong to your airline."));
+        }
+
+        if (!route.EstimatedDurationMinutes.HasValue || route.EstimatedDurationMinutes.Value <= 0)
+        {
+            return Result.Failure<Guid>(new Error("ROUTE_DURATION_INVALID", "The route does not have a valid estimated duration."));
         }
 
         // 2. Validate if the airplane belongs to the partner's airline
@@ -58,8 +61,8 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
             AirplaneId = request.AirplaneId,
             FlightNumber = request.FlightNumber,
             BasePrice = request.BasePrice,
-            DepartureTime = request.ScheduledDeparture,
-            ArrivalTime = request.ScheduledArrival
+            DepartureTime = request.DepartureTime,
+            ArrivalTime = request.DepartureTime.AddMinutes(route.EstimatedDurationMinutes.Value)
         };
 
         var id = await _flightRepository.CreateAsync(flight, cancellationToken);

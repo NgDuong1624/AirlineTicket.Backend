@@ -59,17 +59,21 @@ public class BookingRepository : IBookingRepository
         return await connection.QueryFirstOrDefaultAsync<BookingDto>(sql, new { Id = id });
     }
 
-    public async Task<List<BookingDto>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<(List<BookingDto> Items, int TotalCount)> GetByUserIdAsync(Guid userId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
             SELECT Id, UserId, PnrCode, TotalPrice, Status, ContactEmail, ContactPhone, CreatedAt, UpdatedAt
             FROM dbo.Bookings 
             WHERE UserId = @UserId
-            ORDER BY CreatedAt DESC";
+            ORDER BY CreatedAt DESC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
         
-        var result = await connection.QueryAsync<BookingDto>(sql, new { UserId = userId });
-        return result.ToList();
+        const string countSql = "SELECT COUNT(*) FROM dbo.Bookings WHERE UserId = @UserId";
+        
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { UserId = userId });
+        var result = await connection.QueryAsync<BookingDto>(sql, new { UserId = userId, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
+        return (result.ToList(), totalCount);
     }
 
     public async Task<(List<BookingDto> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)

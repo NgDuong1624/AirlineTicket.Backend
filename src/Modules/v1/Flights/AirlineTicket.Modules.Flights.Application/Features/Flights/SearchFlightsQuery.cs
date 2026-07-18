@@ -20,15 +20,17 @@ public record SearchFlightsQuery(
     decimal? PriceRangeMax = null,
     int? MaxStops = null,
     string? SortBy = null,
-    string Currency = "VND") : IQuery<Result<List<FlightDto>>>, ICacheableRequest
+    string Currency = "VND",
+    int PageIndex = 1,
+    int PageSize = 10) : IQuery<Result<PagedResult<FlightDto>>>, ICacheableRequest
 {
     public string CacheKey => CacheKeyBuilder.ForQuery<SearchFlightsQuery>(
-        $"{OriginCode}_{DestinationCode}_{Date:yyyyMMdd}_{CabinClass}_{(Airlines != null ? string.Join("-", Airlines) : "")}_{PriceRangeMin}_{PriceRangeMax}_{MaxStops}_{SortBy}_{Currency}");
+        $"{OriginCode}_{DestinationCode}_{Date:yyyyMMdd}_{CabinClass}_{(Airlines != null ? string.Join("-", Airlines) : "")}_{PriceRangeMin}_{PriceRangeMax}_{MaxStops}_{SortBy}_{Currency}_{PageIndex}_{PageSize}");
 
     public int CacheDurationMinutes => 5;
 }
 
-public class SearchFlightsQueryHandler : IQueryHandler<SearchFlightsQuery, Result<List<FlightDto>>>
+public class SearchFlightsQueryHandler : IQueryHandler<SearchFlightsQuery, Result<PagedResult<FlightDto>>>
 {
     private readonly IFlightRepository _flightRepository;
 
@@ -37,9 +39,9 @@ public class SearchFlightsQueryHandler : IQueryHandler<SearchFlightsQuery, Resul
         _flightRepository = flightRepository;
     }
 
-    public async Task<Result<List<FlightDto>>> Handle(SearchFlightsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<FlightDto>>> Handle(SearchFlightsQuery request, CancellationToken cancellationToken)
     {
-        var flights = await _flightRepository.SearchAsync(
+        var (items, totalCount) = await _flightRepository.SearchAsync(
             request.OriginCode,
             request.DestinationCode,
             request.Date,
@@ -50,7 +52,9 @@ public class SearchFlightsQueryHandler : IQueryHandler<SearchFlightsQuery, Resul
             request.MaxStops,
             request.SortBy,
             request.Currency,
+            request.PageIndex,
+            request.PageSize,
             cancellationToken);
-        return Result.Success(flights);
+        return Result.Success(PagedResult<FlightDto>.Success(items, request.PageIndex, request.PageSize, totalCount));
     }
 }

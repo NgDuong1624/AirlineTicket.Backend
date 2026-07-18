@@ -82,7 +82,9 @@ public class BookingEndpoints : IEndpoint
         group.MapGet("/my-bookings", async (
                 [FromServices] ISender sender,
                 ClaimsPrincipal user,
-                CancellationToken ct) =>
+                CancellationToken ct,
+                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageSize = 10) =>
             {
                 var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (!Guid.TryParse(userIdClaim, out var userId))
@@ -90,7 +92,7 @@ public class BookingEndpoints : IEndpoint
                     return Results.Json(new { Code = "UNAUTHORIZED", Message = "Invalid user token." }, statusCode: 401);
                 }
 
-                var query = new GetMyBookingsQuery(userId);
+                var query = new GetMyBookingsQuery(userId, pageIndex, pageSize);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
