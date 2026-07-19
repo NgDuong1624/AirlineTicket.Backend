@@ -14,12 +14,14 @@ namespace AirlineTicket.Modules.Logs.Application.Features;
 /// <param name="Level">Optional log level to filter by (e.g., "Error", "Warning").</param>
 /// <param name="Search">Optional search string to filter log messages.</param>
 /// <param name="AirlineId">Optional airline ID to filter logs specific to an airline.</param>
+/// <param name="IsSystemLog">Optional flag to filter for system logs.</param>
 public record GetAdminLogsQuery(
     int PageIndex = 1, 
     int PageSize = 10,
     string? Level = null,
     string? Search = null,
-    Guid? AirlineId = null) : IQuery<PagedResult<LogDto>>;
+    Guid? AirlineId = null,
+    bool? IsSystemLog = null) : IQuery<PagedResult<LogDto>>;
 
 /// <summary>
 /// Handles the <see cref="GetAdminLogsQuery"/> to retrieve administrative logs.
@@ -51,6 +53,7 @@ public class GetAdminLogsQueryHandler : IQueryHandler<GetAdminLogsQuery, PagedRe
             request.AirlineId, 
             request.Level, 
             request.Search, 
+            request.IsSystemLog, 
             cancellationToken);
     }
 }

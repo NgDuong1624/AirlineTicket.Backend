@@ -31,7 +31,11 @@ public static class DependencyInjection
         services.AddScoped<ISystemLogService, SystemLogService>();
         services.AddScoped<ILogRepository, LogRepository>();
 
-        // Background services
+        return services;
+    }
+
+    public static IServiceCollection AddLogsBackgroundJobs(this IServiceCollection services)
+    {
         services.AddHostedService<LogRetentionCleanerJob>();
         services.AddHostedService<DailySalesReportJob>();
 

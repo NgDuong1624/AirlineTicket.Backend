@@ -31,6 +31,69 @@ public class LogRepository : ILogRepository
         Guid? airlineId = null,
         string? level = null,
         string? search = null,
+        bool? isSystemLog = null,
+        CancellationToken cancellationToken = default)
+    {
+        pageIndex = Math.Max(pageIndex, 1);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        var query = _context.SystemLogs.AsNoTracking();
+
+        if (airlineId.HasValue)
+        {
+            query = query.Where(x => x.AirlineId == airlineId.Value);
+        }
+
+        if (isSystemLog.HasValue)
+        {
+            query = query.Where(x => x.IsSystemLog == isSystemLog.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(level))
+        {
+            query = query.Where(x => x.Level == level);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(x => x.Message.Contains(search) 
+                                  || (x.Source != null && x.Source.Contains(search))
+                                  || (x.Exception != null && x.Exception.Contains(search))
+                                  || (x.IpAddress != null && x.IpAddress.Contains(search)));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(x => new LogDto
+            {
+                Id = x.Id,
+                Type = x.Type.ToString(),
+                Metadata = x.Metadata,
+                Level = x.Level,
+                Message = x.Message,
+                Source = x.Source,
+                Exception = x.Exception,
+                UserId = x.UserId,
+                AirlineId = x.AirlineId,
+                IpAddress = x.IpAddress,
+                CreatedAt = x.CreatedAt,
+                IsSystemLog = x.IsSystemLog
+            })
+            .ToListAsync(cancellationToken);
+
+        return PagedResult<LogDto>.Success(items, pageIndex, pageSize, totalCount);
+    }
+
+    public async Task<PagedResult<LogDto>> GetAirlineLogsAsync(
+        int pageIndex,
+        int pageSize,
+        Guid? airlineId = null,
+        string? level = null,
+        string? search = null,
         CancellationToken cancellationToken = default)
     {
         pageIndex = Math.Max(pageIndex, 1);
@@ -65,6 +128,8 @@ public class LogRepository : ILogRepository
             .Select(x => new LogDto
             {
                 Id = x.Id,
+                Type = x.Type.ToString(),
+                Metadata = x.Metadata,
                 Level = x.Level,
                 Message = x.Message,
                 Source = x.Source,
