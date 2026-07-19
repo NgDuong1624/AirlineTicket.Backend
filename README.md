@@ -97,6 +97,7 @@ Full interactive API documentation available at `/scalar/v1` when running.
 
 ```bash
 # Required secrets
+dotnet user-secrets init
 dotnet user-secrets set "Jwt:Secret" "your-secret-key-minimum-32-characters"
 dotnet user-secrets set "LuckyPenny:MediatR:LicenseKey" "your-mediatr-license-key"
 dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-nvidia-api-key"

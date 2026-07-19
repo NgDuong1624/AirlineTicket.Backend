@@ -24,7 +24,11 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtService, JwtService>();
 
-        // Background services
+        return services;
+    }
+
+    public static IServiceCollection AddUsersBackgroundJobs(this IServiceCollection services)
+    {
         services.AddHostedService<CleanExpiredTokensJob>();
 
         return services;

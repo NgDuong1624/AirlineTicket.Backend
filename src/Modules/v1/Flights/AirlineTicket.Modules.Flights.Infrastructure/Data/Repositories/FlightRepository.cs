@@ -103,10 +103,8 @@ public class FlightRepository : IFlightRepository
         }
         else
         {
-            selectSql += " ORDER BY f.DepartureTime";
+            selectSql += " ORDER BY f.DepartureTime OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
         }
-
-        selectSql += " OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
         parameters.Add("Offset", (pageIndex - 1) * pageSize);
         parameters.Add("PageSize", pageSize);
 

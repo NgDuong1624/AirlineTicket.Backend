@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using AirlineTicket.BuildingBlocks.Logging;
+using AirlineTicket.BuildingBlocks.Domain.Enums;
 
 namespace AirlineTicket.BuildingBlocks.Api.Filters;
 
@@ -47,8 +48,13 @@ public class LoggingEndpointFilter : IEndpointFilter
                     string action = isCreate ? "Create" :
                                     isUpdate ? "Update" :
                                     isDelete ? "Delete" :
-                                    isLogin ? "Login" :
-                                    isLogout ? "Logout" : "Action";
+                                    isLogin ? "Auth" :
+                                    isLogout ? "Auth" : "Action";
+
+                    var logType = isCreate ? LogType.Create :
+                                  isUpdate ? LogType.Update :
+                                  isDelete ? LogType.Delete :
+                                  (isLogin || isLogout) ? LogType.Auth : LogType.Create;
 
                     string message = $"User performed {action} on {path}";
                     string level = exception != null || (httpContext.Response.StatusCode >= 400 && httpContext.Response.StatusCode != 401) ? "Error" : "Info";
@@ -69,7 +75,9 @@ public class LoggingEndpointFilter : IEndpointFilter
                         exception: exception?.ToString(),
                         userId: userId,
                         airlineId: airlineId,
-                        ipAddress: ipAddress
+                        ipAddress: ipAddress,
+                        type: logType,
+                        metadata: null
                     );
                 }
             }

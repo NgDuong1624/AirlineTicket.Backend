@@ -36,7 +36,11 @@ public static class DependencyInjection
         services.AddScoped<IFlightGenerator, FlightGenerator>();
         services.AddScoped<IFlightCleaner, FlightCleaner>();
 
-        // Register background services
+        return services;
+    }
+
+    public static IServiceCollection AddFlightsBackgroundJobs(this IServiceCollection services)
+    {
         services.AddHostedService<FlightStatusAutomatorJob>();
         services.AddHostedService<FlightDelayDetectorJob>();
         services.AddHostedService<CloseFlightSalesJob>();

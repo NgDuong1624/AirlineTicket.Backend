@@ -49,6 +49,11 @@ else
 // MediatR — required by SharedFlightSearchService (registered via AddFlightsInfrastructure)
 builder.Services.AddMediatR(cfg =>
 {
+    var mediatRLicenseKey = builder.Configuration["LuckyPenny:MediatR:LicenseKey"];
+    if (!string.IsNullOrWhiteSpace(mediatRLicenseKey))
+    {
+        cfg.LicenseKey = mediatRLicenseKey;
+    }
     cfg.RegisterServicesFromAssembly(typeof(AirlineTicket.Modules.Flights.Application.Features.Flights.CreatePartnerFlightCommand).Assembly);
 });
 
@@ -100,6 +105,10 @@ if (!string.IsNullOrEmpty(redisConn))
     {
         options.Configuration.ChannelPrefix = RedisChannel.Literal("AirlineTicketSignalR");
     });
+}
+else
+{
+    builder.Services.AddDistributedMemoryCache();
 }
 
 builder.Services.AddScoped<IFlightSeatReservation, FlightSeatReservation>();

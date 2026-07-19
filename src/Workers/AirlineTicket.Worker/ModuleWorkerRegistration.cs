@@ -15,7 +15,7 @@ public static class ModuleWorkerRegistration
 {
     public static IServiceCollection AddAllModuleWorkers(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register each module's infrastructure (which registers DbContexts, repositories, and background services)
+        // Register each module's infrastructure (DbContexts, repositories)
         services.AddBookingsInfrastructure(configuration);
         services.AddFlightsInfrastructure(configuration);
         services.AddNotificationsInfrastructure(configuration);
@@ -24,6 +24,15 @@ public static class ModuleWorkerRegistration
         services.AddInteractionsInfrastructure(configuration);
         services.AddLogsInfrastructure(configuration);
         services.AddCMSInfrastructure(configuration);
+
+        // Register each module's background jobs
+        services.AddBookingsBackgroundJobs();
+        services.AddFlightsBackgroundJobs();
+        services.AddNotificationsBackgroundJobs();
+        services.AddPromotionsBackgroundJobs();
+        services.AddUsersBackgroundJobs();
+        services.AddInteractionsBackgroundJobs();
+        services.AddLogsBackgroundJobs();
 
         return services;
     }

@@ -25,6 +25,12 @@ public static class DependencyInjection
         services.AddScoped<ISmsSender, SmsSender>();
         services.AddSingleton<PushSender>();
         services.AddScoped<INotificationSender, NotificationSender>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddNotificationsBackgroundJobs(this IServiceCollection services)
+    {
         services.AddHostedService<NotificationProcessingBackgroundService>();
         services.AddHostedService<EmailSmsMassSender>();
         services.AddHostedService<FlightDelayNotifierJob>();

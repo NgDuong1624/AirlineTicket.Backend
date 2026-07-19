@@ -21,7 +21,12 @@ public static class DependencyInjection
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<IRevenueRepository, RevenueRepository>();
+        
+        return services;
+    }
 
+    public static IServiceCollection AddBookingsBackgroundJobs(this IServiceCollection services)
+    {
         services.AddHostedService<CancelExpiredBookingsJob>();
         services.AddHostedService<BookingRefundProcessor>();
         
