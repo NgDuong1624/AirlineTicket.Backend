@@ -20,7 +20,11 @@ public static class DependencyInjection
         // Register repositories
         services.AddScoped<IPromotionRepository, PromotionRepository>();
 
-        // Background services
+        return services;
+    }
+
+    public static IServiceCollection AddPromotionsBackgroundJobs(this IServiceCollection services)
+    {
         services.AddHostedService<PromotionStatusUpdaterJob>();
 
         return services;

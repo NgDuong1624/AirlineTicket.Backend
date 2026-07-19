@@ -33,9 +33,9 @@ public static class DependencyInjection
             var opts = sp.GetRequiredService<IOptions<AiServiceOptions>>().Value.ModelStore;
 
             var baseUrl = string.IsNullOrWhiteSpace(opts.BaseUrl)
-                ? "https://api.9router.com/v1"
+                ? "https://api.api-endpoint.com/v1"
                 : opts.BaseUrl;
-            // Đảm bảo có dấu '/' cuối để relative path "chat/completions" nối đúng.
+            
             if (!baseUrl.EndsWith('/'))
             {
                 baseUrl += "/";
@@ -59,7 +59,11 @@ public static class DependencyInjection
                              msg.StatusCode == HttpStatusCode.GatewayTimeout)
             .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))));
 
-        // Background services
+        return services;
+    }
+
+    public static IServiceCollection AddInteractionsBackgroundJobs(this IServiceCollection services)
+    {
         services.AddHostedService<ChatbotTimeoutHandler>();
 
         return services;

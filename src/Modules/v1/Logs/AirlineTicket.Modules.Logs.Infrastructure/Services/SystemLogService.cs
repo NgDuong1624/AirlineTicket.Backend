@@ -1,6 +1,7 @@
 using AirlineTicket.BuildingBlocks.Logging;
 using AirlineTicket.Modules.Logs.Domain.Entities;
 using AirlineTicket.Modules.Logs.Infrastructure.Data;
+using BuildingBlocksLogType = AirlineTicket.BuildingBlocks.Domain.Enums.LogType;
 
 namespace AirlineTicket.Modules.Logs.Infrastructure.Services;
 
@@ -28,11 +29,16 @@ public class SystemLogService : ISystemLogService
         string? exception = null,
         Guid? userId = null,
         Guid? airlineId = null,
-        string? ipAddress = null)
+        string? ipAddress = null,
+        BuildingBlocksLogType? type = null,
+        bool isSystemLog = false,
+        string? metadata = null)
     {
         var log = new SystemLog
         {
             Id = Guid.NewGuid(),
+            Type = (BuildingBlocksLogType)(type ?? BuildingBlocksLogType.Create),
+            Metadata = metadata,
             Level = level,
             Message = message,
             Source = source,
@@ -40,6 +46,7 @@ public class SystemLogService : ISystemLogService
             UserId = userId,
             AirlineId = airlineId,
             IpAddress = ipAddress,
+            IsSystemLog = isSystemLog,
             CreatedAt = DateTime.UtcNow
         };
 

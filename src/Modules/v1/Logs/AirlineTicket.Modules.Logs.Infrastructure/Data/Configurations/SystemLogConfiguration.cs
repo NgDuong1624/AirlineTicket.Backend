@@ -14,6 +14,14 @@ public class SystemLogConfiguration : IEntityTypeConfiguration<SystemLog>
     {
         builder.HasKey(x => x.Id);
 
+        builder.Property(x => x.Type)
+            .IsRequired()
+            .HasConversion<int>()
+            .HasMaxLength(50);
+
+        builder.Property(x => x.Metadata)
+            .HasColumnType("nvarchar(max)");
+
         builder.Property(x => x.Level)
             .IsRequired()
             .HasMaxLength(50);
@@ -27,7 +35,12 @@ public class SystemLogConfiguration : IEntityTypeConfiguration<SystemLog>
         builder.Property(x => x.IpAddress)
             .HasMaxLength(50);
 
+        builder.Property(x => x.IsSystemLog)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.HasIndex(x => x.CreatedAt);
         builder.HasIndex(x => new { x.AirlineId, x.CreatedAt });
+        builder.HasIndex(x => x.Type);
     }
 }

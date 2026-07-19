@@ -43,7 +43,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Services(services)
     .Enrich.FromLogContext());
 
-// CORS origins for the web client (SignalR requires credentials + explicit origins).
+// CORS origins for the web client.
 var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? new[] { "http://localhost:3000" };
 const string WebCorsPolicy = "WebClient";
@@ -139,22 +139,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "AirlineTicketApi",
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "AirlineTicketClient",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
-        };
-
-        // SignalR (WebSockets) cannot send Authorization headers — read the token
-        // from the query string when connecting to the seat hub.
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                var accessToken = context.Request.Query["access_token"];
-                var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/seats"))
-                {
-                    context.Token = accessToken;
-                }
-                return Task.CompletedTask;
-            }
         };
     });
 

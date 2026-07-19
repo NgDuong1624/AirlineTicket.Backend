@@ -31,11 +31,16 @@ public class LogEndpoints : IEndpoint
                 CancellationToken ct,
                 [FromQuery] string? level,
                 [FromQuery] string? search,
-                [FromQuery] Guid? airlineId,
+                [FromQuery] string? airlineId,
                 [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
                 [FromQuery, Range(1, 100)] int pageSize = 10) =>
             {
-                var query = new GetAdminLogsQuery(pageIndex, pageSize, level, search, airlineId);
+                Guid? parsedAirlineId = null;
+                if (!string.IsNullOrEmpty(airlineId) && airlineId.ToLower() != "system")
+                {
+                    if (Guid.TryParse(airlineId, out var guid)) parsedAirlineId = guid;
+                }
+                var query = new GetAdminLogsQuery(pageIndex, pageSize, level, search, parsedAirlineId);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })

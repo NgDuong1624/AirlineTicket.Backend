@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using AirlineTicket.BuildingBlocks.Logging;
+using AirlineTicket.BuildingBlocks.Domain.Enums;
 
 namespace AirlineTicket.BuildingBlocks.Api.Middleware;
 
@@ -52,8 +53,13 @@ public class SystemLogMiddleware
                     string action = isCreate ? "Create" :
                                     isUpdate ? "Update" :
                                     isDelete ? "Delete" :
-                                    isLogin ? "Login" :
-                                    isLogout ? "Logout" : "Action";
+                                    isLogin ? "Auth" :
+                                    isLogout ? "Auth" : "Action";
+                    
+                    var logType = isCreate ? LogType.Create :
+                                  isUpdate ? LogType.Update :
+                                  isDelete ? LogType.Delete :
+                                  (isLogin || isLogout) ? LogType.Auth : LogType.Create;
 
                     string message = $"User performed {action} on {path}";
                     string level = exception != null || (context.Response.StatusCode >= 400 && context.Response.StatusCode != 401) ? "Error" : "Info";
@@ -67,6 +73,15 @@ public class SystemLogMiddleware
 
                     var ipAddress = context.Connection.RemoteIpAddress?.ToString();
 
+                    context.Request.EnableBuffering();
+                    string? requestBody = null;
+                    if (context.Request.ContentLength > 0)
+                    {
+                        using var reader = new System.IO.StreamReader(context.Request.Body, System.Text.Encoding.UTF8, leaveOpen: true);
+                        requestBody = await reader.ReadToEndAsync();
+                        context.Request.Body.Position = 0;
+                    }
+
                     await systemLogService.LogAsync(
                         level: level,
                         message: message,
@@ -74,7 +89,9 @@ public class SystemLogMiddleware
                         exception: exception?.ToString(),
                         userId: userId,
                         airlineId: airlineId,
-                        ipAddress: ipAddress
+                        ipAddress: ipAddress,
+                        type: logType,
+                        metadata: requestBody
                     );
                 }
             }

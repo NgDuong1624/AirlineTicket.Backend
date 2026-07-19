@@ -46,7 +46,7 @@ public class GetPartnerLogsQueryHandler : IQueryHandler<GetPartnerLogsQuery, Pag
     /// <returns>A <see cref="PagedResult{LogDto}"/> containing the partner logs.</returns>
     public async Task<PagedResult<LogDto>> Handle(GetPartnerLogsQuery request, CancellationToken cancellationToken)
     {
-        return await _logRepository.GetLogsAsync(
+        return await _logRepository.GetAirlineLogsAsync(
             request.PageIndex, 
             request.PageSize, 
             request.AirlineId, 

@@ -1,4 +1,5 @@
 using System;
+using AirlineTicket.BuildingBlocks.Domain.Enums;
 
 namespace AirlineTicket.Modules.Logs.Domain.Entities;
 
@@ -11,6 +12,16 @@ public class SystemLog
     /// Gets or sets the unique identifier of the log entry.
     /// </summary>
     public Guid Id { get; set; }
+
+    /// <summary>
+    /// Gets or sets the type of the log entry.
+    /// </summary>
+    public LogType Type { get; set; }
+
+    /// <summary>
+    /// Gets or sets the metadata (e.g., old/new values for updates).
+    /// </summary>
+    public string? Metadata { get; set; }
 
     /// <summary>
     /// Gets or sets the severity level of the log (e.g., Info, Warning, Error, Critical).
@@ -51,4 +62,9 @@ public class SystemLog
     /// Gets or sets the timestamp when the log was created.
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether this is a system-level log (no airline association).
+    /// </summary>
+    public bool IsSystemLog { get; set; }
 }

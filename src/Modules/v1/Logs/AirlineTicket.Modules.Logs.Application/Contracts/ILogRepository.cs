@@ -26,5 +26,14 @@ public interface ILogRepository
         Guid? airlineId = null,
         string? level = null,
         string? search = null,
+        bool? isSystemLog = null,
+        CancellationToken cancellationToken = default);
+
+    Task<PagedResult<LogDto>> GetAirlineLogsAsync(
+        int pageIndex,
+        int pageSize,
+        Guid? airlineId = null,
+        string? level = null,
+        string? search = null,
         CancellationToken cancellationToken = default);
 }
