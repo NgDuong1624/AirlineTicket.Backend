@@ -97,8 +97,8 @@ public class FlightAdminEndpoints : IEndpoint
                 [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
                 [FromQuery, Range(1, 100)] int pageSize = 10) =>
             {
-                var result = await sender.Send(new GetAirlinesQuery(pageIndex, pageSize), ct);
-                return result.IsSuccess ? Results.Ok(new { Items = result.Value.Items, TotalCount = result.Value.TotalCount }) : Results.BadRequest(result.Error);
+                var result = await sender.Send(new GetAdminAirlinesQuery(pageIndex, pageSize), ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAirlines");
 
