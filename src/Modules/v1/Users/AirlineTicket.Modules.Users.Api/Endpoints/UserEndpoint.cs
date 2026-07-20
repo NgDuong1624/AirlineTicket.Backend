@@ -109,6 +109,23 @@ public class UserEndpoint : IEndpoint
             .WithSummary("Làm mới token")
             .AllowAnonymous();
 
+        authGroup.MapPost("/logout", async (
+                [FromBody] LogoutRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new LogoutCommand(request.RefreshToken);
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                {
+                    return result.ToErrorResult();
+                }
+                return Results.Ok();
+            })
+            .WithName("Logout")
+            .WithSummary("Đăng xuất người dùng và thu hồi session")
+            .AllowAnonymous();
+
         // ——————————————————————— Admin User Management ————————————————————————————————
         var adminGroup = app.MapGroup("/api/admin/users")
             .WithTags("Admin Users")
@@ -213,5 +230,6 @@ public sealed record RegisterUserRequest(string Email, string Password, string F
 public sealed record LoginUserRequest(string Email, string Password);
 public sealed record GoogleLoginRequest(string IdToken);
 public sealed record RefreshTokenRequest(string RefreshToken);
+public sealed record LogoutRequest(string RefreshToken);
 public sealed record AdminUserRequest(string Email, string FullName, string? Phone, int? RoleId, bool? IsActive, string? Password, Guid? AirlineId);
 public sealed record AdminPermissionRequest(string Code, string Name, string? Description);

@@ -33,6 +33,7 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<
         }
 
         var tokens = _jwtService.GenerateToken(user);
+        user.LastLoginAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user, cancellationToken);
 
         return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken));

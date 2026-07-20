@@ -3,6 +3,7 @@ using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
 using AirlineTicket.Modules.Users.Domain.Entities;
+using AirlineTicket.Modules.Users.Domain.Enums;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;
 using System;
@@ -67,7 +68,7 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
                     EmailConfirmed = payload.EmailVerified,
                     FullName = payload.Name ?? payload.Email.Split('@')[0],
                     AvatarUrl = payload.Picture,
-                    Role = (int)Domain.Enums.UserRole.Customer, // Default role
+                    Role = (int)UserRole.Customer,
                     GoogleId = payload.Subject,
                     AuthProvider = "Google",
                     PasswordHash = string.Empty, // External auth user has no password hash
@@ -106,6 +107,9 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
 
             // Generate Access + Refresh tokens
             var tokens = _jwtService.GenerateToken(user);
+
+            // Updated last login at
+            user.LastLoginAt = DateTime.UtcNow;
 
             // Persist rotated refresh token
             await _userRepository.UpdateAsync(user, cancellationToken);
