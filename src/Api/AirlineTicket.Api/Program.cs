@@ -4,7 +4,18 @@ using AirlineTicket.BuildingBlocks.Api.Auth;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Infrastructure;
 using AirlineTicket.BuildingBlocks.Behaviors;
+using AirlineTicket.BuildingBlocks.Api.Behaviors;
 using AirlineTicket.BuildingBlocks.Api.Middleware;
+using AirlineTicket.BuildingBlocks.Application.Data;
+using AirlineTicket.BuildingBlocks.Infrastructure.Data;
+using AirlineTicket.Modules.Users.Infrastructure.Data;
+using AirlineTicket.Modules.Promotions.Infrastructure.Data;
+using AirlineTicket.Modules.Interactions.Infrastructure.Data;
+using AirlineTicket.Modules.CMS.Infrastructure.Data;
+using AirlineTicket.Modules.Flights.Infrastructure.Data;
+using AirlineTicket.Modules.Bookings.Infrastructure.Data;
+using AirlineTicket.Modules.Notifications.Infrastructure.Data;
+using AirlineTicket.Modules.Logs.Infrastructure.Data;
 using AirlineTicket.Modules.Flights.Infrastructure;
 using AirlineTicket.Modules.Bookings.Infrastructure;
 using AirlineTicket.Modules.Users.Infrastructure;
@@ -125,6 +136,16 @@ builder.Services.AddCMSInfrastructure(builder.Configuration);
 builder.Services.AddNotificationsInfrastructure(builder.Configuration);
 builder.Services.AddLogsInfrastructure(builder.Configuration);
 
+// Register entity snapshot readers for old-data capture on Update/Delete
+builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<UserDbContext>>();
+builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<FlightDbContext>>();
+builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<BookingDbContext>>();
+builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<PromotionDbContext>>();
+builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<CMSDbContext>>();
+builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<NotificationDbContext>>();
+builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<InteractionDbContext>>();
+builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<LogsDbContext>>();
+
 // Cấu hình JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -191,6 +212,7 @@ builder.Services.AddMediatR(cfg =>
     cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
     cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
+    cfg.AddOpenBehavior(typeof(SystemLoggingBehavior<,>));
 });
 
 // 3. Đăng ký FluentValidation quét tất cả Validator trong các Modules

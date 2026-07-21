@@ -6,5 +6,6 @@ public enum LogType
     Update,
     Delete,
     Auth,
-    Register
+    Register,
+    SystemError
 }

@@ -11,6 +11,10 @@ namespace AirlineTicket.BuildingBlocks.Api.Middleware;
 
 public class SystemLogMiddleware
 {
+    private const string MiddlewareErrorSource = "Middleware-Error";
+    private const string AirlineIdClaimType = "AirlineId";
+    private const string ErrorLogLevel = "Error";
+
     private readonly RequestDelegate _next;
 
     public SystemLogMiddleware(RequestDelegate next)
@@ -20,18 +24,6 @@ public class SystemLogMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        var method = context.Request.Method;
-        var path = context.Request.Path.Value ?? string.Empty;
-
-        // Check if it's one of the actions we want to log
-        bool isCreate = HttpMethods.IsPost(method) && !path.Contains("/login", StringComparison.OrdinalIgnoreCase) && !path.Contains("/logout", StringComparison.OrdinalIgnoreCase);
-        bool isUpdate = HttpMethods.IsPut(method) || HttpMethods.IsPatch(method);
-        bool isDelete = HttpMethods.IsDelete(method);
-        bool isLogin = path.Contains("/login", StringComparison.OrdinalIgnoreCase);
-        bool isLogout = path.Contains("/logout", StringComparison.OrdinalIgnoreCase);
-
-        bool shouldLog = isCreate || isUpdate || isDelete || isLogin || isLogout;
-
         Exception? exception = null;
 
         try
@@ -45,54 +37,42 @@ public class SystemLogMiddleware
         }
         finally
         {
-            if (shouldLog)
+            if (exception != null || context.Response.StatusCode >= 500)
             {
-                var systemLogService = context.RequestServices.GetService<ISystemLogService>();
-                if (systemLogService != null)
+                try
                 {
-                    string action = isCreate ? "Create" :
-                                    isUpdate ? "Update" :
-                                    isDelete ? "Delete" :
-                                    isLogin ? "Auth" :
-                                    isLogout ? "Auth" : "Action";
-                    
-                    var logType = isCreate ? LogType.Create :
-                                  isUpdate ? LogType.Update :
-                                  isDelete ? LogType.Delete :
-                                  (isLogin || isLogout) ? LogType.Auth : LogType.Create;
-
-                    string message = $"User performed {action} on {path}";
-                    string level = exception != null || (context.Response.StatusCode >= 400 && context.Response.StatusCode != 401) ? "Error" : "Info";
-                    if (context.Response.StatusCode == 401) level = "Warning"; // Login failed
-
-                    var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    Guid? userId = Guid.TryParse(userIdClaim, out var uid) ? uid : null;
-
-                    var airlineIdClaim = context.User.FindFirst("AirlineId")?.Value;
-                    Guid? airlineId = Guid.TryParse(airlineIdClaim, out var aid) ? aid : null;
-
-                    var ipAddress = context.Connection.RemoteIpAddress?.ToString();
-
-                    context.Request.EnableBuffering();
-                    string? requestBody = null;
-                    if (context.Request.ContentLength > 0)
+                    var systemLogService = context.RequestServices.GetService<ISystemLogService>();
+                    if (systemLogService != null)
                     {
-                        using var reader = new System.IO.StreamReader(context.Request.Body, System.Text.Encoding.UTF8, leaveOpen: true);
-                        requestBody = await reader.ReadToEndAsync();
-                        context.Request.Body.Position = 0;
-                    }
+                        var path = context.Request.Path.Value ?? string.Empty;
+                        string message = exception != null
+                            ? $"Unhandled exception: {exception.Message}"
+                            : $"Server error: {context.Response.StatusCode} at {path}";
 
-                    await systemLogService.LogAsync(
-                        level: level,
-                        message: message,
-                        source: $"Middleware-{action}",
-                        exception: exception?.ToString(),
-                        userId: userId,
-                        airlineId: airlineId,
-                        ipAddress: ipAddress,
-                        type: logType,
-                        metadata: requestBody
-                    );
+                        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                        Guid? userId = Guid.TryParse(userIdClaim, out var uid) ? uid : null;
+
+                        var airlineIdClaim = context.User.FindFirst(AirlineIdClaimType)?.Value;
+                        Guid? airlineId = Guid.TryParse(airlineIdClaim, out var aid) ? aid : null;
+
+                        var ipAddress = context.Connection.RemoteIpAddress?.ToString();
+
+                        await systemLogService.LogAsync(
+                            level: ErrorLogLevel,
+                            message: message,
+                            source: MiddlewareErrorSource,
+                            exception: exception?.ToString(),
+                            userId: userId,
+                            airlineId: airlineId,
+                            ipAddress: ipAddress,
+                            type: LogType.SystemError,
+                            metadata: null
+                        );
+                    }
+                }
+                catch
+                {
+                    // Prevent logging failure from masking original exception
                 }
             }
         }
