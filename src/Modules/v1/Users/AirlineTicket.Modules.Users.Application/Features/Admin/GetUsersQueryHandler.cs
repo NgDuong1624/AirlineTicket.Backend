@@ -31,6 +31,7 @@ public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<PagedRes
             (int)user.Role,
             user.AirlineId,
             user.AirlineName,
+            user.AirlineLogoUrl,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         )).ToList();

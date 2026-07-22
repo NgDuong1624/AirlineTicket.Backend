@@ -20,7 +20,7 @@ public class UserRepository : IUserRepository
         var connection = _context.Database.GetDbConnection();
         const string countSql = "SELECT COUNT(*) FROM dbo.Users";
         const string sql = @"
-            SELECT u.*, a.Name as AirlineName 
+            SELECT u.*, a.Name as AirlineName, a.LogoUrl as AirlineLogoUrl 
             FROM dbo.Users u 
             LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id
             ORDER BY u.CreatedAt DESC
@@ -36,7 +36,7 @@ public class UserRepository : IUserRepository
         var connection = _context.Database.GetDbConnection();
         const string countSql = "SELECT COUNT(*) FROM dbo.Users WHERE AirlineId = @AirlineId AND IsDeleted = 0";
         const string sql = @"
-            SELECT u.*, a.Name as AirlineName 
+            SELECT u.*, a.Name as AirlineName, a.LogoUrl as AirlineLogoUrl 
             FROM dbo.Users u 
             LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id 
             WHERE u.AirlineId = @AirlineId AND u.IsDeleted = 0
@@ -52,7 +52,7 @@ public class UserRepository : IUserRepository
     {
         var connection = _context.Database.GetDbConnection();
         return await connection.QueryFirstOrDefaultAsync<User>(@"
-            SELECT u.*, a.Name as AirlineName 
+            SELECT u.*, a.Name as AirlineName, a.LogoUrl as AirlineLogoUrl 
             FROM dbo.Users u 
             LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id 
             WHERE u.Id = @Id", 

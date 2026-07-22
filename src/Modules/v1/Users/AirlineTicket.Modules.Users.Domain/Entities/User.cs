@@ -15,6 +15,8 @@ public class User
     public Guid? AirlineId { get; set; }
     [NotMapped]
     public string? AirlineName { get; set; }
+    [NotMapped]
+    public string? AirlineLogoUrl { get; set; }
     public string? AvatarUrl { get; set; }
     public string? LanguagePreference { get; set; } = "vi";
 
