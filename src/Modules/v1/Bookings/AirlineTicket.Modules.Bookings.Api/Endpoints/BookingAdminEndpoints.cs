@@ -18,6 +18,7 @@ public class BookingAdminEndpoints : IEndpoint
             .WithTags("Admin Bookings")
             .RequireAuthorization("AdminOnly");
 
+        // GET /api/admin/bookings — Get paginated list of bookings
         adminBookings.MapGet("/", async (
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
@@ -28,8 +29,14 @@ public class BookingAdminEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : Results.BadRequest(result.Error);
             })
-            .WithName("AdminGetBookings");
+            .WithName("AdminGetBookings")
+            .WithSummary("Get paginated list of bookings")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // GET /api/admin/bookings/{id} — Get booking by ID
         adminBookings.MapGet("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -39,8 +46,14 @@ public class BookingAdminEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound();
             })
-            .WithName("AdminGetBookingById");
+            .WithName("AdminGetBookingById")
+            .WithSummary("Get booking by ID")
+            .Produces(200)
+            .Produces(404)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/admin/bookings/{id} — Update booking details
         adminBookings.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] UpdateBookingRequest request,
@@ -52,8 +65,14 @@ public class BookingAdminEndpoints : IEndpoint
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             })
-            .WithName("AdminUpdateBooking");
+            .WithName("AdminUpdateBooking")
+            .WithSummary("Update booking details")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/admin/bookings/{id}/status — Update booking status
         adminBookings.MapPut("/{id:guid}/status", async (
                 Guid id,
                 [FromBody] UpdateBookingStatusRequest request,
@@ -66,8 +85,15 @@ public class BookingAdminEndpoints : IEndpoint
                 if (result.Error.Code == "NOT_FOUND") return Results.NotFound(result.Error);
                 return Results.BadRequest(result.Error);
             })
-            .WithName("AdminUpdateBookingStatus");
+            .WithName("AdminUpdateBookingStatus")
+            .WithSummary("Update booking status")
+            .Produces(200)
+            .Produces(400)
+            .Produces(404)
+            .Produces(401)
+            .Produces(403);
 
+        // DELETE /api/admin/bookings/{id} — Cancel a booking
         adminBookings.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -77,7 +103,12 @@ public class BookingAdminEndpoints : IEndpoint
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             })
-            .WithName("AdminDeleteBooking");
+            .WithName("AdminDeleteBooking")
+            .WithSummary("Cancel a booking")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
     }
 }
 

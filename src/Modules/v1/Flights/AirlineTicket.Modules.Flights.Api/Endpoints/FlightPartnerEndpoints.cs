@@ -26,6 +26,7 @@ public class FlightPartnerEndpoints : IEndpoint
             .WithTags("Partner Routes")
             .RequireAuthorization("PartnerOnly");
 
+        // GET /api/partner/routes — Get paginated list of routes for partner
         partnerRoutes.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
@@ -36,8 +37,14 @@ public class FlightPartnerEndpoints : IEndpoint
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
                 var result = await sender.Send(new GetRoutesByAirlineQuery(airlineId, pageIndex, pageSize), ct);
                 return result.IsSuccess ? Results.Ok(new { Items = result.Items, TotalCount = result.TotalCount }) : Results.BadRequest(result.Error);
-            });
+            })
+            .WithSummary("Get paginated list of routes for partner")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // POST /api/partner/routes — Create a new route for partner
         partnerRoutes.MapPost("/", async (
                 [FromBody] PartnerRouteRequest request,
                 ClaimsPrincipal principal,
@@ -48,8 +55,14 @@ public class FlightPartnerEndpoints : IEndpoint
                 var command = new CreateRouteCommand(airlineId, request.OriginAirportId, request.DestinationAirportId, request.DistanceKm, request.EstimatedDurationMinutes);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Created($"/api/partner/routes/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
-            });
+            })
+            .WithSummary("Create a new route for partner")
+            .Produces(201)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/partner/routes/{id} — Update an existing route for partner
         partnerRoutes.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerRouteRequest request,
@@ -61,8 +74,14 @@ public class FlightPartnerEndpoints : IEndpoint
                 var command = new UpdateRouteCommand(id, airlineId, request.OriginAirportId, request.DestinationAirportId, request.DistanceKm, request.EstimatedDurationMinutes);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
-            });
+            })
+            .WithSummary("Update an existing route for partner")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // DELETE /api/partner/routes/{id} — Delete a route for partner
         partnerRoutes.MapDelete("/{id:guid}", async (
                 Guid id,
                 ClaimsPrincipal principal,
@@ -72,13 +91,19 @@ public class FlightPartnerEndpoints : IEndpoint
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
                 var result = await sender.Send(new DeleteRouteCommand(id, airlineId), ct);
                 return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-            });
+            })
+            .WithSummary("Delete a route for partner")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
         // ——————————————————————— Partner Airplanes ————————————————————————————————
         var partnerAirplanes = app.MapGroup("/api/partner/airplanes")
             .WithTags("Partner Airplanes")
             .RequireAuthorization("PartnerOnly");
 
+        // GET /api/partner/airplanes — Get paginated list of airplanes for partner
         partnerAirplanes.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
@@ -89,8 +114,14 @@ public class FlightPartnerEndpoints : IEndpoint
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
                 var result = await sender.Send(new GetAirplanesByAirlineQuery(airlineId, pageIndex, pageSize), ct);
                 return result.IsSuccess ? Results.Ok(new { Items = result.Items, TotalCount = result.TotalCount }) : Results.BadRequest(result.Error);
-            });
+            })
+            .WithSummary("Get paginated list of airplanes for partner")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // GET /api/partner/airplanes/models — Get paginated list of aircraft models
         partnerAirplanes.MapGet("/models", async (
                 [FromServices] ISender sender,
                 CancellationToken ct,

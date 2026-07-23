@@ -22,6 +22,7 @@ public class PartnerPromotionEndpoints : IEndpoint
             .WithTags("Partner Coupons")
             .RequireAuthorization("PartnerOnly");
 
+        // GET /api/partner/coupons — Get partner coupons (paginated)
         coupons.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
@@ -34,8 +35,15 @@ public class PartnerPromotionEndpoints : IEndpoint
                 var query = new GetCouponsPartnerQuery(airlineId, pageIndex, pageSize);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
-            });
+            })
+            .WithName("GetPartnerCoupons")
+            .WithSummary("Get partner coupons (paginated)")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // POST /api/partner/coupons — Create a new partner coupon
         coupons.MapPost("/", async (
                 [FromBody] PartnerCouponRequest request,
                 ClaimsPrincipal principal,
@@ -61,8 +69,15 @@ public class PartnerPromotionEndpoints : IEndpoint
                     return Results.BadRequest(result.Error);
 
                 return Results.Created($"/api/partner/coupons/{result.Value}", new { Id = result.Value });
-            });
+            })
+            .WithName("CreatePartnerCoupon")
+            .WithSummary("Create a new partner coupon")
+            .Produces(201)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/partner/coupons/{id:guid} — Update a partner coupon
         coupons.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerCouponRequest request,
@@ -90,8 +105,16 @@ public class PartnerPromotionEndpoints : IEndpoint
                     return Results.BadRequest(result.Error);
 
                 return Results.Ok();
-            });
+            })
+            .WithName("UpdatePartnerCoupon")
+            .WithSummary("Update a partner coupon")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // DELETE /api/partner/coupons/{id:guid} — Delete a partner coupon
         coupons.MapDelete("/{id:guid}", async (
                 Guid id,
                 ClaimsPrincipal principal,
@@ -106,13 +129,21 @@ public class PartnerPromotionEndpoints : IEndpoint
                     return Results.BadRequest(result.Error);
 
                 return Results.NoContent();
-            });
+            })
+            .WithName("DeletePartnerCoupon")
+            .WithSummary("Delete a partner coupon")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
         // ——————————————————————— Partner Campaigns ————————————————————————————————
         var campaigns = app.MapGroup("/api/partner/campaigns")
             .WithTags("Partner Campaigns")
             .RequireAuthorization("PartnerOnly");
 
+        // GET /api/partner/campaigns — Get partner campaigns (paginated)
         campaigns.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
@@ -125,8 +156,15 @@ public class PartnerPromotionEndpoints : IEndpoint
                 var query = new GetCampaignsPartnerQuery(airlineId, pageIndex, pageSize);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
-            });
+            })
+            .WithName("GetPartnerCampaigns")
+            .WithSummary("Get partner campaigns (paginated)")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // POST /api/partner/campaigns — Create a new partner campaign
         campaigns.MapPost("/", async (
                 [FromBody] PartnerCampaignRequest request,
                 ClaimsPrincipal principal,
@@ -148,8 +186,15 @@ public class PartnerPromotionEndpoints : IEndpoint
                     return Results.BadRequest(result.Error);
 
                 return Results.Created($"/api/partner/campaigns/{result.Value}", new { Id = result.Value });
-            });
+            })
+            .WithName("CreatePartnerCampaign")
+            .WithSummary("Create a new partner campaign")
+            .Produces(201)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/partner/campaigns/{id:guid} — Update a partner campaign
         campaigns.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerCampaignRequest request,
@@ -173,8 +218,16 @@ public class PartnerPromotionEndpoints : IEndpoint
                     return Results.BadRequest(result.Error);
 
                 return Results.Ok();
-            });
+            })
+            .WithName("UpdatePartnerCampaign")
+            .WithSummary("Update a partner campaign")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // DELETE /api/partner/campaigns/{id:guid} — Delete a partner campaign
         campaigns.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -186,7 +239,14 @@ public class PartnerPromotionEndpoints : IEndpoint
                     return Results.BadRequest(result.Error);
 
                 return Results.NoContent();
-            });
+            })
+            .WithName("DeletePartnerCampaign")
+            .WithSummary("Delete a partner campaign")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
     }
 
     private static bool TryGetAirlineId(ClaimsPrincipal principal, out Guid airlineId)

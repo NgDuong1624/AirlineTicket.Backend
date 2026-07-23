@@ -23,6 +23,7 @@ public class BookingEndpoints : IEndpoint
             .WithTags("Bookings Module");
 
         // ——————————————————————— Bookings ————————————————————————————————
+        // POST /api/bookings — Create a new booking
         group.MapPost("/", async (
                 [FromBody] CreateBookingRequest request,
                 [FromServices] ISender sender,
@@ -43,12 +44,13 @@ public class BookingEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("CreateBooking")
-            .WithSummary("Tạo đơn đặt chỗ mới")
+            .WithSummary("Create a new booking")
             .Produces(200)
             .Produces(400)
             .Produces(500)
             .AllowAnonymous();
 
+        // GET /api/bookings — Get all bookings
         group.MapGet("/", async (
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
@@ -60,10 +62,13 @@ public class BookingEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : result.ToErrorResult();
             })
             .WithName("GetAllBookings")
-            .WithSummary("Lấy danh sách tất cả đặt vé")
+            .WithSummary("Get all bookings")
             .Produces(200)
+            .Produces(401)
+            .Produces(403)
             .RequireAuthorization("PartnerOrStaff");
 
+        // GET /api/bookings/{id:guid} — Get booking details
         group.MapGet("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -74,11 +79,12 @@ public class BookingEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound();
             })
             .WithName("GetBookingById")
-            .WithSummary("Xem chi tiết đơn đặt chỗ")
+            .WithSummary("Get booking details")
             .Produces(200)
             .Produces(404)
             .AllowAnonymous();
 
+        // GET /api/bookings/my-bookings — Get booking history of logged-in user
         group.MapGet("/my-bookings", async (
                 [FromServices] ISender sender,
                 ClaimsPrincipal user,
@@ -97,11 +103,12 @@ public class BookingEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetMyBookings")
-            .WithSummary("Xem lịch sử đặt chỗ của User đang đăng nhập")
+            .WithSummary("Get booking history of logged-in user")
             .Produces(200)
             .Produces(401)
             .RequireAuthorization();
 
+        // PUT /api/bookings/{id:guid} — Update booking information
         group.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] UpdateBookingRequest request,
@@ -117,11 +124,12 @@ public class BookingEndpoints : IEndpoint
                     : result.ToErrorResult();
             })
             .WithName("UpdateBooking")
-            .WithSummary("Cập nhật thông tin đặt vé")
+            .WithSummary("Update booking information")
             .Produces(200)
             .Produces(400)
             .Produces(500);
 
+        // DELETE /api/bookings/{id:guid} — Cancel booking
         group.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -132,10 +140,11 @@ public class BookingEndpoints : IEndpoint
                 return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
             })
             .WithName("CancelBooking")
-            .WithSummary("Hủy đơn đặt chỗ")
+            .WithSummary("Cancel booking")
             .Produces(204)
             .Produces(400);
 
+        // GET /api/bookings/search — Search booking
         group.MapGet("/search", async (
                 [FromQuery] string pnrCode,
                 [FromServices] ISender sender,
@@ -146,12 +155,13 @@ public class BookingEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("SearchBooking")
-            .WithSummary("Tìm kiếm đơn đặt chỗ")
+            .WithSummary("Search booking")
             .Produces(200)
             .Produces(404)
             .AllowAnonymous();
 
         // ——————————————————————— Payments & Tickets ————————————————————————————————
+        // POST /api/bookings/{id:guid}/pay — Process payment
         group.MapPost("/{id:guid}/pay", async (
                 Guid id,
                 [FromBody] PayBookingRequest request,
@@ -190,11 +200,12 @@ public class BookingEndpoints : IEndpoint
                     : result.ToErrorResult();
             })
             .WithName("PayBooking")
-            .WithSummary("Thực hiện thanh toán")
+            .WithSummary("Process payment")
             .Produces(200)
             .Produces(400)
             .AllowAnonymous();
 
+        // GET /api/tickets/{id:guid} — Get e-ticket information
         app.MapGet("/api/tickets/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -206,7 +217,7 @@ public class BookingEndpoints : IEndpoint
             })
             .WithTags("Tickets Module")
             .WithName("GetTicketById")
-            .WithSummary("Lấy thông tin vé điện tử")
+            .WithSummary("Get e-ticket information")
             .Produces(200)
             .Produces(404)
             .AllowAnonymous();

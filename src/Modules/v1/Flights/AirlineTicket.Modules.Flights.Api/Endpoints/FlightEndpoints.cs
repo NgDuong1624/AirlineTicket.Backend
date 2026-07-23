@@ -35,7 +35,7 @@ public class FlightEndpoints : IEndpoint
                     return result.IsSuccess ? Results.Ok(result) : result.ToErrorResult();
                 })
             .WithName("GetAirports")
-            .WithSummary("Lấy danh sách sân bay hoặc tìm kiếm theo từ khóa")
+            .WithSummary("Get list of airports or search by keyword")
             .Produces(200)
             .AllowAnonymous();
 
@@ -51,7 +51,7 @@ public class FlightEndpoints : IEndpoint
                     return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
                 })
             .WithName("GetAirlines")
-            .WithSummary("Lấy danh sách hãng hàng không")
+            .WithSummary("Get list of airlines")
             .Produces(200)
             .AllowAnonymous();
 
@@ -69,7 +69,7 @@ public class FlightEndpoints : IEndpoint
                     return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
                 })
             .WithName("GetRoutes")
-            .WithSummary("Lấy danh sách tuyến bay")
+            .WithSummary("Get list of flight routes")
             .Produces(200)
             .AllowAnonymous();
 
@@ -100,7 +100,7 @@ public class FlightEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("SearchFlights")
-            .WithSummary("Tìm kiếm chuyến bay theo bộ lọc")
+            .WithSummary("Search flights by filters")
             .Produces(200)
             .Produces(400)
             .Produces(500)
@@ -128,7 +128,7 @@ public class FlightEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("SearchRoundTripFlights")
-            .WithSummary("Tìm kiếm chuyến bay khứ hồi theo bộ lọc")
+            .WithSummary("Search round-trip flights by filters")
             .Produces(200)
             .Produces(400)
             .Produces(500)
@@ -145,7 +145,7 @@ public class FlightEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetFlightById")
-            .WithSummary("Lấy chi tiết chuyến bay theo ID")
+            .WithSummary("Get flight details by ID")
             .Produces(200)
             .Produces(404)
             .AllowAnonymous();
@@ -162,7 +162,7 @@ public class FlightEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetTrendingFlights")
-            .WithSummary("Lấy danh sách các chuyến bay/tuyến đường phổ biến")
+            .WithSummary("Get list of trending flights/routes")
             .Produces(200)
             .AllowAnonymous();
 
@@ -177,7 +177,7 @@ public class FlightEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithName("GetFlightSeats")
-            .WithSummary("Lấy sơ đồ ghế của chuyến bay")
+            .WithSummary("Get flight seat map")
             .Produces(200)
             .Produces(404)
             .AllowAnonymous();
@@ -200,9 +200,11 @@ public class FlightEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Created($"/api/flights/{result.Value}", new { Id = result.Value }) : result.ToErrorResult();
             })
             .WithName("CreateFlight")
-            .WithSummary("Tạo chuyến bay mới")
+            .WithSummary("Create a new flight")
             .Produces(201)
             .Produces(400)
+            .Produces(401)
+            .Produces(403)
             .Produces(500)
             .RequireAuthorization("PartnerOrStaff");
     }

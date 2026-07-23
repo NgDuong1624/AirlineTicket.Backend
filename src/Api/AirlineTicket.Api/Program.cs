@@ -100,23 +100,26 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-    }); // Hỗ trợ Controllers từ các Module
+    }); // Supports Controllers from Modules
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
 });
 
-// Cấu hình BuildingBlocks (Logging, Caching, Correlation)
+// Configure BuildingBlocks (Logging, Caching, Correlation)
 builder.Services.AddBuildingBlocksInfrastructure();
 
-// Cấu hình cache provider (Redis hoặc MemoryCache dự phòng)
+// Configure cache provider (Redis or MemoryCache fallback)
 var redisConn = builder.Configuration.GetConnectionString("Redis");
 if (!string.IsNullOrEmpty(redisConn))
 {
+    var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConn);
+    builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(multiplexer);
+
     builder.Services.AddStackExchangeRedisCache(options =>
     {
-        options.Configuration = redisConn;
+        options.ConnectionMultiplexerFactory = () => Task.FromResult<StackExchange.Redis.IConnectionMultiplexer>(multiplexer);
         options.InstanceName = "AirlineTicket:";
     });
 }
@@ -125,8 +128,8 @@ else
     builder.Services.AddDistributedMemoryCache();
 }
 
-// Cấu hình Database & Infrastructure cho từng Module
-// (AiService:ModelStore được bind bên trong AddInteractionsInfrastructure)
+// Configure Database & Infrastructure for each Module
+// (AiService:ModelStore is bound within AddInteractionsInfrastructure)
 builder.Services.AddFlightsInfrastructure(builder.Configuration);
 builder.Services.AddBookingsInfrastructure(builder.Configuration);
 builder.Services.AddUsersInfrastructure(builder.Configuration);
@@ -146,7 +149,7 @@ builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<Notifi
 builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<InteractionDbContext>>();
 builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<LogsDbContext>>();
 
-// Cấu hình JWT Authentication
+// Configure JWT Authentication
 var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!";
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -179,12 +182,12 @@ builder.Services.AddCors(options =>
               .AllowCredentials());
 });
 
-// 1. Quét tìm tất cả các Assemblies thuộc hệ thống AirlineTicket (cho endpoints & validator)
+// 1. Scan all Assemblies belonging to the AirlineTicket system (for endpoints & validators)
 var runtimeAssemblies = AppDomain.CurrentDomain.GetAssemblies()
     .Where(a => a.FullName != null && a.FullName.StartsWith("AirlineTicket"))
     .ToArray();
 
-// Các assemblies chứa handlers của ứng dụng
+// Application assemblies containing handlers
 var applicationAssemblies = new Assembly[]
 {
     typeof(BookingsApplicationMarker).Assembly,
@@ -197,10 +200,10 @@ var applicationAssemblies = new Assembly[]
     typeof(LogsApplicationMarker).Assembly,
 };
 
-// 2. Đăng ký MediatR cho toàn bộ các Modules
+// 2. Register MediatR for all Modules
 builder.Services.AddMediatR(cfg =>
 {
-    // Khóa license MediatR (Lucky Penny Software) - bắt buộc cho môi trường production
+    // MediatR license key (Lucky Penny Software) - required for production environment
     var mediatRLicenseKey = builder.Configuration["LuckyPenny:MediatR:LicenseKey"];
     if (!string.IsNullOrWhiteSpace(mediatRLicenseKey))
     {
@@ -208,22 +211,22 @@ builder.Services.AddMediatR(cfg =>
     }
 
     cfg.RegisterServicesFromAssemblies(applicationAssemblies);
-    // Pipeline Behaviors: thực thi theo thứ tự đăng ký
+    // Pipeline Behaviors: executed in registration order
     cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
     cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
     cfg.AddOpenBehavior(typeof(SystemLoggingBehavior<,>));
 });
 
-// 3. Đăng ký FluentValidation quét tất cả Validator trong các Modules
+// 3. Register FluentValidation to scan all Validators in Modules
 builder.Services.AddValidatorsFromAssemblies(applicationAssemblies);
 
-// 4. Đăng ký Minimal API Endpoints
+// 4. Register Minimal API Endpoints
 builder.Services.AddEndpoints(runtimeAssemblies);
 
 var app = builder.Build();
 
-// Đăng ký Middleware cho Correlation ID & Logging HTTP
+// Register Middleware for Correlation ID & HTTP Logging
 app.UseGlobalExceptionHandlingMiddleware();
 app.UseMiddleware<CorrelationMiddleware>();
 app.UseMiddleware<RequestResponseLoggingMiddleware>();
@@ -251,7 +254,7 @@ app.UseCors(WebCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();   // Định tuyến các Controller từ các Module (vd: QaController)
+app.MapControllers();   // Routes Controllers from Modules (e.g., QaController)
 app.MapEndpoints();
 
 app.MapGet("/api/health/live", () => Results.Ok(new { status = "Healthy", server = "Running", timestamp = DateTime.UtcNow }))

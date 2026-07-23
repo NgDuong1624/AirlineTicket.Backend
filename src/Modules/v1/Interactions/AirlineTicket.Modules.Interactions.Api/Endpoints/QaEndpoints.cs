@@ -20,6 +20,7 @@ public class QaEndpoints : IEndpoint
         var group = app.MapGroup("/api/v1/qa")
             .WithTags("AI Chat");
 
+        // POST /api/v1/qa/ask — Send question to AI Travel Assistant
         group.MapPost("/ask", async (
                 [FromBody] AskQuestionRequest request,
                 [FromServices] ISender sender,
@@ -57,7 +58,7 @@ public class QaEndpoints : IEndpoint
                 }
             })
             .WithName("AskQuestion")
-            .WithSummary("Gửi câu hỏi cho AI Travel Assistant")
+            .WithSummary("Send question to AI Travel Assistant")
             .Produces<AirTicketAnswerResponse>(200)
             .Produces(400)
             .Produces(429)

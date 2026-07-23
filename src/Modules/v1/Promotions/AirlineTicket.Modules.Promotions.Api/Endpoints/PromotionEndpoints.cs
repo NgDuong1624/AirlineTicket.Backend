@@ -22,6 +22,7 @@ public class PromotionEndpoints : IEndpoint
             .WithTags("Admin Coupons Management")
             .RequireAuthorization("AdminOnly");
 
+        // POST /api/admin/coupons — Create a new coupon
         adminCouponsGroup.MapPost("/", async (
                 [FromBody] CreatePromotionRequest request,
                 [FromServices] ISender sender,
@@ -43,9 +44,13 @@ public class PromotionEndpoints : IEndpoint
                 return Results.Created($"/api/admin/coupons/{result.Value}", new { Id = result.Value });
             })
             .WithName("AdminCreateCoupon")
+            .WithSummary("Create a new coupon")
             .Produces(201)
-            .Produces(400);
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // GET /api/admin/coupons — Get all coupons (paginated)
         adminCouponsGroup.MapGet("/", async (
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
@@ -56,8 +61,12 @@ public class PromotionEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetCoupons")
-            .Produces(200);
+            .WithSummary("Get all coupons (paginated)")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/admin/coupons/{id:guid} — Update a coupon
         adminCouponsGroup.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] UpdatePromotionRequest request,
@@ -69,12 +78,17 @@ public class PromotionEndpoints : IEndpoint
                 if (result.IsFailure)
                     return Results.BadRequest(result.Error);
 
-                return Results.Ok(new { Message = "Cập nhật coupon thành công." });
+                return Results.Ok(new { Message = "Coupon updated successfully." });
             })
             .WithName("AdminUpdateCoupon")
+            .WithSummary("Update a coupon")
             .Produces(200)
-            .Produces(400);
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // DELETE /api/admin/coupons/{id:guid} — Delete a coupon
         adminCouponsGroup.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -88,13 +102,19 @@ public class PromotionEndpoints : IEndpoint
                 return Results.NoContent();
             })
             .WithName("AdminDeleteCoupon")
-            .Produces(204);
+            .WithSummary("Delete a coupon")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
         // ——————————————————————— Admin Campaigns ————————————————————————————————
         var adminCampaignsGroup = app.MapGroup("/api/admin/campaigns")
             .WithTags("Admin Campaigns Management")
             .RequireAuthorization("AdminOnly");
 
+        // GET /api/admin/campaigns — Get all campaigns (paginated)
         adminCampaignsGroup.MapGet("/", async (
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
@@ -105,8 +125,12 @@ public class PromotionEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetCampaigns")
-            .Produces(200);
+            .WithSummary("Get all campaigns (paginated)")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403);
 
+        // POST /api/admin/campaigns — Create a new campaign
         adminCampaignsGroup.MapPost("/", async (
                 [FromBody] AdminCampaignRequest request,
                 [FromServices] ISender sender,
@@ -120,8 +144,13 @@ public class PromotionEndpoints : IEndpoint
                 return Results.Created($"/api/admin/campaigns/{result.Value}", new { Id = result.Value });
             })
             .WithName("AdminCreateCampaign")
-            .Produces(201);
+            .WithSummary("Create a new campaign")
+            .Produces(201)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/admin/campaigns/{id:guid} — Update a campaign
         adminCampaignsGroup.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] AdminCampaignRequest request,
@@ -136,8 +165,14 @@ public class PromotionEndpoints : IEndpoint
                 return Results.Ok();
             })
             .WithName("AdminUpdateCampaign")
-            .Produces(200);
+            .WithSummary("Update a campaign")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // DELETE /api/admin/campaigns/{id:guid} — Delete a campaign
         adminCampaignsGroup.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -151,13 +186,19 @@ public class PromotionEndpoints : IEndpoint
                 return Results.NoContent();
             })
             .WithName("AdminDeleteCampaign")
-            .Produces(204);
+            .WithSummary("Delete a campaign")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
         // ——————————————————————— Public Endpoints ————————————————————————————————
         var publicGroup = app.MapGroup("/api/promotions")
             .WithTags("Promotions Public")
             .AllowAnonymous();
 
+        // GET /api/promotions — Get active promotions
         publicGroup.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -170,8 +211,11 @@ public class PromotionEndpoints : IEndpoint
                 return Results.Ok(result.Value);
             })
             .WithName("GetActivePromotions")
-            .Produces(200);
+            .WithSummary("Get active promotions")
+            .Produces(200)
+            .Produces(400);
 
+        // GET /api/promotions/campaigns — Get campaigns
         publicGroup.MapGet("/campaigns", async (
                 CancellationToken ct) =>
             {
@@ -179,8 +223,10 @@ public class PromotionEndpoints : IEndpoint
                 return Results.Ok(new List<object>());
             })
             .WithName("GetCampaigns")
+            .WithSummary("Get campaigns")
             .Produces(200);
 
+        // POST /api/promotions/apply — Apply a promotion code to a flight booking
         publicGroup.MapPost("/apply", async (
                 [FromBody] ApplyPromotionRequest request,
                 [FromServices] ISender sender,
@@ -194,6 +240,7 @@ public class PromotionEndpoints : IEndpoint
                 return Results.Ok(result.Value);
             })
             .WithName("ApplyPromotion")
+            .WithSummary("Apply a promotion code to a flight booking")
             .Produces(200)
             .Produces(400);
     }
