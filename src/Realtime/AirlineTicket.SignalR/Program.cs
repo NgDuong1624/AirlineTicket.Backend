@@ -33,11 +33,16 @@ builder.Services.AddBuildingBlocksAuth();
 
 // Configure cache provider (Redis or MemoryCache fallback)
 var redisConn = builder.Configuration.GetConnectionString("Redis");
+ConnectionMultiplexer? multiplexer = null;
 if (!string.IsNullOrEmpty(redisConn))
 {
+    // Use a single shared ConnectionMultiplexer for both Caching and SignalR Backplane
+    multiplexer = ConnectionMultiplexer.Connect(redisConn);
+    builder.Services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+
     builder.Services.AddStackExchangeRedisCache(options =>
     {
-        options.Configuration = redisConn;
+        options.ConnectionMultiplexerFactory = () => Task.FromResult<IConnectionMultiplexer>(multiplexer!);
         options.InstanceName = "AirlineTicket:";
     });
 }
@@ -99,10 +104,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // SignalR + Redis Backplane
 var signalRBuilder = builder.Services.AddSignalR();
-if (!string.IsNullOrEmpty(redisConn))
+if (!string.IsNullOrEmpty(redisConn) && multiplexer != null)
 {
-    signalRBuilder.AddStackExchangeRedis(redisConn, options =>
+    signalRBuilder.AddStackExchangeRedis(options =>
     {
+        options.ConnectionFactory = writer => Task.FromResult<IConnectionMultiplexer>(multiplexer);
         options.Configuration.ChannelPrefix = RedisChannel.Literal("AirlineTicketSignalR");
     });
 }
