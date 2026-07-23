@@ -23,6 +23,7 @@ public class PartnerStaffEndpoints : IEndpoint
             .WithTags("Partner Staff")
             .RequireAuthorization("PartnerOnly");
 
+        // GET /api/partner/staff — Get partner staff members
         staff.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] IUserRepository repo,
@@ -40,8 +41,14 @@ public class PartnerStaffEndpoints : IEndpoint
                     .Select(ToDto)
                     .ToList();
                 return Results.Ok(new { items, totalCount });
-            });
+            })
+            .WithName("GetPartnerStaff")
+            .WithSummary("Get partner staff members")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403);
 
+        // POST /api/partner/staff — Create a new partner staff member
         staff.MapPost("/", async (
                 [FromBody] PartnerStaffRequest request,
                 ClaimsPrincipal principal,
@@ -69,8 +76,15 @@ public class PartnerStaffEndpoints : IEndpoint
                 };
                 await repo.AddAsync(user, ct);
                 return Results.Created($"/api/partner/staff/{user.Id}", new { Id = user.Id });
-            });
+            })
+            .WithName("CreatePartnerStaff")
+            .WithSummary("Create a new partner staff member")
+            .Produces(201)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/partner/staff/{id:guid} — Update a partner staff member
         staff.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerStaffRequest request,
@@ -91,8 +105,15 @@ public class PartnerStaffEndpoints : IEndpoint
                 user.UpdatedAt = DateTime.UtcNow;
                 await repo.UpdateAsync(user, ct);
                 return Results.Ok();
-            });
+            })
+            .WithName("UpdatePartnerStaff")
+            .WithSummary("Update a partner staff member")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // DELETE /api/partner/staff/{id:guid} — Delete a partner staff member
         staff.MapDelete("/{id:guid}", async (
                 Guid id,
                 ClaimsPrincipal principal,
@@ -108,8 +129,15 @@ public class PartnerStaffEndpoints : IEndpoint
 
                 await repo.DeleteAsync(user, ct);
                 return Results.NoContent();
-            });
+            })
+            .WithName("DeletePartnerStaff")
+            .WithSummary("Delete a partner staff member")
+            .Produces(204)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // PATCH /api/partner/staff/{id:guid}/status — Update partner staff status
         staff.MapPatch("/{id:guid}/status", async (
                 Guid id,
                 [FromBody] UpdateUserStatusRequest request,
@@ -128,8 +156,15 @@ public class PartnerStaffEndpoints : IEndpoint
                 user.UpdatedAt = DateTime.UtcNow;
                 await repo.UpdateAsync(user, ct);
                 return Results.Ok();
-            });
+            })
+            .WithName("UpdatePartnerStaffStatus")
+            .WithSummary("Update partner staff status")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // GET /api/partner/staff/my-airline — Get all staff for my airline
         staff.MapGet("/my-airline", async (
                 ClaimsPrincipal principal,
                 [FromServices] IUserRepository repo,
@@ -144,7 +179,12 @@ public class PartnerStaffEndpoints : IEndpoint
                 var (users, totalCount) = await repo.GetByAirlineIdAsync(airlineId.Value, pageIndex, pageSize, ct);
                 var items = users.Select(ToDto).ToList();
                 return Results.Ok(new { airlineId, items, totalCount });
-            });
+            })
+            .WithName("GetMyAirlineStaff")
+            .WithSummary("Get all staff for my airline")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403);
     }
 
     private static object ToDto(User u) => new

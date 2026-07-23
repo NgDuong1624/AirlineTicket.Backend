@@ -22,6 +22,7 @@ public class UserEndpoint : IEndpoint
         var authGroup = app.MapGroup("/api/auth")
             .WithTags("Authentication");
 
+        // POST /api/auth/login — User login
         authGroup.MapPost("/login", async (
                 [FromBody] LoginUserRequest request,
                 [FromServices] ISender sender,
@@ -36,9 +37,12 @@ public class UserEndpoint : IEndpoint
                 return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
             })
             .WithName("Login")
-            .WithSummary("Đăng nhập người dùng")
+            .WithSummary("User login")
+            .Produces(200)
+            .Produces(401)
             .AllowAnonymous();
 
+        // POST /api/auth/google — Google login
         authGroup.MapPost("/google", async (
                 [FromBody] GoogleLoginRequest request,
                 [FromServices] ISender sender,
@@ -53,9 +57,12 @@ public class UserEndpoint : IEndpoint
                 return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
             })
             .WithName("GoogleLogin")
-            .WithSummary("Đăng nhập bằng Google")
+            .WithSummary("Google login")
+            .Produces(200)
+            .Produces(401)
             .AllowAnonymous();
 
+        // POST /api/auth/register — Register new user
         authGroup.MapPost("/register", async (
                 [FromBody] RegisterUserRequest request,
                 [FromServices] ISender sender,
@@ -70,9 +77,12 @@ public class UserEndpoint : IEndpoint
                 return Results.Ok(new { UserId = result.Value });
             })
             .WithName("Register")
-            .WithSummary("Đăng ký tài khoản mới")
+            .WithSummary("Register new user")
+            .Produces(200)
+            .Produces(400)
             .AllowAnonymous();
 
+        // GET /api/auth/me — Get current user profile
         authGroup.MapGet("/me", async (
                 [FromServices] ISender sender,
                 ClaimsPrincipal user,
@@ -89,9 +99,13 @@ public class UserEndpoint : IEndpoint
                 return result.IsSuccess && result.Value != null ? Results.Ok(result.Value) : Results.NotFound();
             })
             .WithName("GetMe")
-            .WithSummary("Lấy thông tin tài khoản đang đăng nhập")
+            .WithSummary("Get current user profile")
+            .Produces(200)
+            .Produces(401)
+            .Produces(404)
             .RequireAuthorization();
 
+        // POST /api/auth/refresh — Refresh access token
         authGroup.MapPost("/refresh", async (
                 [FromBody] RefreshTokenRequest request,
                 [FromServices] ISender sender,
@@ -106,9 +120,12 @@ public class UserEndpoint : IEndpoint
                 return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
             })
             .WithName("Refresh")
-            .WithSummary("Làm mới token")
+            .WithSummary("Refresh access token")
+            .Produces(200)
+            .Produces(401)
             .AllowAnonymous();
 
+        // POST /api/auth/logout — Logout user and revoke session
         authGroup.MapPost("/logout", async (
                 [FromBody] LogoutRequest request,
                 [FromServices] ISender sender,
@@ -123,7 +140,9 @@ public class UserEndpoint : IEndpoint
                 return Results.Ok();
             })
             .WithName("Logout")
-            .WithSummary("Đăng xuất người dùng và thu hồi session")
+            .WithSummary("Logout user and revoke session")
+            .Produces(200)
+            .Produces(400)
             .AllowAnonymous();
 
         // ——————————————————————— Admin User Management ————————————————————————————————
@@ -131,6 +150,7 @@ public class UserEndpoint : IEndpoint
             .WithTags("Admin Users")
             .RequireAuthorization("AdminOnly");
 
+        // GET /api/admin/users — Get all users (paginated)
         adminGroup.MapGet("/", async (
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
@@ -141,8 +161,14 @@ public class UserEndpoint : IEndpoint
                 return result.IsSuccess
                     ? Results.Ok(result.Value)
                     : result.ToErrorResult();
-            });
+            })
+            .WithName("AdminGetUsers")
+            .WithSummary("Get all users (paginated)")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403);
 
+        // POST /api/admin/users — Create a new user
         adminGroup.MapPost("/", async (
                 [FromBody] AdminUserRequest request,
                 [FromServices] ISender sender,
@@ -158,8 +184,15 @@ public class UserEndpoint : IEndpoint
                     request.AirlineId);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Created($"/api/admin/users/{result.Value}", new { Id = result.Value }) : result.ToErrorResult();
-            });
+            })
+            .WithName("AdminCreateUser")
+            .WithSummary("Create a new user")
+            .Produces(201)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/admin/users/{id:guid} — Update a user
         adminGroup.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] AdminUserRequest request,
@@ -176,22 +209,47 @@ public class UserEndpoint : IEndpoint
                     request.AirlineId);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Ok() : result.ToErrorResult();
-            });
+            })
+            .WithName("AdminUpdateUser")
+            .WithSummary("Update a user")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // GET /api/admin/users/{id:guid} — Get user by ID
+        // GET /api/admin/users/{id:guid} — Get user by ID
         adminGroup.MapGet("/{id:guid}", async (Guid id, [FromServices] ISender sender, CancellationToken ct) =>
             {
                 var query = new GetUserByIdQuery(id);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess && result.Value != null ? Results.Ok(result.Value) : Results.NotFound();
-            });
+            })
+            .WithName("AdminGetUserById")
+            .WithSummary("Get user by ID")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // DELETE /api/admin/users/{id:guid} — Delete a user
+        // DELETE /api/admin/users/{id:guid} — Delete a user
         adminGroup.MapDelete("/{id:guid}", async (Guid id, [FromServices] ISender sender, CancellationToken ct) =>
             {
                 var command = new DeleteUserCommand(id);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
-            });
+            })
+            .WithName("AdminDeleteUser")
+            .WithSummary("Delete a user")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
+        // PATCH /api/admin/users/{id:guid}/status — Update user status
         adminGroup.MapPatch("/{id:guid}/status", async (
                 Guid id,
                 [FromBody] UpdateUserStatusRequest request,
@@ -205,13 +263,20 @@ public class UserEndpoint : IEndpoint
                 user.UpdatedAt = DateTime.UtcNow;
                 await repo.UpdateAsync(user, ct);
                 return Results.Ok();
-            });
+            })
+            .WithName("AdminUpdateUserStatus")
+            .WithSummary("Update user status")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403)
+            .Produces(404);
 
         // ——————————————————————— Admin Permission Management ————————————————————————————————
         var permissionGroup = app.MapGroup("/api/admin/permissions")
             .WithTags("Admin Permissions")
             .RequireAuthorization("AdminOnly");
 
+        // GET /api/admin/permissions — Get all permissions (paginated)
         adminGroup.MapGet("/permissions", async (
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
@@ -222,7 +287,12 @@ public class UserEndpoint : IEndpoint
                 return result.IsSuccess
                     ? Results.Ok(result.Value)
                     : result.ToErrorResult();
-            });
+            })
+            .WithName("AdminGetPermissions")
+            .WithSummary("Get all permissions (paginated)")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403);
     }
 }
 

@@ -24,6 +24,7 @@ public class FlightAdminEndpoints : IEndpoint
             .WithTags("Admin Airports")
             .RequireAuthorization("AdminOnly");
 
+        // GET /api/admin/airports — Get paginated list of airports
         adminAirports.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct,
@@ -34,8 +35,14 @@ public class FlightAdminEndpoints : IEndpoint
                 var result = await sender.Send(new GetAirportsQuery(search, pageIndex, pageSize), ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
-            .WithName("AdminGetAirports");
+            .WithName("AdminGetAirports")
+            .WithSummary("Get paginated list of airports")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // POST /api/admin/airports — Create a new airport
         adminAirports.MapPost("/", async (
                 [FromBody] AdminAirportRequest request,
                 [FromServices] ISender sender,
@@ -53,8 +60,14 @@ public class FlightAdminEndpoints : IEndpoint
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Created($"/api/admin/airports/{result.Value}", new { Id = result.Value }) : Results.BadRequest(result.Error);
             })
-            .WithName("AdminCreateAirport");
+            .WithName("AdminCreateAirport")
+            .WithSummary("Create a new airport")
+            .Produces(201)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/admin/airports/{id} — Update an existing airport
         adminAirports.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] AdminAirportRequest request,
@@ -74,8 +87,14 @@ public class FlightAdminEndpoints : IEndpoint
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             })
-            .WithName("AdminUpdateAirport");
+            .WithName("AdminUpdateAirport")
+            .WithSummary("Update an existing airport")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // DELETE /api/admin/airports/{id} — Delete an airport
         adminAirports.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -84,13 +103,19 @@ public class FlightAdminEndpoints : IEndpoint
                 var result = await sender.Send(new DeleteAirportCommand(id), ct);
                 return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
             })
-            .WithName("AdminDeleteAirport");
+            .WithName("AdminDeleteAirport")
+            .WithSummary("Delete an airport")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
         // ——————————————————————— Admin Airlines ————————————————————————————————
         var adminAirlines = app.MapGroup("/api/admin/airlines")
             .WithTags("Admin Airlines")
             .RequireAuthorization("AdminOnly");
 
+        // GET /api/admin/airlines — Get paginated list of airlines
         adminAirlines.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct,

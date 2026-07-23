@@ -18,6 +18,7 @@ public class NotificationEndpoints : IEndpoint
         var group = app.MapGroup("/api/v1/notifications")
             .WithTags("Notifications Module");
 
+        // GET /api/v1/notifications — Get notifications status
         group.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -26,6 +27,9 @@ public class NotificationEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
-            .WithName("GetNotificationsStatus");
+            .WithName("GetNotificationsStatus")
+            .WithSummary("Get notifications status")
+            .Produces(200)
+            .Produces(400);
     }
 }

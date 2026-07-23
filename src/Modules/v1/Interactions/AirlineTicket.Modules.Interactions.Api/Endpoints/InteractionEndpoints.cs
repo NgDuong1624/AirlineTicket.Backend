@@ -18,6 +18,7 @@ public class InteractionEndpoints : IEndpoint
         var group = app.MapGroup("/api/v1/interactions")
             .WithTags("Interactions Module");
 
+        // GET /api/v1/interactions — Get interactions module status
         group.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -26,6 +27,9 @@ public class InteractionEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
-            .WithName("GetInteractionsStatus");
+            .WithName("GetInteractionsStatus")
+            .WithSummary("Get interactions module status")
+            .Produces(200)
+            .Produces(400);
     }
 }

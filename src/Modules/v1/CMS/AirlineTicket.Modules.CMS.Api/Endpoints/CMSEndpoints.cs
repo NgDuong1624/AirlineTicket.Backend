@@ -19,6 +19,7 @@ public class CMSEndpoints : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         // ——————————————————————— Admin Dashboard ————————————————————————————————
+        // GET /api/admin/dashboard — Get admin dashboard statistics
         app.MapGet("/api/admin/dashboard", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -29,9 +30,15 @@ public class CMSEndpoints : IEndpoint
             })
             .WithTags("Admin Dashboard")
             .RequireAuthorization("AdminOnly")
-            .WithName("AdminGetDashboard");
+            .WithName("AdminGetDashboard")
+            .WithSummary("Get admin dashboard statistics")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
         // ——————————————————————— Partner Dashboard ————————————————————————————————
+        // GET /api/partner/dashboard — Get partner dashboard statistics
         app.MapGet("/api/partner/dashboard", async (
                 [FromServices] ISender sender,
                 ClaimsPrincipal principal,
@@ -44,13 +51,19 @@ public class CMSEndpoints : IEndpoint
             })
             .WithTags("Partner Dashboard")
             .RequireAuthorization("PartnerOnly")
-            .WithName("PartnerGetDashboard");
+            .WithName("PartnerGetDashboard")
+            .WithSummary("Get partner dashboard statistics")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
         // ——————————————————————— Admin Settings ————————————————————————————————
         var adminSettings = app.MapGroup("/api/admin/settings")
             .WithTags("Admin Settings")
             .RequireAuthorization("AdminOnly");
 
+        // GET /api/admin/settings — Get admin settings
         adminSettings.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -59,8 +72,14 @@ public class CMSEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
-            .WithName("AdminGetSettings");
+            .WithName("AdminGetSettings")
+            .WithSummary("Get admin settings")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/admin/settings — Update admin settings
         adminSettings.MapPut("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -69,7 +88,12 @@ public class CMSEndpoints : IEndpoint
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
-            .WithName("AdminUpdateSettings");
+            .WithName("AdminUpdateSettings")
+            .WithSummary("Update admin settings")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
     }
 
     private static bool TryGetAirlineId(ClaimsPrincipal principal, out Guid airlineId)

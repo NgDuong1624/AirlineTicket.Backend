@@ -24,6 +24,7 @@ public class PartnerBookingEndpoints : IEndpoint
             .WithTags("Partner Bookings")
             .RequireAuthorization("PartnerOnly");
 
+        // GET /api/partner/bookings — Get paginated list of bookings for partner
         group.MapGet("/", async (
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
@@ -35,8 +36,14 @@ public class PartnerBookingEndpoints : IEndpoint
                     ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount })
                     : Results.BadRequest(result.Error);
             })
-            .WithName("PartnerGetBookings");
+            .WithName("PartnerGetBookings")
+            .WithSummary("Get paginated list of bookings for partner")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
+        // PUT /api/partner/bookings/{id} — Update booking status for partner
         group.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] PartnerBookingUpdateRequest request,
@@ -48,7 +55,13 @@ public class PartnerBookingEndpoints : IEndpoint
                 if (result.Error.Code == "NOT_FOUND") return Results.NotFound(result.Error);
                 return Results.BadRequest(result.Error);
             })
-            .WithName("PartnerUpdateBooking");
+            .WithName("PartnerUpdateBooking")
+            .WithSummary("Update booking status for partner")
+            .Produces(200)
+            .Produces(400)
+            .Produces(404)
+            .Produces(401)
+            .Produces(403);
     }
 }
 

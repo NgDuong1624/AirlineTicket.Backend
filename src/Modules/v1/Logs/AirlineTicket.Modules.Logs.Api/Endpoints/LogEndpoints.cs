@@ -26,6 +26,7 @@ public class LogEndpoints : IEndpoint
             .WithTags("Admin Logs")
             .RequireAuthorization("AdminOnly");
 
+        // GET /api/admin/logs — Get system logs for admin
         adminLogs.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct,
@@ -44,12 +45,18 @@ public class LogEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
-            .WithName("AdminGetLogs");
+            .WithName("AdminGetLogs")
+            .WithSummary("Get system logs for admin")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
 
         var partnerLogs = app.MapGroup("/api/partner/logs")
             .WithTags("Partner Logs")
             .RequireAuthorization("PartnerOnly");
 
+        // GET /api/partner/logs — Get system logs for partner
         partnerLogs.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
@@ -68,6 +75,11 @@ public class LogEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
-            .WithName("PartnerGetLogs");
+            .WithName("PartnerGetLogs")
+            .WithSummary("Get system logs for partner")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
+            .Produces(403);
     }
 }
