@@ -8,7 +8,7 @@ public class RolePermissionConfiguration : IEntityTypeConfiguration<RolePermissi
 {
     public void Configure(EntityTypeBuilder<RolePermission> builder)
     {
-        // Khóa chính kết hợp (composite key) - EF không tự suy ra được
+        // Composite key - EF cannot infer this automatically
         builder.HasKey(x => new { x.RoleId, x.PermissionId });
 
         builder.HasOne(x => x.Role)

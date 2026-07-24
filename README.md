@@ -23,7 +23,7 @@ The system follows a **Modular Monolith** architecture with 8 independent busine
 | **Flights** | `flights` | Airlines, airports, airplanes, routes, flights, seat maps |
 | **Bookings** | `bookings` | Booking lifecycle, passengers, payments, e-tickets |
 | **Promotions** | `promotions` | Coupons (percentage/fixed), campaigns (admin & partner scoped) |
-| **Interactions** | `interactions` | AI Travel Assistant (NVIDIA API + DeepSeek V4 Flash), reviews |
+| **Interactions** | `interactions` | AI Travel Assistant, reviews |
 | **CMS** | `cms` | Admin/Partner dashboards, system settings, articles |
 | **Logs** | `logs` | System logs, partner activity logs (paginated) |
 | **Notifications** | `notifications` | Email, SMS, Push notification templates and delivery |
@@ -100,7 +100,7 @@ Full interactive API documentation available at `/scalar/v1` when running.
 dotnet user-secrets init
 dotnet user-secrets set "Jwt:Secret" "your-secret-key-minimum-32-characters"
 dotnet user-secrets set "LuckyPenny:MediatR:LicenseKey" "your-mediatr-license-key"
-dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-nvidia-api-key"
+dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-ai-api-key"
 dotnet user-secrets set "Google:ClientId" "your-google-client-id"
 ```
 
@@ -185,6 +185,5 @@ AirlineTicket.Backend/
 ├── deploy/                              # Docker & Nginx configs
 ├── docs/                                # Documentation
 │   ├── api/api-list.md                  # Complete API endpoint reference
-│   ├── database/database_design.md      # Full database schema documentation
-│   └── plan/                            # Project planning docs
+│   └── database/database_design.md      # Full database schema documentation
 └── tests/                               # Unit & Integration tests

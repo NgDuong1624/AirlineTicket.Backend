@@ -30,7 +30,7 @@ GO
 -- 2. IDENTITY SCHEMA - Authentication & Authorization & Permission
 -- ================================================================
 
--- Bảng Roles (Vai trò - Sử dụng kiểu INT)
+-- Roles Table (Using INT type)
 CREATE TABLE [identity].[Roles] (
     [Id] INT PRIMARY KEY, 
     [Name] NVARCHAR(50) NOT NULL UNIQUE,
@@ -38,7 +38,7 @@ CREATE TABLE [identity].[Roles] (
 );
 GO
 
--- Bảng Users (Thông tin người dùng/nhân viên/khách hàng)
+-- Users Table (User/Staff/Customer information)
 CREATE TABLE [identity].[Users] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [Email] NVARCHAR(255) NOT NULL UNIQUE,
@@ -56,20 +56,20 @@ CREATE TABLE [identity].[Users] (
 );
 GO
 
--- Bảng Permissions (Danh mục các chức năng/quyền hạn trong hệ thống)
+-- Permissions Table (System functions/permissions catalog)
 CREATE TABLE [identity].[Permissions] (
     [Id] INT IDENTITY(1,1) PRIMARY KEY,
-    [Code] NVARCHAR(50) NOT NULL UNIQUE, -- Ví dụ: 'SELL_TICKET', 'CREATE_FLIGHT'
+    [Code] NVARCHAR(50) NOT NULL UNIQUE, -- Example: 'SELL_TICKET', 'CREATE_FLIGHT'
     [Name] NVARCHAR(100) NOT NULL,
     [Description] NVARCHAR(255) NULL
 );
 GO
 
 -- ==================================================================
--- TẠO CÁC BẢNG TRUNG GIAN & PHÂN QUYỀN (RELATIONSHIP & SCOPE TABLES)
+-- CREATE INTERMEDIATE & PERMISSION TABLES (RELATIONSHIP & SCOPE TABLES)
 -- ==================================================================
 
--- Bảng RolePermissions (Cấu hình quyền mặc định thuộc về từng Role)
+-- RolePermissions Table (Default permissions configuration for each Role)
 CREATE TABLE [identity].[RolePermissions] (
     [RoleId] INT NOT NULL,
     [PermissionId] INT NOT NULL,
@@ -381,7 +381,7 @@ GO
 
 CREATE TABLE [notifications].[NotificationTemplates] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    [Code] NVARCHAR(100) NOT NULL UNIQUE, -- Ví dụ: 'BOOKING_CONFIRMED', 'FLIGHT_DELAYED'
+    [Code] NVARCHAR(100) NOT NULL UNIQUE, -- Example: 'BOOKING_CONFIRMED', 'FLIGHT_DELAYED'
     [Subject] NVARCHAR(255) NOT NULL,
     [BodyTemplate] NVARCHAR(MAX) NOT NULL,
     [Language] NVARCHAR(10) DEFAULT 'vi',
@@ -392,7 +392,7 @@ GO
 CREATE TABLE [notifications].[Notifications] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
     [UserId] UNIQUEIDENTIFIER NULL,
-    [Recipient] NVARCHAR(255) NOT NULL, -- Email hoặc Phone
+    [Recipient] NVARCHAR(255) NOT NULL, -- Email or Phone
     [Subject] NVARCHAR(255) NULL,
     [Content] NVARCHAR(MAX) NOT NULL,
     [Type] INT NOT NULL, -- 0: Email, 1: SMS, 2: Push, 3: SignalR

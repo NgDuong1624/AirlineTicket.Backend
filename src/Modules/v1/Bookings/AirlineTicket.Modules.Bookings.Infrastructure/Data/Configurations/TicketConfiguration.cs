@@ -10,7 +10,7 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
     {
         builder.HasKey(x => x.Id);
 
-        // Ngăn chặn lỗi multiple cascade paths của SQL Server
+        // Prevent SQL Server multiple cascade paths error
         builder.HasOne(x => x.Passenger)
             .WithMany()
             .HasForeignKey(x => x.PassengerId)

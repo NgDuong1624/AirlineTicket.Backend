@@ -100,7 +100,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-    }); // Supports Controllers from Modules
+    }); // Support Controllers from Modules
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -110,7 +110,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 // Configure BuildingBlocks (Logging, Caching, Correlation)
 builder.Services.AddBuildingBlocksInfrastructure();
 
-// Configure cache provider (Redis or MemoryCache fallback)
+// Configure cache provider (Redis or fallback MemoryCache)
 var redisConn = builder.Configuration.GetConnectionString("Redis");
 if (!string.IsNullOrEmpty(redisConn))
 {
@@ -129,7 +129,7 @@ else
 }
 
 // Configure Database & Infrastructure for each Module
-// (AiService:ModelStore is bound within AddInteractionsInfrastructure)
+// (AiService:ModelStore is bound inside AddInteractionsInfrastructure)
 builder.Services.AddFlightsInfrastructure(builder.Configuration);
 builder.Services.AddBookingsInfrastructure(builder.Configuration);
 builder.Services.AddUsersInfrastructure(builder.Configuration);
@@ -187,7 +187,7 @@ var runtimeAssemblies = AppDomain.CurrentDomain.GetAssemblies()
     .Where(a => a.FullName != null && a.FullName.StartsWith("AirlineTicket"))
     .ToArray();
 
-// Application assemblies containing handlers
+// Assemblies containing application handlers
 var applicationAssemblies = new Assembly[]
 {
     typeof(BookingsApplicationMarker).Assembly,
@@ -211,7 +211,7 @@ builder.Services.AddMediatR(cfg =>
     }
 
     cfg.RegisterServicesFromAssemblies(applicationAssemblies);
-    // Pipeline Behaviors: executed in registration order
+    // Pipeline Behaviors: executed in order of registration
     cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
     cfg.AddOpenBehavior(typeof(CachingBehavior<,>));
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
@@ -254,7 +254,7 @@ app.UseCors(WebCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();   // Routes Controllers from Modules (e.g., QaController)
+app.MapControllers();   // Route Controllers from Modules (e.g., QaController)
 app.MapEndpoints();
 
 app.MapGet("/api/health/live", () => Results.Ok(new { status = "Healthy", server = "Running", timestamp = DateTime.UtcNow }))

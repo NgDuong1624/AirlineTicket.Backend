@@ -10,7 +10,7 @@ GO
 -- 1. SEED IDENTITY DATA (Roles, Permissions, Users)
 -- =====================================================
 
--- Khởi tạo danh sách Roles cố định với mã dịch i18n
+-- Initialize fixed Roles list with i18n translation codes
 SET IDENTITY_INSERT [dbo].[Roles] ON;
 INSERT INTO [dbo].[Roles] ([Id], [Name], [Description]) VALUES
 (0, N'role.system_admin.name', N'role.system_admin.desc'),
@@ -20,7 +20,7 @@ INSERT INTO [dbo].[Roles] ([Id], [Name], [Description]) VALUES
 SET IDENTITY_INSERT [dbo].[Roles] OFF;
 GO
 
--- Khởi tạo một số Permissions mẫu với mã dịch i18n
+-- Initialize sample Permissions with i18n translation codes
 INSERT INTO [dbo].[Permissions] ([Code], [Name], [Description]) VALUES
 ('CREATE_FLIGHT', N'permission.create_flight.name', N'permission.create_flight.desc'),
 ('SELL_TICKET', N'permission.sell_ticket.name', N'permission.sell_ticket.desc'),
@@ -33,8 +33,8 @@ INSERT INTO [dbo].[Permissions] ([Code], [Name], [Description]) VALUES
 ('MANAGE_ARTICLES', N'permission.manage_articles.name', N'permission.manage_articles.desc');
 GO
 
--- Khởi tạo danh sách Users mẫu (Admin và Client)
--- Mật khẩu mặc định có mã băm tương ứng
+-- Initialize sample Users (Admin and Client)
+-- Default passwords have corresponding hashes
 INSERT INTO [dbo].[Users] ([Id], [Email], [EmailConfirmed], [PasswordHash], [FullName], [Phone], [IsActive], [IsDeleted], [CreatedAt], [UpdatedAt], [Role]) VALUES
 ('D4B0F2A8-9B2F-4A9B-89E3-4E80D77BC901', 'admin@airlineticket.com', 1, '$2b$12$d7mwUGX/x5jcRrxdNAFqJekces0IQ2f9F4mC24iVGZUpwM2pF1Qly', N'Hệ Thống Admin', '0123456789', 1, 0, GETUTCDATE(), GETUTCDATE(), 0),
 ('E2E3F4C5-1A2B-3C4D-5E6F-7A8B9C0D1E2F', 'client@gmail.com', 1, '$2b$12$d7mwUGX/x5jcRrxdNAFqJekces0IQ2f9F4mC24iVGZUpwM2pF1Qly', N'Nguyễn Văn A', '0987654321', 1, 0, GETUTCDATE(), GETUTCDATE(), 2),
@@ -43,7 +43,7 @@ INSERT INTO [dbo].[Users] ([Id], [Email], [EmailConfirmed], [PasswordHash], [Ful
 ('C3F3E2D4-BCDE-4F01-2345-6789ABCDEF93', 'admin.qh@airlineticket.com', 1, '$2b$12$d7mwUGX/x5jcRrxdNAFqJekces0IQ2f9F4mC24iVGZUpwM2pF1Qly', N'Admin QH', '0333333333', 1, 0, GETUTCDATE(), GETUTCDATE(), 1);
 GO
 
--- Phân quyền quản trị cho các Airline Admin
+-- Assign admin permissions for Airline Admins
 INSERT INTO [dbo].[UserPermissionScopes] ([Id], [UserId], [PermissionId], [AirlineId], [ScopeDescription], [CreatedAt]) VALUES
 (NEWID(), 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF93', 3, 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF03', N'Bamboo Airways Administration', GETUTCDATE()),
 (NEWID(), 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF93', 5, 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF03', N'QH Flight Administration', GETUTCDATE());
@@ -53,7 +53,7 @@ GO
 -- 2. SEED FLIGHTS DATA
 -- =====================================================
 
--- Khởi tạo danh sách các Hãng hàng không (Airlines) để hiển thị cho Frontend
+-- Initialize Airlines list for Frontend display
 INSERT INTO [dbo].[Airlines] ([Id], [IataCode], [Name], [LogoUrl], [BaseCountry], [IsActive], [IsDeleted], [CreatedAt]) VALUES
 ('A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', 'VN', N'Vietnam Airlines', 'https://images.vietnamairlines.com/logos/vna-logo.png', N'Vietnam', 1, 0, GETUTCDATE()),
 ('B2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', 'VJ', N'VietJet Air', 'https://www.vietjetair.com/static/media/logo.8efdcd6f.svg', N'Vietnam', 1, 0, GETUTCDATE()),
@@ -65,7 +65,7 @@ INSERT INTO [dbo].[Airlines] ([Id], [IataCode], [Name], [LogoUrl], [BaseCountry]
 ('E4F3E2D4-BCDE-4F01-2345-6789ABCDEF30', 'CX', N'Cathay Pacific', 'https://www.cathaypacific.com/logo.png', N'Hong Kong', 1, 0, GETUTCDATE());
 GO
 
--- Khởi tạo danh sách các Sân bay (Airports) phổ biến ở Việt Nam và Quốc tế
+-- Initialize popular Airports in Vietnam and International
 INSERT INTO [dbo].[Airports] ([Id], [IataCode], [NameEn], [NameVi], [CityEn], [CityVi], [CountryCode], [Timezone], [Latitude], [Longitude], [IsActive], [IsDeleted]) VALUES
 ('E5F3E2D4-BCDE-4F01-2345-6789ABCDEF05', 'HAN', 'Noi Bai International Airport', N'Sân bay quốc tế Nội Bài', 'Hanoi', N'Hà Nội', 'VN', 'Asia/Ho_Chi_Minh', 21.2212, 105.8072, 1, 0),
 ('F6F3E2D4-BCDE-4F01-2345-6789ABCDEF06', 'SGN', 'Tan Son Nhat International Airport', N'Sân bay quốc tế Tân Sơn Nhất', 'Ho Chi Minh City', N'TP. Hồ Chí Minh', 'VN', 'Asia/Ho_Chi_Minh', 10.8188, 106.6519, 1, 0),
@@ -102,7 +102,7 @@ INSERT INTO [dbo].[Airports] ([Id], [IataCode], [NameEn], [NameVi], [CityEn], [C
 ('37F3E2D4-BCDE-4F01-2345-6789ABCDEF37', 'YVR', 'Vancouver International Airport', N'Sân bay quốc tế Vancouver', 'Vancouver', N'Vancouver', 'CA', 'America/Vancouver', 49.1967, -123.1815, 1, 0);
 GO
 
--- Seed Airplanes (Máy bay mẫu)
+-- Seed Airplanes (Sample airplanes)
 INSERT INTO [dbo].[Airplanes] ([Id], [AirlineId], [Model], [RegistrationNumber], [TotalCapacity], [IsDeleted]) VALUES
 ('81F3E2D4-BCDE-4F01-2345-6789ABCDEF01', 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', 'Boeing 787-9 Dreamliner', 'VN-A861', 274, 0),
 ('82F3E2D4-BCDE-4F01-2345-6789ABCDEF02', 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', 'Airbus A350-900', 'VN-A886', 305, 0),
@@ -110,21 +110,21 @@ INSERT INTO [dbo].[Airplanes] ([Id], [AirlineId], [Model], [RegistrationNumber],
 ('84F3E2D4-BCDE-4F01-2345-6789ABCDEF04', 'C3F3E2D4-BCDE-4F01-2345-6789ABCDEF03', 'Boeing 787-9 Dreamliner', 'VN-A819', 294, 0);
 GO
 
--- Seed Routes (Tuyến bay mẫu)
+-- Seed Routes (Sample routes)
 INSERT INTO [dbo].[Routes] ([Id], [AirlineId], [OriginAirportId], [DestinationAirportId], [DistanceKm], [EstimatedDurationMinutes], [IsDeleted]) VALUES
 ('91F3E2D4-BCDE-4F01-2345-6789ABCDEF01', 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', 'E5F3E2D4-BCDE-4F01-2345-6789ABCDEF05', 'F6F3E2D4-BCDE-4F01-2345-6789ABCDEF06', 1160, 130, 0), -- HAN to SGN (VN)
 ('92F3E2D4-BCDE-4F01-2345-6789ABCDEF02', 'B2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', 'F6F3E2D4-BCDE-4F01-2345-6789ABCDEF06', 'E5F3E2D4-BCDE-4F01-2345-6789ABCDEF05', 1160, 130, 0), -- SGN to HAN (VJ)
 ('93F3E2D4-BCDE-4F01-2345-6789ABCDEF03', 'A1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', 'E5F3E2D4-BCDE-4F01-2345-6789ABCDEF05', '07F3E2D4-BCDE-4F01-2345-6789ABCDEF07', 627, 85, 0);   -- HAN to DAD (VN)
 GO
 
--- Seed Flights (Chuyến bay mẫu)
+-- Seed Flights (Sample flights)
 INSERT INTO [dbo].[Flights] ([Id], [RouteId], [AirplaneId], [FlightNumber], [DepartureTime], [ArrivalTime], [BasePrice], [Currency], [Status], [IsDeleted], [CreatedAt], [UpdatedAt]) VALUES
 ('F1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', '91F3E2D4-BCDE-4F01-2345-6789ABCDEF01', '81F3E2D4-BCDE-4F01-2345-6789ABCDEF01', 'VN213', DATEADD(day, 1, GETUTCDATE()), DATEADD(minute, 130, DATEADD(day, 1, GETUTCDATE())), 80.00, 'USD', 0, 0, GETUTCDATE(), GETUTCDATE()),
 ('F2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', '92F3E2D4-BCDE-4F01-2345-6789ABCDEF02', '83F3E2D4-BCDE-4F01-2345-6789ABCDEF03', 'VJ120', DATEADD(day, 2, GETUTCDATE()), DATEADD(minute, 130, DATEADD(day, 2, GETUTCDATE())), 50.00, 'USD', 0, 0, GETUTCDATE(), GETUTCDATE());
 GO
 
--- Seed FlightSeats (Ghế của chuyến bay)
--- Cấu hình ghế cho VN213
+-- Seed FlightSeats (Flight seats)
+-- Seat configuration for VN213
 INSERT INTO [dbo].[FlightSeats] ([Id], [FlightId], [SeatNumber], [SeatClass], [PriceOverride], [IsAvailable], [IsExtraLegroom]) VALUES
 (NEWID(), 'F1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', '01A', 2, 150.00, 1, 1), -- Business
 (NEWID(), 'F1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', '01B', 2, 150.00, 1, 1),
@@ -133,7 +133,7 @@ INSERT INTO [dbo].[FlightSeats] ([Id], [FlightId], [SeatNumber], [SeatClass], [P
 (NEWID(), 'F1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', '11A', 0, NULL, 1, 0),
 (NEWID(), 'F1F3E2D4-BCDE-4F01-2345-6789ABCDEF01', '11B', 0, NULL, 1, 0);
 
--- Cấu hình ghế cho VJ120
+-- Seat configuration for VJ120
 INSERT INTO [dbo].[FlightSeats] ([Id], [FlightId], [SeatNumber], [SeatClass], [PriceOverride], [IsAvailable], [IsExtraLegroom]) VALUES
 (NEWID(), 'F2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', '01A', 1, 80.00, 1, 1),  -- Premium Economy
 (NEWID(), 'F2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', '01B', 1, 80.00, 1, 1),
@@ -187,7 +187,7 @@ INSERT INTO [dbo].[Coupons] ([Id], [Code], [Description], [DiscountType], [Disco
 ('C2F3E2D4-BCDE-4F01-2345-6789ABCDEF02', 'WELCOME10', N'Giảm 10$ cho đơn hàng đầu tiên', 1, 10.00, 0.00, 10.00, GETUTCDATE(), DATEADD(year, 1, GETUTCDATE()), 5000, 0, 1, 0);
 GO
 
--- Seed Campaigns (Chiến dịch marketing)
+-- Seed Campaigns (Marketing campaigns)
 INSERT INTO [dbo].[Campaigns] ([Id], [Title], [BannerUrl], [Content], [StartDate], [EndDate], [IsFeatured], [IsDeleted]) VALUES
 ('CC13E2D4-BCDE-4F01-2345-6789ABCDEF01', N'Siêu Hè Rực Rỡ 2025', 'https://images.vietnamairlines.com/banners/summer-2025.jpg', N'Giảm giá lên đến 20% các chặng bay nội địa và quốc tế dịp hè từ 01/06 đến 31/08/2025.', GETUTCDATE(), DATEADD(month, 3, GETUTCDATE()), 1, 0),
 ('CC23E2D4-BCDE-4F01-2345-6789ABCDEF02', N'Mùa Thu Vàng', 'https://images.vietnamairlines.com/banners/autumn-2025.jpg', N'Đón thu vàng cùng ngập tràn khuyến mãi vé bay khứ hồi giá cực tốt.', DATEADD(month, 3, GETUTCDATE()), DATEADD(month, 5, GETUTCDATE()), 0, 0);

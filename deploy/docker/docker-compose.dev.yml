@@ -22,21 +22,21 @@ services:
       - AiService__ModelStore__ReasoningEffort=${AI_SERVICE_REASONING_EFFORT}
       - LuckyPenny__MediatR__LicenseKey=${LUCKY_PENNY_MEDIATR_LICENSE_KEY}
       - Google__ClientId=${GOOGLE_CLIENT_ID}
-    # depends_on:
-    #   - sqlserver
+    depends_on:
+      - sqlserver
     restart: always
 
-  # sqlserver:
-  #   image: mcr.microsoft.com/mssql/server:2022-latest
-  #   environment:
-  #     ACCEPT_EULA: Y
-  #     SA_PASSWORD: Admin@123
-  #     MSSQL_PID: Developer
-  #   ports:
-  #     - "1433:1433"
-  #   volumes:
-  #     - sqlserver-data-dev:/var/opt/mssql
-  #   restart: always
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: Y
+      SA_PASSWORD: Admin@123
+      MSSQL_PID: Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data-dev:/var/opt/mssql
+    restart: always
 
 volumes:
   sqlserver-data-dev:

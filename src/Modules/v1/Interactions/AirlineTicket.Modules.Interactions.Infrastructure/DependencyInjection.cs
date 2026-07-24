@@ -18,16 +18,16 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInteractionsInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Bind cấu hình AiService:ModelStore
+        // Bind AiService:ModelStore configuration
         services.Configure<AiServiceOptions>(configuration.GetSection(AiServiceOptions.SectionName));
 
-        // Đăng ký DbContext
+        // Register DbContext
         services.AddDbContext<InteractionDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
-        // Đăng ký AI client dưới dạng typed HttpClient (dùng IHttpClientFactory để quản lý connection pooling).
+        // Register AI client as a typed HttpClient (using IHttpClientFactory to manage connection pooling).
         services.AddHttpClient<IAirTicketAiClient, OpenAiCompatibleQaClient>((sp, client) =>
         {
             var opts = sp.GetRequiredService<IOptions<AiServiceOptions>>().Value.ModelStore;

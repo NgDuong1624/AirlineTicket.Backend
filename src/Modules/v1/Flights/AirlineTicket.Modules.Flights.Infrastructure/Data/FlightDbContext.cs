@@ -23,10 +23,10 @@ public class FlightDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        // Cấu hình Schema riêng cho Module Flights (Modular Monolith)
-        modelBuilder.HasDefaultSchema("dbo");
+        // Configure separate schema for Flights Module (Modular Monolith)
+        modelBuilder.HasDefaultSchema("flights");
 
-        // Tự động apply tất cả IEntityTypeConfiguration nằm trong Assembly này
+        // Automatically apply all IEntityTypeConfiguration found in this Assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FlightDbContext).Assembly);
     }
 }

@@ -19,36 +19,36 @@ public sealed class ModelStoreOptions
     public const string SectionName = "ModelStore";
 
     /// <summary>
-    /// Base URL của endpoint tương thích OpenAI. Ví dụ: https://api.9router.com/v1
+    /// Base URL of the OpenAI-compatible endpoint. Example: https://api.9router.com/v1
     /// </summary>
     public string BaseUrl { get; set; } = "https://api.9router.com/v1";
 
     /// <summary>
-    /// API key để truy cập Model Store AI service.
-    /// KHÔNG commit giá trị thật vào source control — dùng User Secrets / biến môi trường.
+    /// API key to access the Model Store AI service.
+    /// DO NOT commit the real value to source control — use User Secrets / environment variables.
     /// </summary>
     public string ApiKey { get; set; } = string.Empty;
 
     /// <summary>
-    /// Tên model chat completion. Mặc định: deepseek-ai/deepseek-v4-flash.
+    /// Chat completion model name. Default: deepseek-ai/deepseek-v4-flash.
     /// </summary>
     public string Model { get; set; } = "deepseek-ai/deepseek-v4-flash";
 
-    /// <summary>Nhiệt độ sampling (0..2). Càng cao càng ngẫu nhiên.</summary>
+    /// <summary>Sampling temperature (0..2). Higher is more random.</summary>
     public double Temperature { get; set; } = 1.0;
 
     /// <summary>Nucleus sampling (0..1).</summary>
     public double TopP { get; set; } = 0.95;
 
-    /// <summary>Số token tối đa trong câu trả lời.</summary>
+    /// <summary>Maximum number of tokens in the response.</summary>
     public int MaxTokens { get; set; } = 16384;
 
-    /// <summary>Bật chế độ suy luận (chain-of-thought) của model nếu được hỗ trợ.</summary>
+    /// <summary>Enable model's reasoning mode (chain-of-thought) if supported.</summary>
     public bool EnableThinking { get; set; } = true;
 
-    /// <summary>Mức độ suy luận khi <see cref="EnableThinking"/> bật: low | medium | high.</summary>
+    /// <summary>Reasoning effort when <see cref="EnableThinking"/> is enabled: low | medium | high.</summary>
     public string ReasoningEffort { get; set; } = "high";
 
-    /// <summary>Thời gian chờ tối đa cho một request (giây).</summary>
+    /// <summary>Maximum timeout for a single request (seconds).</summary>
     public int TimeoutSeconds { get; set; } = 100;
 }

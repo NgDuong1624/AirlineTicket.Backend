@@ -4,15 +4,15 @@ using AirlineTicket.BuildingBlocks.CQRS;
 namespace AirlineTicket.Modules.Interactions.Application.Features.Qa;
 
 /// <summary>
-/// Query yêu cầu trả lời câu hỏi liên quan đến vé máy bay.
+/// Query requesting an answer to a question related to flight tickets.
 /// </summary>
 public record GetAirTicketAnswerQuery(string Question, IReadOnlyList<ChatMessageDto>? History = null, string? Currency = null) : IQuery<AirTicketAnswerResponse>;
 
 /// <summary>
-/// Response chứa câu trả lời và siêu dữ liệu đi kèm.
+/// Response containing the answer and accompanying metadata.
 /// </summary>
-/// <param name="Answer">Câu trả lời hiển thị cho người dùng.</param>
-/// <param name="Reasoning">Chuỗi suy luận của model (nếu có).</param>
-/// <param name="Model">Tên model đã phục vụ request.</param>
-/// <param name="Status">Trạng thái xử lý.</param>
+/// <param name="Answer">Answer displayed to the user.</param>
+/// <param name="Reasoning">Model's reasoning string (if any).</param>
+/// <param name="Model">Name of the model that served the request.</param>
+/// <param name="Status">Processing status.</param>
 public record AirTicketAnswerResponse(string Answer, string? Reasoning, string Model, string Status);
