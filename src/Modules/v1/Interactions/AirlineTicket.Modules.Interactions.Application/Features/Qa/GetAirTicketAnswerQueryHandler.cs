@@ -6,8 +6,8 @@ using AirlineTicket.BuildingBlocks.CQRS;
 namespace AirlineTicket.Modules.Interactions.Application.Features.Qa;
 
 /// <summary>
-/// Handler xử lý câu hỏi vé máy bay bằng cách gọi Model Store AI (endpoint tương thích OpenAI).
-/// Tách lời gọi HTTP ra <see cref="IAirTicketAiClient"/> (Infrastructure) để giữ tầng Application thuần khiết.
+/// Handler for processing flight ticket questions by calling Model Store AI (OpenAI-compatible endpoint).
+/// Separates HTTP calls into <see cref="IAirTicketAiClient"/> (Infrastructure) to keep the Application layer pure.
 /// </summary>
 public sealed class GetAirTicketAnswerQueryHandler : IQueryHandler<GetAirTicketAnswerQuery, AirTicketAnswerResponse>
 {

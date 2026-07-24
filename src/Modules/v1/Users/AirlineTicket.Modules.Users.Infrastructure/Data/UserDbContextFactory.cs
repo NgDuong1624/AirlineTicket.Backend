@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Design;
 namespace AirlineTicket.Modules.Users.Infrastructure.Data;
 
 /// <summary>
-/// Factory dùng cho design-time (dotnet ef migrations/database update).
-/// Cho phép EF Tools tạo DbContext mà không cần build project API host.
-/// Lấy chuỗi kết nối từ biến môi trường ConnectionStrings__DefaultConnection.
+/// Factory used for design-time (dotnet ef migrations/database update).
+/// Allows EF Tools to create DbContext without building the API host project.
+/// Retrieves the connection string from the ConnectionStrings__DefaultConnection environment variable.
 /// </summary>
 public class UserDbContextFactory : IDesignTimeDbContextFactory<UserDbContext>
 {

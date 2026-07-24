@@ -6,7 +6,7 @@
 USE [AirlineTicketDb]
 GO
 
--- 1. Triggers cho Schema Users (was identity)
+-- 1. Triggers for Users Schema (was identity)
 CREATE TRIGGER [dbo].[TR_Users_SoftDelete]
 ON [dbo].[Users]
 INSTEAD OF DELETE
@@ -19,7 +19,7 @@ BEGIN
 END
 GO
 
--- 2. Triggers cho Schema Flights
+-- 2. Triggers for Flights Schema
 CREATE TRIGGER [dbo].[TR_Airlines_SoftDelete]
 ON [dbo].[Airlines]
 INSTEAD OF DELETE
@@ -92,7 +92,7 @@ BEGIN
 END
 GO
 
--- 3. Triggers cho Schema Bookings
+-- 3. Triggers for Bookings Schema
 CREATE TRIGGER [dbo].[TR_Bookings_SoftDelete]
 ON [dbo].[Bookings]
 INSTEAD OF DELETE
@@ -105,7 +105,7 @@ BEGIN
 END
 GO
 
--- 4. Triggers cho Schema Promotions
+-- 4. Triggers for Promotions Schema
 CREATE TRIGGER [dbo].[TR_Coupons_SoftDelete]
 ON [dbo].[Coupons]
 INSTEAD OF DELETE
@@ -130,7 +130,7 @@ BEGIN
 END
 GO
 
--- 5. Triggers cho Schema Interactions
+-- 5. Triggers for Interactions Schema
 CREATE TRIGGER [dbo].[TR_Reviews_SoftDelete]
 ON [dbo].[Reviews]
 INSTEAD OF DELETE
@@ -143,7 +143,7 @@ BEGIN
 END
 GO
 
--- 6. Triggers cho Schema CMS
+-- 6. Triggers for CMS Schema
 CREATE TRIGGER [dbo].[TR_Categories_SoftDelete]
 ON [dbo].[Categories]
 INSTEAD OF DELETE

@@ -1,6 +1,6 @@
 namespace AirlineTicket.Modules.Flights.Application;
 
 /// <summary>
-/// Marker type để xác định Assembly của Flights Application Module
+/// Marker type to identify the Assembly of the Flights Application Module
 /// </summary>
 public sealed class FlightsApplicationMarker;

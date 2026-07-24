@@ -14,8 +14,8 @@ using Microsoft.Extensions.Options;
 namespace AirlineTicket.Modules.Interactions.Infrastructure.Ai;
 
 /// <summary>
-/// Cài đặt <see cref="IAirTicketAiClient"/> gọi tới endpoint Chat Completions tương thích OpenAI.
-/// Hỗ trợ Tool Calling (Function Calling) để lấy dữ liệu thực tế từ module Flights.
+/// Implements <see cref="IAirTicketAiClient"/> calling an OpenAI-compatible Chat Completions endpoint.
+/// Supports Tool Calling (Function Calling) to fetch real data from the Flights module.
 /// </summary>
 public sealed class OpenAiCompatibleQaClient : IAirTicketAiClient
 {
@@ -285,7 +285,7 @@ public sealed class OpenAiCompatibleQaClient : IAirTicketAiClient
 
         [JsonPropertyName("tools")] public ToolDefinition[]? Tools { get; init; }
 
-        /// <summary>Tương đương extra_body.chat_template_kwargs của OpenAI Python SDK.</summary>
+        /// <summary>Equivalent to extra_body.chat_template_kwargs in the OpenAI Python SDK.</summary>
         [JsonPropertyName("chat_template_kwargs")] public ChatTemplateKwargs? ChatTemplateKwargs { get; init; }
     }
 
