@@ -391,15 +391,16 @@ GO
 
 CREATE TABLE [notifications].[Notifications] (
     [Id] UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
-    [UserId] UNIQUEIDENTIFIER NULL,
-    [Recipient] NVARCHAR(255) NOT NULL, -- Email or Phone
-    [Subject] NVARCHAR(255) NULL,
-    [Content] NVARCHAR(MAX) NOT NULL,
-    [Type] INT NOT NULL, -- 0: Email, 1: SMS, 2: Push, 3: SignalR
-    [Status] INT DEFAULT 0, -- 0: Pending, 1: Sent, 2: Failed
-    [RetryCount] INT DEFAULT 0,
-    [ErrorMessage] NVARCHAR(MAX) NULL,
-    [SentAt] DATETIME2 NULL,
+    [UserId] UNIQUEIDENTIFIER NULL, -- Recipient User ID
+    [Type] NVARCHAR(100) NOT NULL, -- Notification category: FlightCreated, FlightStatusChanged, ProfileUpdated, SystemError
+    [Severity] INT NOT NULL DEFAULT 0, -- 0: Info, 1: Critical
+    [Title] NVARCHAR(255) NOT NULL,
+    [Content] NVARCHAR(MAX) NULL,
+    [ActionUrl] NVARCHAR(MAX) NULL, -- Deep link to redirect on click
+    [ReferenceId] UNIQUEIDENTIFIER NULL, -- Source entity ID (FlightId, AirlineId, etc.)
+    [ReferenceType] NVARCHAR(100) NULL, -- Source entity type: Flight, Airline, Booking
+    [IsRead] BIT NOT NULL DEFAULT 0,
+    [IsDeleted] BIT NOT NULL DEFAULT 0,
     [CreatedAt] DATETIME2 DEFAULT GETUTCDATE(),
     CONSTRAINT [FK_Notifications_Users] FOREIGN KEY ([UserId]) REFERENCES [identity].[Users]([Id])
 )
