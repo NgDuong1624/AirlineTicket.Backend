@@ -1,81 +1,76 @@
 # Notifications Module
 
 ## Overview
-The **Notifications Module** manages all outbound multi-channel communications (Email, SMS, Push, and SignalR) for the Airline Ticket platform. It operates as an asynchronous outbox system, ensuring reliable delivery even during high traffic or external provider downtime.
+The **Notifications Module** manages real-time in-app communications for Staff, Partner, and Admin roles. Notifications are triggered by system events (e.g., flight creation, status changes, profile updates, system errors) and delivered instantly via SignalR, with persistent storage for offline users.
 
 ---
 
 ## How It Works (For End Users & Clients)
-1. **Triggering a Notification**: When an event occurs (e.g., booking confirmation, flight delay), the system creates a `Notification` record in the database with a `Pending` status.
-2. **Template Rendering**: The system resolves the appropriate `NotificationTemplate` based on the event code (e.g., `BOOKING_CONFIRMED`) and the user's preferred language (`vi` or `en`). It replaces placeholders (like `{{PassengerName}}` or `{{PnrCode}}`) with actual transaction data.
-3. **Background Processing**: A background worker (`NotificationProcessingBackgroundService`) polls the database every 10 seconds for `Pending` notifications.
-4. **Delivery**: The worker dispatches each notification to the correct channel provider (Email, SMS, or Push).
-5. **Retry Mechanism**: If a delivery fails, the system logs the error, increments the `RetryCount`, and marks the status as `Failed`. The background worker will retry sending failed notifications up to a configured limit.
-
----
-
-## Notification Channels
-- **Email (Type 0)**: Used for rich-text communications like booking confirmations, e-tickets, and marketing campaigns.
-- **SMS (Type 1)**: Used for urgent alerts, OTP verification, and quick updates.
-- **Push (Type 2)**: Used for mobile app notifications (e.g., gate changes, check-in reminders).
-- **SignalR (Type 3)**: Used for real-time in-app alerts while the user is actively browsing the website.
+1. **Triggering a Notification**: When a domain event occurs (e.g., `FlightCreatedEvent`), the system creates a `Notification` record in the database.
+2. **Real-time Delivery**: The system immediately pushes the notification to the target user via `AirlineTicket.SignalR` (`NotificationHub`).
+3. **State Management**: The frontend client (React/Zustand) receives the SignalR event, updates the unread count, and displays a toast/bell indicator.
+4. **User Interaction**: When a user clicks a notification, it is marked as read via API, and the user is redirected to the relevant `ActionUrl`.
 
 ---
 
 ## Domain Entities & Data Model
 
 ### Notification
-Represents an individual message queued or sent by the system.
+Represents an individual in-app alert.
 - `Id` (Guid): Unique identifier.
-- `UserId` (Guid?): Optional link to the recipient's user account.
-- `Recipient` (string): Destination address (Email address, phone number, or device token).
-- `Subject` (string?): Subject line (primarily for Emails).
-- `Content` (string): The rendered message body.
-- `Type` (int): Channel type (`0` = Email, `1` = SMS, `2` = Push, `3` = SignalR).
-- `Status` (int): Delivery status (`0` = Pending, `1` = Sent, `2` = Failed).
-- `RetryCount` (int): Number of failed delivery attempts.
-- `ErrorMessage` (string?): Error details if the delivery failed.
-- `SentAt` (DateTime?): UTC timestamp when successfully sent.
-- `CreatedAt` (DateTime): UTC timestamp when the notification was queued.
+- `UserId` (Guid?): Recipient User ID.
+- `Type` (string): Notification category (e.g., `FlightCreated`, `FlightStatusChanged`, `SystemError`).
+- `Severity` (int): `0` = Info, `1` = Critical.
+- `Title` (string): Short title.
+- `Content` (string?): Detailed message.
+- `ActionUrl` (string?): Deep link to redirect on click (e.g., `/staff/flights/{id}/seats`).
+- `ReferenceId` (Guid?): Source entity ID (FlightId, AirlineId, etc.).
+- `ReferenceType` (string?): Source entity type (`Flight`, `Airline`, `Booking`).
+- `IsRead` (bool): Read status.
+- `IsDeleted` (bool): Soft delete flag.
+- `CreatedAt` (DateTime): UTC timestamp.
 
-### NotificationTemplate
-Pre-defined message templates supporting localization and dynamic variables.
-- `Id` (Guid): Unique identifier.
-- `Code` (string): Unique template identifier (e.g., `BOOKING_CONFIRMED`, `FLIGHT_DELAYED`).
-- `Subject` (string): Default subject line.
-- `BodyTemplate` (string): Message body containing placeholders (e.g., `Hello {{PassengerName}}`).
-- `Language` (string): Language code (e.g., `vi`, `en`).
-- `CreatedAt` (DateTime): UTC timestamp when the template was created.
+---
+
+## Backend Architecture
+
+### 1. Domain Layer (`Modules/v1/Notifications`)
+- `Notification` entity.
+- `NotificationSeverity` enum.
+- `INotificationRepository`.
+
+### 2. Infrastructure Layer (`Modules/v1/Notifications`)
+- `NotificationRepository` (EF Core).
+- Entity Framework mapping for `Notification`.
+
+### 3. Application Layer (`Modules/v1/Notifications`)
+- **Commands**: `CreateNotificationCommand`, `MarkNotificationAsReadCommand`, `MarkAllNotificationsAsReadCommand`, `DeleteNotificationCommand`.
+- **Queries**: `GetUnreadNotificationCountQuery`, `GetNotificationsQuery` (Paginated).
+- **Event Handlers**: Listen to domain events to trigger `CreateNotificationCommand`.
+
+### 4. Real-time Layer (`AirlineTicket.SignalR`)
+- `NotificationHub`: Pushes notifications to specific users (`Clients.User(userId).SendAsync("ReceiveNotification", notification)`).
+
+### 5. API Layer (`AirlineTicket.Api`)
+- `NotificationsController`: Endpoints for queries and commands.
 
 ---
 
 ## API Reference
 
-### Authentication Roles
-- **PartnerOrStaff**: Requires authentication as an Airline Admin, Airline Staff, or System Admin.
-
 ### Endpoints
 
-| Method | Path | Auth | Description | Request Body / Response |
-|--------|------|------|-------------|-------------------------|
-| **GET** | `/api/v1/notifications` | None | Health check endpoint for the notification module. | Returns status `200 OK`. |
-| **GET** | `/api/v1/notifications/manage` | PartnerOrStaff | Retrieves the last 100 queued notifications. | Returns a list of `Notification` records. |
-| **GET** | `/api/v1/notifications/manage/templates` | PartnerOrStaff | Retrieves all registered notification templates. | Returns a list of `NotificationTemplate` records. |
-| **POST** | `/api/v1/notifications/manage/templates` | PartnerOrStaff | Registers a new notification template. | **JSON Body:**<br>```json{"code": "STRING", "subject": "STRING", "bodyTemplate": "STRING", "language": "STRING"}``` |
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| **GET** | `/api/v1/notifications` | Authenticated | Retrieves paginated notifications for the current user. |
+| **GET** | `/api/v1/notifications/unread-count` | Authenticated | Retrieves the unread notification count. |
+| **PUT** | `/api/v1/notifications/{id}/read` | Authenticated | Marks a specific notification as read. |
+| **PUT** | `/api/v1/notifications/read-all` | Authenticated | Marks all notifications as read for the current user. |
+| **DELETE** | `/api/v1/notifications/{id}` | Authenticated | Soft deletes a notification. |
 
 ---
 
-## Configuration (`appsettings.json`)
-Configure SMTP credentials and external gateways under the notification section:
-```json
-{
-  "Email": {
-    "SmtpHost": "smtp.example.com",
-    "SmtpPort": 587,
-    "SmtpUsername": "your-username",
-    "SmtpPassword": "your-password",
-    "FromAddress": "noreply@skyviet.com",
-    "FromName": "SkyViet"
-  }
-}
-```
+## Integration Points (Per Role)
+- **Staff**: Receives notification when Partner creates Flight. `ActionUrl` -> `/staff/flights/{flightId}/seats`.
+- **Partner**: Receives notification when Flight status changes or Admin updates their profile.
+- **Admin**: Receives notification when system error occurs.
