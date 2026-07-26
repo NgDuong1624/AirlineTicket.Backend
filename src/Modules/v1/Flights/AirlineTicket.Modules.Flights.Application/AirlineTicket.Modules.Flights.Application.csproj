@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Application\AirlineTicket.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\AirlineTicket.Modules.Flights.Domain\AirlineTicket.Modules.Flights.Domain.csproj" />
+    <ProjectReference Include="..\..\Notifications\AirlineTicket.Modules.Notifications.Application\AirlineTicket.Modules.Notifications.Application.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

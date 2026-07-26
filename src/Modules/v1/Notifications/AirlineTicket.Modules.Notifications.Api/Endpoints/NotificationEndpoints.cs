@@ -1,8 +1,14 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.Api.Auth;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Auth;
 using AirlineTicket.BuildingBlocks.Responses;
+using AirlineTicket.Modules.Notifications.Application.Features.Commands;
+using AirlineTicket.Modules.Notifications.Application.Features.Queries;
 using AirlineTicket.Modules.Notifications.Application.Features.Status;
+using AirlineTicket.Modules.Notifications.Application.Features.Templates;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -18,8 +24,8 @@ public class NotificationEndpoints : IEndpoint
         var group = app.MapGroup("/api/v1/notifications")
             .WithTags("Notifications Module");
 
-        // GET /api/v1/notifications — Get notifications status
-        group.MapGet("/", async (
+        // GET /api/v1/notifications/status — Get notifications status
+        group.MapGet("/status", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
@@ -31,5 +37,205 @@ public class NotificationEndpoints : IEndpoint
             .WithSummary("Get notifications status")
             .Produces(200)
             .Produces(400);
+
+        // GET /api/v1/notifications — Get user notifications
+        group.MapGet("/", async (
+                [FromQuery] int pageNumber,
+                [FromQuery] int pageSize,
+                HttpContext context,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userId = context.User.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+
+                var query = new GetNotificationsQuery(userId.Value, pageNumber == 0 ? 1 : pageNumber, pageSize == 0 ? 10 : pageSize);
+                var result = await sender.Send(query, ct);
+                return Results.Ok(result);
+            })
+            .RequireAuthorization()
+            .WithName("GetUserNotifications")
+            .WithSummary("Get paginated notifications for the current user")
+            .Produces(200)
+            .Produces(401);
+
+        // GET /api/v1/notifications/unread-count — Get unread count
+        group.MapGet("/unread-count", async (
+                HttpContext context,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userId = context.User.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+
+                var query = new GetUnreadNotificationCountQuery(userId.Value);
+                var count = await sender.Send(query, ct);
+                return Results.Ok(new { Count = count });
+            })
+            .RequireAuthorization()
+            .WithName("GetUnreadNotificationCount")
+            .WithSummary("Get unread notification count for the current user")
+            .Produces(200)
+            .Produces(401);
+
+        // PUT /api/v1/notifications/{id}/read — Mark as read
+        group.MapPut("/{id:guid}/read", async (
+                Guid id,
+                HttpContext context,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userId = context.User.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+
+                var command = new MarkNotificationAsReadCommand(id, userId.Value);
+                var result = await sender.Send(command, ct);
+                return result ? Results.NoContent() : Results.NotFound();
+            })
+            .RequireAuthorization()
+            .WithName("MarkNotificationAsRead")
+            .WithSummary("Mark a specific notification as read")
+            .Produces(204)
+            .Produces(401)
+            .Produces(404);
+
+        // PUT /api/v1/notifications/read-all — Mark all as read
+        group.MapPut("/read-all", async (
+                HttpContext context,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userId = context.User.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+
+                var command = new MarkAllNotificationsAsReadCommand(userId.Value);
+                var result = await sender.Send(command, ct);
+                return result ? Results.NoContent() : Results.BadRequest();
+            })
+            .RequireAuthorization()
+            .WithName("MarkAllNotificationsAsRead")
+            .WithSummary("Mark all notifications as read for the current user")
+            .Produces(204)
+            .Produces(400)
+            .Produces(401);
+
+        // DELETE /api/v1/notifications/{id} — Delete notification
+        group.MapDelete("/{id:guid}", async (
+                Guid id,
+                HttpContext context,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userId = context.User.GetUserId();
+                if (userId is null) return Results.Unauthorized();
+
+                var command = new DeleteNotificationCommand(id, userId.Value);
+                var result = await sender.Send(command, ct);
+                return result ? Results.NoContent() : Results.NotFound();
+            })
+            .RequireAuthorization()
+            .WithName("DeleteNotification")
+            .WithSummary("Soft delete a notification")
+            .Produces(204)
+            .Produces(401)
+            .Produces(404);
+
+        // ==========================================
+        // TEMPLATE CRUD ENDPOINTS (i18n)
+        // ==========================================
+        var templateGroup = app.MapGroup("/api/v1/notifications/templates")
+            .WithTags("Notification Templates")
+            .RequireAuthorization(); // Admin/Staff only in practice
+
+        // GET /api/v1/notifications/templates — Get all templates
+        templateGroup.MapGet("/", async (
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new GetTemplatesQuery();
+                var result = await sender.Send(query, ct);
+                return Results.Ok(result);
+            })
+            .WithName("GetTemplates")
+            .WithSummary("Get all notification templates")
+            .Produces(200);
+
+        // GET /api/v1/notifications/templates/{id} — Get template by ID
+        templateGroup.MapGet("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new GetTemplateByIdQuery(id);
+                var result = await sender.Send(query, ct);
+                return result is not null ? Results.Ok(result) : Results.NotFound();
+            })
+            .WithName("GetTemplateById")
+            .WithSummary("Get notification template by ID")
+            .Produces(200)
+            .Produces(404);
+
+        // POST /api/v1/notifications/templates — Create template
+        templateGroup.MapPost("/", async (
+                [FromBody] CreateTemplateRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                // Validate language matches routing locales: vi, en, zh, ja, ko, fr
+                var allowedLocales = new[] { "vi", "en", "zh", "ja", "ko", "fr" };
+                if (Array.IndexOf(allowedLocales, request.Language.ToLower()) < 0)
+                {
+                    return Results.BadRequest($"Invalid language. Allowed locales: {string.Join(", ", allowedLocales)}");
+                }
+
+                var command = new CreateTemplateCommand(request.Code, request.Subject, request.BodyTemplate, request.Language);
+                var id = await sender.Send(command, ct);
+                return Results.Created($"/api/v1/notifications/templates/{id}", new { Id = id });
+            })
+            .WithName("CreateTemplate")
+            .WithSummary("Create a new notification template")
+            .Produces(201)
+            .Produces(400);
+
+        // PUT /api/v1/notifications/templates/{id} — Update template
+        templateGroup.MapPut("/{id:guid}", async (
+                Guid id,
+                [FromBody] UpdateTemplateRequest request,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var allowedLocales = new[] { "vi", "en", "zh", "ja", "ko", "fr" };
+                if (Array.IndexOf(allowedLocales, request.Language.ToLower()) < 0)
+                {
+                    return Results.BadRequest($"Invalid language. Allowed locales: {string.Join(", ", allowedLocales)}");
+                }
+
+                var command = new UpdateTemplateCommand(id, request.Code, request.Subject, request.BodyTemplate, request.Language);
+                var result = await sender.Send(command, ct);
+                return result ? Results.NoContent() : Results.NotFound();
+            })
+            .WithName("UpdateTemplate")
+            .WithSummary("Update an existing notification template")
+            .Produces(204)
+            .Produces(400)
+            .Produces(404);
+
+        // DELETE /api/v1/notifications/templates/{id} — Delete template
+        templateGroup.MapDelete("/{id:guid}", async (
+                Guid id,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var command = new DeleteTemplateCommand(id);
+                var result = await sender.Send(command, ct);
+                return result ? Results.NoContent() : Results.NotFound();
+            })
+            .WithName("DeleteTemplate")
+            .WithSummary("Delete a notification template")
+            .Produces(204)
+            .Produces(404);
     }
 }
+
+public record CreateTemplateRequest(string Code, string Subject, string BodyTemplate, string Language);
+public record UpdateTemplateRequest(string Code, string Subject, string BodyTemplate, string Language);

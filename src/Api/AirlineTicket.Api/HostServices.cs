@@ -213,12 +213,17 @@ public class BookingConfirmedEventHandler : INotificationHandler<BookingConfirme
 
         var notificationEntity = new Notification
         {
-            Type = 0, // Email
-            Status = 0, // Pending
-            Recipient = bookingDetails.ContactEmail,
-            Content = emailContent
+            UserId = null, // We don't have UserId in BookingConfirmedDetailsDto, so we leave it null or we could fetch it.
+            Type = "BookingConfirmed",
+            Severity = 0, // Info
+            Title = "Booking Confirmed",
+            Content = emailContent,
+            ActionUrl = $"/bookings/detail/{bookingDetails.PnrCode}",
+            ReferenceId = notification.BookingId,
+            ReferenceType = "Booking"
         };
 
         await _notificationRepository.AddAsync(notificationEntity);
+        await _notificationRepository.SaveChangesAsync();
     }
 }
