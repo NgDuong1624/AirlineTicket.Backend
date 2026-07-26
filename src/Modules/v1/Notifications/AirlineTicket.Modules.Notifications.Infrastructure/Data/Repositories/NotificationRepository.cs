@@ -25,66 +25,36 @@ public class NotificationRepository : INotificationRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<Notification>> GetPendingAsync(int batchSize = 10)
+    public async Task<Notification?> GetByIdAsync(Guid id)
     {
-        return await _context.Notifications
-            .Where(n => n.Status == 0) // Pending
-            .OrderBy(n => n.CreatedAt)
-            .Take(batchSize)
-            .ToListAsync();
+        return await _context.Notifications.FindAsync(id);
     }
 
-    public async Task<List<Notification>> GetAllAsync()
+    public async Task<List<Notification>> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize)
     {
         return await _context.Notifications
+            .Where(n => n.UserId == userId && !n.IsDeleted)
             .OrderByDescending(n => n.CreatedAt)
-            .Take(100)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync();
     }
 
-    public async Task MarkSentAsync(Guid id, DateTime? sentAt = null)
+    public async Task<int> GetUnreadCountByUserIdAsync(Guid userId)
     {
-        var notification = await _context.Notifications.FindAsync(id);
-        if (notification != null)
-        {
-            notification.Status = 1; // Sent
-            notification.SentAt = sentAt ?? DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-        }
+        return await _context.Notifications
+            .CountAsync(n => n.UserId == userId && !n.IsRead && !n.IsDeleted);
     }
 
-    public async Task MarkFailedAsync(Guid id, string errorMessage)
+    public async Task UpdateAsync(Notification notification)
     {
-        var notification = await _context.Notifications.FindAsync(id);
-        if (notification != null)
-        {
-            notification.Status = 2; // Failed
-            notification.ErrorMessage = errorMessage;
-            notification.RetryCount++;
-            await _context.SaveChangesAsync();
-        }
-    }
-}
-
-public class TemplateRepository : ITemplateRepository
-{
-    private readonly NotificationDbContext _context;
-
-    public TemplateRepository(NotificationDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<List<NotificationTemplate>> GetAllAsync()
-    {
-        return await _context.NotificationTemplates.ToListAsync();
-    }
-
-    public async Task<Guid> CreateAsync(NotificationTemplate template)
-    {
-        _context.NotificationTemplates.Add(template);
+        _context.Notifications.Update(notification);
         await _context.SaveChangesAsync();
-        return template.Id;
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
     }
 }
 

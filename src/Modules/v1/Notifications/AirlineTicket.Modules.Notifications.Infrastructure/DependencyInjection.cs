@@ -1,6 +1,4 @@
 using AirlineTicket.Modules.Notifications.Application.Contracts;
-using AirlineTicket.Modules.Notifications.Application.BackgroundServices;
-using AirlineTicket.Modules.Notifications.Infrastructure.BackgroundServices;
 using AirlineTicket.Modules.Notifications.Infrastructure.Data;
 using AirlineTicket.Modules.Notifications.Infrastructure.Data.Repositories;
 using AirlineTicket.Modules.Notifications.Infrastructure.Services;
@@ -21,20 +19,13 @@ public static class DependencyInjection
 
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<ITemplateRepository, TemplateRepository>();
-        services.AddScoped<IEmailSender, EmailSender>();
-        services.AddScoped<ISmsSender, SmsSender>();
-        services.AddSingleton<PushSender>();
-        services.AddScoped<INotificationSender, NotificationSender>();
+        services.AddScoped<INotificationTemplateService, NotificationTemplateService>();
 
         return services;
     }
 
     public static IServiceCollection AddNotificationsBackgroundJobs(this IServiceCollection services)
     {
-        services.AddHostedService<NotificationProcessingBackgroundService>();
-        services.AddHostedService<EmailSmsMassSender>();
-        services.AddHostedService<FlightDelayNotifierJob>();
-
         return services;
     }
 }

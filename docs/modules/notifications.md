@@ -52,7 +52,7 @@ Represents an individual in-app alert.
 - `NotificationHub`: Pushes notifications to specific users (`Clients.User(userId).SendAsync("ReceiveNotification", notification)`).
 
 ### 5. API Layer (`AirlineTicket.Api`)
-- `NotificationsController`: Endpoints for queries and commands.
+- Minimal API Endpoints in `NotificationEndpoints.cs` for queries and commands.
 
 ---
 
