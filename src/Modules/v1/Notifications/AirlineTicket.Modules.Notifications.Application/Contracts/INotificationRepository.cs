@@ -11,6 +11,7 @@ public interface INotificationRepository
     Task AddAsync(Notification notification);
     Task<Notification?> GetByIdAsync(Guid id);
     Task<List<Notification>> GetByUserIdAsync(Guid userId, int pageNumber, int pageSize);
+    Task<List<Notification>> GetAllAsync(int pageNumber, int pageSize);
     Task<int> GetUnreadCountByUserIdAsync(Guid userId);
     Task UpdateAsync(Notification notification);
     Task SaveChangesAsync();

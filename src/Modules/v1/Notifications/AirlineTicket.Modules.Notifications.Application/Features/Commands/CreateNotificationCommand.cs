@@ -1,10 +1,11 @@
+using System;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Domain.Entities;
 using MediatR;
-using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AirlineTicket.Modules.Notifications.Application.Features.Commands;
 
@@ -35,8 +36,6 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
 
         if (template == null)
         {
-            // Fallback or error handling if template not found
-            // For now, let's throw an exception or log an error
             throw new InvalidOperationException($"Notification template '{request.TemplateCode}' for language '{request.Language}' not found.");
         }
 
@@ -51,6 +50,8 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
             Severity = request.Severity,
             Title = title,
             Content = content,
+            TemplateCode = request.TemplateCode,
+            TemplateParameters = JsonSerializer.Serialize(request.TemplateParameters),
             ActionUrl = request.ActionUrl,
             ReferenceId = request.ReferenceId,
             ReferenceType = request.ReferenceType,
@@ -61,8 +62,6 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
 
         await _repository.AddAsync(notification);
         await _repository.SaveChangesAsync();
-
-        // TODO: Trigger SignalR push here
 
         return notification.Id;
     }

@@ -40,6 +40,16 @@ public class NotificationRepository : INotificationRepository
             .ToListAsync();
     }
 
+    public async Task<List<Notification>> GetAllAsync(int pageNumber, int pageSize)
+    {
+        return await _context.Notifications
+            .Where(n => !n.IsDeleted)
+            .OrderByDescending(n => n.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
     public async Task<int> GetUnreadCountByUserIdAsync(Guid userId)
     {
         return await _context.Notifications
