@@ -396,6 +396,8 @@ CREATE TABLE [notifications].[Notifications] (
     [Severity] INT NOT NULL DEFAULT 0, -- 0: Info, 1: Critical
     [Title] NVARCHAR(255) NOT NULL,
     [Content] NVARCHAR(MAX) NULL,
+    [TemplateCode] NVARCHAR(100) NULL,
+    [TemplateParameters] NVARCHAR(MAX) NULL,
     [ActionUrl] NVARCHAR(MAX) NULL, -- Deep link to redirect on click
     [ReferenceId] UNIQUEIDENTIFIER NULL, -- Source entity ID (FlightId, AirlineId, etc.)
     [ReferenceType] NVARCHAR(100) NULL, -- Source entity type: Flight, Airline, Booking

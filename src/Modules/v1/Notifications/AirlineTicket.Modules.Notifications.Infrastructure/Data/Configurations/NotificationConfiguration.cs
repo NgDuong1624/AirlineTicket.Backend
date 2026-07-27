@@ -25,6 +25,10 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 
         builder.Property(x => x.Content);
 
+        builder.Property(x => x.TemplateCode);
+
+        builder.Property(x => x.TemplateParameters);
+
         builder.Property(x => x.ActionUrl);
 
         builder.Property(x => x.ReferenceId);

@@ -10,6 +10,8 @@ public class Notification
     public int Severity { get; set; } // 0: Info, 1: Critical
     public string Title { get; set; } = string.Empty; // Notification title
     public string? Content { get; set; }
+    public string? TemplateCode { get; set; } // Added for dynamic rendering
+    public string? TemplateParameters { get; set; } // JSON string
     public string? ActionUrl { get; set; } // Deep link to redirect on click
     public Guid? ReferenceId { get; set; } // Source entity ID (FlightId, AirlineId, etc.)
     public string? ReferenceType { get; set; } // Source entity type: Flight, Airline, Booking

@@ -42,6 +42,7 @@ public class NotificationEndpoints : IEndpoint
         group.MapGet("/", async (
                 [FromQuery] int pageNumber,
                 [FromQuery] int pageSize,
+                [FromQuery] string? locale,
                 HttpContext context,
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -49,7 +50,7 @@ public class NotificationEndpoints : IEndpoint
                 var userId = context.User.GetUserId();
                 if (userId is null) return Results.Unauthorized();
 
-                var query = new GetNotificationsQuery(userId.Value, pageNumber == 0 ? 1 : pageNumber, pageSize == 0 ? 10 : pageSize);
+                var query = new GetNotificationsQuery(userId.Value, pageNumber == 0 ? 1 : pageNumber, pageSize == 0 ? 10 : pageSize, locale ?? "en");
                 var result = await sender.Send(query, ct);
                 return Results.Ok(result);
             })
@@ -139,6 +140,24 @@ public class NotificationEndpoints : IEndpoint
             .Produces(204)
             .Produces(401)
             .Produces(404);
+
+        // GET /api/v1/notifications/admin — Get all notifications (Admin)
+        group.MapGet("/admin", async (
+                [FromQuery] int pageNumber,
+                [FromQuery] int pageSize,
+                [FromQuery] string? locale,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var query = new GetAllNotificationsQuery(pageNumber == 0 ? 1 : pageNumber, pageSize == 0 ? 10 : pageSize, locale ?? "en");
+                var result = await sender.Send(query, ct);
+                return Results.Ok(result);
+            })
+            .RequireAuthorization()
+            .WithName("GetAllNotifications")
+            .WithSummary("Get all notifications (Admin)")
+            .Produces(200)
+            .Produces(401);
 
         // ==========================================
         // TEMPLATE CRUD ENDPOINTS (i18n)
