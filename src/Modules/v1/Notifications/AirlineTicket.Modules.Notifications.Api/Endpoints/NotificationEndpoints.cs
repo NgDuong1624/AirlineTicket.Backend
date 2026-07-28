@@ -21,8 +21,12 @@ public class NotificationEndpoints : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/v1/notifications")
+        var group = app.MapGroup("/api/notifications")
             .WithTags("Notifications Module");
+
+        var adminGroup = app.MapGroup("/api/admin/notifications")
+            .WithTags("Notifications Admin Module")
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // GET /api/v1/notifications/status — Get notifications status
         group.MapGet("/status", async (
@@ -54,7 +58,7 @@ public class NotificationEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return Results.Ok(result);
             })
-            .RequireAuthorization()
+
             .WithName("GetUserNotifications")
             .WithSummary("Get paginated notifications for the current user")
             .Produces(200)
@@ -141,8 +145,12 @@ public class NotificationEndpoints : IEndpoint
             .Produces(401)
             .Produces(404);
 
-        // GET /api/v1/notifications/admin — Get all notifications (Admin)
-        group.MapGet("/admin", async (
+        // ==========================================
+        // ADMIN NOTIFICATION ENDPOINTS
+        // ==========================================
+
+        // GET /api/admin/notifications — Get all notifications (Admin)
+        adminGroup.MapGet("/", async Task<IResult> (
                 [FromQuery] int pageNumber,
                 [FromQuery] int pageSize,
                 [FromQuery] string? locale,
@@ -153,20 +161,16 @@ public class NotificationEndpoints : IEndpoint
                 var result = await sender.Send(query, ct);
                 return Results.Ok(result);
             })
-            .RequireAuthorization()
             .WithName("GetAllNotifications")
             .WithSummary("Get all notifications (Admin)")
-            .Produces(200)
-            .Produces(401);
+            .Produces(200);
 
         // ==========================================
         // TEMPLATE CRUD ENDPOINTS (i18n)
         // ==========================================
-        var templateGroup = app.MapGroup("/api/v1/notifications/templates")
-            .WithTags("Notification Templates")
-            .RequireAuthorization(); // Admin/Staff only in practice
+        var templateGroup = adminGroup.MapGroup("/templates");
 
-        // GET /api/v1/notifications/templates — Get all templates
+        // GET /api/admin/notifications/templates — Get all templates
         templateGroup.MapGet("/", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -179,7 +183,7 @@ public class NotificationEndpoints : IEndpoint
             .WithSummary("Get all notification templates")
             .Produces(200);
 
-        // GET /api/v1/notifications/templates/{id} — Get template by ID
+        // GET /api/admin/notifications/templates/{id} — Get template by ID
         templateGroup.MapGet("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
@@ -194,7 +198,7 @@ public class NotificationEndpoints : IEndpoint
             .Produces(200)
             .Produces(404);
 
-        // POST /api/v1/notifications/templates — Create template
+        // POST /api/admin/notifications/templates — Create template
         templateGroup.MapPost("/", async (
                 [FromBody] CreateTemplateRequest request,
                 [FromServices] ISender sender,
@@ -209,14 +213,14 @@ public class NotificationEndpoints : IEndpoint
 
                 var command = new CreateTemplateCommand(request.Code, request.Subject, request.BodyTemplate, request.Language);
                 var id = await sender.Send(command, ct);
-                return Results.Created($"/api/v1/notifications/templates/{id}", new { Id = id });
+                return Results.Created($"/api/admin/notifications/templates/{id}", new { Id = id });
             })
             .WithName("CreateTemplate")
             .WithSummary("Create a new notification template")
             .Produces(201)
             .Produces(400);
 
-        // PUT /api/v1/notifications/templates/{id} — Update template
+        // PUT /api/admin/notifications/templates/{id} — Update template
         templateGroup.MapPut("/{id:guid}", async (
                 Guid id,
                 [FromBody] UpdateTemplateRequest request,
@@ -239,7 +243,7 @@ public class NotificationEndpoints : IEndpoint
             .Produces(400)
             .Produces(404);
 
-        // DELETE /api/v1/notifications/templates/{id} — Delete template
+        // DELETE /api/admin/notifications/templates/{id} — Delete template
         templateGroup.MapDelete("/{id:guid}", async (
                 Guid id,
                 [FromServices] ISender sender,
