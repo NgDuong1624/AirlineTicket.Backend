@@ -150,7 +150,7 @@ builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<Intera
 builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<LogsDbContext>>();
 
 // Configure JWT Authentication
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!";
+var jwtSecret = (builder.Configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {

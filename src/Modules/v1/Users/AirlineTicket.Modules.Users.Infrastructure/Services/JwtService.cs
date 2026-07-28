@@ -22,7 +22,7 @@ public class JwtService : IJwtService
 
     public TokenResponse GenerateToken(User user)
     {
-        var secret = _configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!";
+        var secret = (_configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
