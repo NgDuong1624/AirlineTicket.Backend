@@ -69,7 +69,15 @@ builder.Services.AddUsersInfrastructure(builder.Configuration);
 builder.Services.AddInteractionsInfrastructure(builder.Configuration);
 
 // Configure JWT Authentication
-var jwtSecret = (builder.Configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
+var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtSecret = (jwtSection["Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
+var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+var jwtKeyId = jwtSection["KeyId"];
+if (!string.IsNullOrEmpty(jwtKeyId))
+{
+    jwtKey.KeyId = jwtKeyId;
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -81,7 +89,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "AirlineTicketApi",
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "AirlineTicketClient",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+            IssuerSigningKeys = new List<SecurityKey> { jwtKey }
         };
 
         // SignalR (WebSockets) cannot send Authorization headers — read the token

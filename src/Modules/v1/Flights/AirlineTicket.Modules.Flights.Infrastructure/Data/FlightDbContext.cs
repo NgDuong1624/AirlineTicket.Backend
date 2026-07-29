@@ -24,7 +24,7 @@ public class FlightDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         
         // Configure separate schema for Flights Module (Modular Monolith)
-        modelBuilder.HasDefaultSchema("flights");
+        modelBuilder.HasDefaultSchema("dbo");
 
         // Automatically apply all IEntityTypeConfiguration found in this Assembly
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(FlightDbContext).Assembly);

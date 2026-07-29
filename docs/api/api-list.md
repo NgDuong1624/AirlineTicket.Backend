@@ -9,8 +9,11 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
 | **POST** | `/api/auth/login` | Đăng nhập (trả về JWT token) | Anonymous |
-| **POST** | `/api/auth/register` | Đăng ký tài khoản mới (email, password, fullName, phone) | Anonymous |
-| **GET** | `/api/auth/me` | Thông tin tài khoản đang đăng nhập | Bearer JWT |
+| **POST** | `/api/auth/google` | Đăng nhập bằng Google | Anonymous |
+| **POST** | `/api/auth/register` | Đăng ký tài khoản mới | Anonymous |
+| **GET** | `/api/auth/me` | Thông tin tài khoản đang đăng nhập | Authenticated |
+| **POST** | `/api/auth/refresh` | Làm mới access token | Anonymous |
+| **POST** | `/api/auth/logout` | Đăng xuất và thu hồi session | Anonymous |
 
 ---
 
@@ -18,85 +21,129 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| **POST** | `/api/flights` | Tìm kiếm chuyến bay một chiều (originCode, destinationCode, departDate, cabinClass?, airlines?, priceRangeMin/Max?, maxStops?, sortBy?, currency?) | Anonymous |
-| **POST** | `/api/flights/round-trip` | Tìm kiếm chuyến bay khứ hồi (+ returnDate) | Anonymous |
-| **GET** | `/api/flights/{id}` | Chi tiết chuyến bay theo ID | Anonymous |
-| **GET** | `/api/flights/trending` | Danh sách chuyến bay/tuyến bay phổ biến | Anonymous |
-| **GET** | `/api/flights/{id}/seats` | Sơ đồ ghế chuyến bay | Anonymous |
-
----
-
-## 3. Airports, Airlines & Routes APIs (Hạ tầng bay - Public)
-
-| Method | Endpoint | Description | Auth |
-| :--- | :--- | :--- | :--- |
-| **GET** | `/api/airports?search=` | Danh sách/tìm kiếm sân bay | Anonymous |
+| **POST** | `/api/flights` | Tìm kiếm chuyến bay | Anonymous |
+| **GET** | `/api/airports` | Danh sách/tìm kiếm sân bay | Anonymous |
 | **GET** | `/api/airlines` | Danh sách hãng hàng không | Anonymous |
 | **GET** | `/api/routes` | Danh sách tuyến bay | Anonymous |
 
 ---
 
-## 4. Bookings APIs (Đặt vé - Customer)
+## 3. Bookings APIs (Đặt vé - Customer)
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| **POST** | `/api/bookings` | Tạo đơn đặt chỗ (flightId, passengers: [{firstName, lastName, identityCard, seatNumber}]) | Anonymous |
+| **POST** | `/api/bookings` | Tạo đơn đặt chỗ | Anonymous |
 | **GET** | `/api/bookings` | Danh sách tất cả đặt vé | PartnerOrStaff |
 | **GET** | `/api/bookings/{id}` | Chi tiết đơn đặt chỗ | Anonymous |
-| **GET** | `/api/bookings/my-bookings` | Lịch sử đặt vé người dùng | Bearer JWT |
-| **PUT** | `/api/bookings/{id}` | Cập nhật thông tin đặt vé (passengers?, contactEmail?, contactPhone?) | — |
-| **DELETE** | `/api/bookings/{id}` | Hủy đơn đặt chỗ | — |
-| **POST** | `/api/bookings/{id}/pay` | Thanh toán đơn hàng (paymentMethod, amount) → status, transactionId | Anonymous |
+| **GET** | `/api/bookings/my-bookings` | Lịch sử đặt vé người dùng | Authenticated |
 
 ---
 
-## 5. Tickets APIs (Vé điện tử)
+## 4. Notifications APIs (Thông báo)
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/api/tickets/{id}` | Thông tin vé điện tử | Anonymous |
+| **GET** | `/api/notifications/status` | Trạng thái module thông báo | Anonymous |
+| **GET** | `/api/notifications` | Danh sách thông báo (phân trang) | Authenticated |
+| **GET** | `/api/notifications/unread-count` | Số lượng thông báo chưa đọc | Authenticated |
+| **PUT** | `/api/notifications/{id}/read` | Đánh dấu đã đọc | Authenticated |
 
 ---
 
-## 6. Promotions APIs (Khuyến mãi - Public)
+## 5. AI Chat & Interactions APIs (Trợ lý AI & Tương tác)
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/api/promotions` | Danh sách khuyến mãi đang hoạt động | Anonymous |
-| **GET** | `/api/promotions/campaigns` | Danh sách chiến dịch ưu đãi | Anonymous |
-| **POST** | `/api/promotions/apply` | Áp dụng mã giảm giá (promoCode, flightId, originalAmount) | Anonymous |
+| **GET** | `/api/v1/interactions` | Trạng thái module tương tác | Anonymous |
+| **POST** | `/api/v1/qa/ask` | Gửi câu hỏi cho AI Travel Assistant | Anonymous |
 
 ---
 
-## 7. AI Chat APIs (Trợ lý AI)
+## 6. Staff APIs (Nhân viên hãng bay - Role: PartnerOrStaff)
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| **POST** | `/api/v1/qa/ask` | Gửi câu hỏi cho AI Travel Assistant (question) | Anonymous |
+| **GET** | `/api/staff/flights` | Danh sách chuyến bay (staff portal) | PartnerOrStaff |
+| **GET** | `/api/staff/flights/{id}/seats` | Sơ đồ ghế chuyến bay | PartnerOrStaff |
+| **POST** | `/api/staff/bookings` | Đặt vé hộ khách hàng | PartnerOrStaff |
+| **GET** | `/api/staff/sales` | Bảng bán vé (ticket-sales board) | PartnerOrStaff |
 
 ---
 
-## 8. Staff APIs (Nhân viên hãng bay - Role: PartnerOrStaff)
+## 7. Partner APIs (Đối tác hãng bay - Role: PartnerOnly)
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| **GET** | `/api/staff/flights?search=` | Danh sách chuyến bay (staff portal) |
-| **GET** | `/api/staff/flights/{id}/seats` | Sơ đồ ghế chuyến bay |
-| **POST** | `/api/staff/bookings` | Đặt vé hộ khách hàng (flightId, contactName, contactEmail, contactPhone, passengers) |
-| **GET** | `/api/staff/sales` | Bảng bán vé (ticket-sales board) |
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/api/partner/bookings` | Danh sách đặt vé của đối tác | PartnerOnly |
+| **PUT** | `/api/partner/bookings/{id}` | Cập nhật trạng thái đặt vé | PartnerOnly |
+| **GET** | `/api/partner/dashboard/sales-summary` | Tổng quan doanh thu | PartnerOnly |
+| **GET** | `/api/partner/dashboard/occupancy-rates` | Tỷ lệ lấp đầy | PartnerOnly |
+| **GET** | `/api/partner/dashboard/revenue-trends` | Xu hướng doanh thu | PartnerOnly |
+| **GET** | `/api/partner/coupons` | Danh sách mã giảm giá | PartnerOnly |
+| **POST** | `/api/partner/coupons` | Tạo mã giảm giá mới | PartnerOnly |
+| **PUT** | `/api/partner/coupons/{id}` | Cập nhật mã giảm giá | PartnerOnly |
+| **GET** | `/api/partner/routes` | Danh sách tuyến bay | PartnerOnly |
+| **POST** | `/api/partner/routes` | Tạo tuyến bay mới | PartnerOnly |
+| **PUT** | `/api/partner/routes/{id}` | Cập nhật tuyến bay | PartnerOnly |
+| **DELETE** | `/api/partner/routes/{id}` | Xóa tuyến bay | PartnerOnly |
+| **GET** | `/api/partner/logs` | Nhật ký hệ thống của đối tác | PartnerOnly |
+| **GET** | `/api/partner/dashboard` | Thống kê dashboard đối tác | PartnerOnly |
 
 ---
 
-## 9. Admin APIs (Quản trị - Role: AdminOnly)
+## 8. Admin APIs (Quản trị - Role: AdminOnly)
 
-### 9.1. Quản lý Người dùng
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| **GET** | `/api/admin/users` | Danh sách người dùng |
-| **POST** | `/api/admin/users` | Tạo người dùng (mật khẩu mặc định ChangeMe123!) |
-| **GET** | `/api/admin/users/{id}` | Chi tiết người dùng |
-| **PUT** | `/api/admin/users/{id}` | Cập nhật người dùng |
-| **DELETE** | `/api/admin/users/{id}` | Xóa người dùng |
+### 8.1. Quản lý Người dùng & Phân quyền
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/api/admin/users` | Danh sách người dùng | AdminOnly |
+| **POST** | `/api/admin/users` | Tạo người dùng | AdminOnly |
+| **GET** | `/api/admin/users/{id}` | Chi tiết người dùng | AdminOnly |
+| **PUT** | `/api/admin/users/{id}` | Cập nhật người dùng | AdminOnly |
+| **DELETE** | `/api/admin/users/{id}` | Xóa người dùng | AdminOnly |
+| **PATCH** | `/api/admin/users/{id}/status` | Cập nhật trạng thái người dùng | AdminOnly |
+| **GET** | `/api/admin/permissions` | Danh sách quyền hạn | AdminOnly |
+
+### 8.2. Quản lý Đặt vé
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/api/admin/bookings` | Danh sách đặt vé | AdminOnly |
+| **GET** | `/api/admin/bookings/{id}` | Chi tiết đặt vé | AdminOnly |
+| **PUT** | `/api/admin/bookings/{id}` | Cập nhật đặt vé | AdminOnly |
+| **PUT** | `/api/admin/bookings/{id}/status` | Cập nhật trạng thái đặt vé | AdminOnly |
+| **DELETE** | `/api/admin/bookings/{id}` | Hủy đặt vé | AdminOnly |
+
+### 8.3. Quản lý Khuyến mãi
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/api/admin/coupons` | Danh sách mã giảm giá | AdminOnly |
+| **POST** | `/api/admin/coupons` | Tạo mã giảm giá | AdminOnly |
+| **PUT** | `/api/admin/coupons/{id}` | Cập nhật mã giảm giá | AdminOnly |
+| **DELETE** | `/api/admin/coupons/{id}` | Xóa mã giảm giá | AdminOnly |
+
+### 8.4. Quản lý Hạ tầng bay
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/api/admin/airports` | Danh sách sân bay | AdminOnly |
+| **POST** | `/api/admin/airports` | Tạo sân bay | AdminOnly |
+| **PUT** | `/api/admin/airports/{id}` | Cập nhật sân bay | AdminOnly |
+
+### 8.5. Hệ thống & Dashboard
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/api/admin/logs` | Nhật ký hệ thống | AdminOnly |
+| **GET** | `/api/admin/dashboard` | Thống kê dashboard admin | AdminOnly |
+| **GET** | `/api/admin/settings` | Cài đặt hệ thống | AdminOnly |
+| **PUT** | `/api/admin/settings` | Cập nhật cài đặt hệ thống | AdminOnly |
+
+---
+
+## 9. Health Checks
+
+| Method | Endpoint | Description | Auth |
+| :--- | :--- | :--- | :--- |
+| **GET** | `/api/health/live` | Kiểm tra liveness | Anonymous |
+| **GET** | `/api/health` | Kiểm tra readiness | Anonymous |
 
 ### 9.2. Quản lý Quyền hạn
 | Method | Endpoint | Description |
@@ -272,3 +319,4 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 | :--- | :--- | :--- | :--- |
 | **SeatHub** | `/hubs/seats` | `JoinFlight(flightId)`, `LeaveFlight(flightId)` | Theo dõi ghế realtime. Server → Client: `SeatUpdated(flightId, seatNumber, isAvailable)` |
 | **SupportChatHub** | `/hubs/support` | `CustomerJoinChat(airlineId, customerName)`, `StaffRegister(airlineId, staffName)`, `SendMessageToAirline(message)`, `SendMessageToCustomer(connectionId, message)` | Live chat Customer ↔ Staff, auto-assign |
+| **NotificationHub** | `/hubs/notifications` | Client → Server: (none — server push only) | Đẩy thông báo realtime đến người dùng. Server → Client: `ReceiveNotification(notification)` |

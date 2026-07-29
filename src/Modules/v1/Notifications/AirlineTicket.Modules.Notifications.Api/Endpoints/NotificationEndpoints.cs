@@ -28,7 +28,7 @@ public class NotificationEndpoints : IEndpoint
             .WithTags("Notifications Admin Module")
             .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
-        // GET /api/v1/notifications/status — Get notifications status
+        // GET /api/notifications/status — Get notifications status
         group.MapGet("/status", async (
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
@@ -42,7 +42,7 @@ public class NotificationEndpoints : IEndpoint
             .Produces(200)
             .Produces(400);
 
-        // GET /api/v1/notifications — Get user notifications
+        // GET /api/notifications — Get user notifications
         group.MapGet("/", async (
                 [FromQuery] int pageNumber,
                 [FromQuery] int pageSize,
@@ -64,7 +64,7 @@ public class NotificationEndpoints : IEndpoint
             .Produces(200)
             .Produces(401);
 
-        // GET /api/v1/notifications/unread-count — Get unread count
+        // GET /api/notifications/unread-count — Get unread count
         group.MapGet("/unread-count", async (
                 HttpContext context,
                 [FromServices] ISender sender,
@@ -83,7 +83,7 @@ public class NotificationEndpoints : IEndpoint
             .Produces(200)
             .Produces(401);
 
-        // PUT /api/v1/notifications/{id}/read — Mark as read
+        // PUT /api/notifications/{id}/read — Mark as read
         group.MapPut("/{id:guid}/read", async (
                 Guid id,
                 HttpContext context,
@@ -104,7 +104,7 @@ public class NotificationEndpoints : IEndpoint
             .Produces(401)
             .Produces(404);
 
-        // PUT /api/v1/notifications/read-all — Mark all as read
+        // PUT /api/notifications/read-all — Mark all as read
         group.MapPut("/read-all", async (
                 HttpContext context,
                 [FromServices] ISender sender,
@@ -124,7 +124,7 @@ public class NotificationEndpoints : IEndpoint
             .Produces(400)
             .Produces(401);
 
-        // DELETE /api/v1/notifications/{id} — Delete notification
+        // DELETE /api/notifications/{id} — Delete notification
         group.MapDelete("/{id:guid}", async (
                 Guid id,
                 HttpContext context,
