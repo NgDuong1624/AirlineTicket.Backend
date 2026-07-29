@@ -24,6 +24,11 @@ public class JwtService : IJwtService
     {
         var secret = (_configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+        var keyId = _configuration["Jwt:KeyId"];
+        if (!string.IsNullOrEmpty(keyId))
+        {
+            key.KeyId = keyId;
+        }
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>

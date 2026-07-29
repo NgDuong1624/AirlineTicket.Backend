@@ -151,6 +151,13 @@ builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<LogsDb
 
 // Configure JWT Authentication
 var jwtSecret = (builder.Configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
+var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+var jwtKeyId = builder.Configuration["Jwt:KeyId"];
+if (!string.IsNullOrEmpty(jwtKeyId))
+{
+    jwtKey.KeyId = jwtKeyId;
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -162,7 +169,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "AirlineTicketApi",
             ValidAudience = builder.Configuration["Jwt:Audience"] ?? "AirlineTicketClient",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret))
+            IssuerSigningKey = jwtKey
         };
     });
 

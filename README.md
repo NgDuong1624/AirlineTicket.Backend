@@ -56,10 +56,15 @@ The system follows a **Modular Monolith** architecture with 8 independent busine
 - Re-assigns customers when staff disconnects
 - In-memory session storage via `ConcurrentDictionary`
 
+### NotificationHub (`/hubs/notifications`)
+- Real-time notification delivery to authenticated users
+- Requires JWT authentication (supports token in query string for WebSockets)
+
 ## Database
 
 **SQL Server** with 8 schemas as bounded contexts:
-- `identity`, `flights`, `bookings`, `promotions`, `interactions`, `cms`, `logs`, `notifications`
+- `dbo` (default for identity, bookings, promotions, interactions, cms, logs, notifications)
+- `flights` (explicit schema for flights module)
 
 ### Key Design Decisions
 - **Soft Delete** — `IsDeleted` column + SQL Server `INSTEAD OF DELETE` triggers on all major tables
