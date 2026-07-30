@@ -26,7 +26,7 @@ public class LogsDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        modelBuilder.HasDefaultSchema("dbo");
+        modelBuilder.HasDefaultSchema("logs");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LogsDbContext).Assembly);
     }
 }

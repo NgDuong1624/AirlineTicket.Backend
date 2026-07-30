@@ -20,7 +20,7 @@ public class LogsDbContextFactory : IDesignTimeDbContextFactory<LogsDbContext>
         }
 
         var optionsBuilder = new DbContextOptionsBuilder<LogsDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseNpgsql(connectionString);
 
         return new LogsDbContext(optionsBuilder.Options);
     }

@@ -12,7 +12,7 @@ public static class DependencyInjection
     public static IServiceCollection AddCMSInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<CMSDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 

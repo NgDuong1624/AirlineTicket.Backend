@@ -16,7 +16,7 @@ public class CMSDbContextFactory : IDesignTimeDbContextFactory<CMSDbContext>
         }
 
         var optionsBuilder = new DbContextOptionsBuilder<CMSDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseNpgsql(connectionString);
 
         return new CMSDbContext(optionsBuilder.Options);
     }

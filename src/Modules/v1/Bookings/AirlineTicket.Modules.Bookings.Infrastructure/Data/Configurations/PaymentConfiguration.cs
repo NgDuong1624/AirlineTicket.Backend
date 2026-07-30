@@ -14,7 +14,7 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .HasPrecision(18, 2);
 
         builder.HasOne(x => x.Booking)
-            .WithMany()
+            .WithMany(x => x.Payments)
             .HasForeignKey(x => x.BookingId)
             .OnDelete(DeleteBehavior.Restrict);
     }

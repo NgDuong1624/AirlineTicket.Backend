@@ -16,7 +16,7 @@ public class NotificationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        modelBuilder.HasDefaultSchema("dbo");
+        modelBuilder.HasDefaultSchema("notifications");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NotificationDbContext).Assembly);
     }
 }

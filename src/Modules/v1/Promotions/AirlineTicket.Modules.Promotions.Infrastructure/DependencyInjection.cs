@@ -13,7 +13,7 @@ public static class DependencyInjection
     public static IServiceCollection AddPromotionsInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<PromotionDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
         

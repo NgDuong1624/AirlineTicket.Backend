@@ -16,11 +16,9 @@ public class SystemLogConfiguration : IEntityTypeConfiguration<SystemLog>
 
         builder.Property(x => x.Type)
             .IsRequired()
-            .HasConversion<int>()
-            .HasMaxLength(50);
+            .HasConversion<int>();
 
-        builder.Property(x => x.Metadata)
-            .HasColumnType("nvarchar(max)");
+        builder.Property(x => x.Metadata);
 
         builder.Property(x => x.Level)
             .IsRequired()
