@@ -19,7 +19,7 @@ public class BookingDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         
         // Separate schema for Bookings
-        modelBuilder.HasDefaultSchema("dbo");
+        modelBuilder.HasDefaultSchema("bookings");
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BookingDbContext).Assembly);
     }

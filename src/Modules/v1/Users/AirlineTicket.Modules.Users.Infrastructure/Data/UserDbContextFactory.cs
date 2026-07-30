@@ -22,7 +22,7 @@ public class UserDbContextFactory : IDesignTimeDbContextFactory<UserDbContext>
         }
 
         var optionsBuilder = new DbContextOptionsBuilder<UserDbContext>();
-        optionsBuilder.UseSqlServer(connectionString);
+        optionsBuilder.UseNpgsql(connectionString);
 
         return new UserDbContext(optionsBuilder.Options);
     }

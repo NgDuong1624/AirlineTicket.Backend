@@ -16,7 +16,7 @@ public class CMSDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        modelBuilder.HasDefaultSchema("dbo");
+        modelBuilder.HasDefaultSchema("cms");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CMSDbContext).Assembly);
     }
 }

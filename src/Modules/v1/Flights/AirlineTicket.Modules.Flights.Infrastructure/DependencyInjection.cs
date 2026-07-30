@@ -15,7 +15,7 @@ public static class DependencyInjection
     public static IServiceCollection AddFlightsInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<FlightDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 

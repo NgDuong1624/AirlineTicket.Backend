@@ -24,7 +24,7 @@ public static class DependencyInjection
     public static IServiceCollection AddLogsInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<LogsDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 

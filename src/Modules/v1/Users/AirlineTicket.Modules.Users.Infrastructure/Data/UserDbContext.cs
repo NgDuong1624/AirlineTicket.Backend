@@ -19,7 +19,7 @@ public class UserDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         
         // Separate schema for Users
-        modelBuilder.HasDefaultSchema("dbo");
+        modelBuilder.HasDefaultSchema("users");
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserDbContext).Assembly);
     }

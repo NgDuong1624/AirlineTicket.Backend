@@ -16,7 +16,7 @@ public class InteractionDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        modelBuilder.HasDefaultSchema("dbo");
+        modelBuilder.HasDefaultSchema("interactions");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(InteractionDbContext).Assembly);
     }
 }

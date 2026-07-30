@@ -23,7 +23,7 @@ public static class DependencyInjection
 
         // Register DbContext
         services.AddDbContext<InteractionDbContext>(options =>
-            options.UseSqlServer(
+            options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure()));
 

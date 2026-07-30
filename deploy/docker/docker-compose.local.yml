@@ -23,20 +23,20 @@ services:
       - LuckyPenny__MediatR__LicenseKey=${LUCKY_PENNY_MEDIATR_LICENSE_KEY}
       - Google__ClientId=${GOOGLE_CLIENT_ID}
     depends_on:
-      - sqlserver
+      - postgres
     restart: always
 
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+  postgres:
+    image: postgres:16-alpine
     environment:
-      ACCEPT_EULA: Y
-      SA_PASSWORD: ${SQLSERVER_PASSWORD:-Admin@123}
-      MSSQL_PID: Developer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-Admin@123}
+      POSTGRES_DB: AirlineTicketDb
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqlserver-data-local:/var/opt/mssql
+      - postgres-data-local:/var/lib/postgresql/data
     restart: always
 
 volumes:
-  sqlserver-data-local:
+  postgres-data-local:

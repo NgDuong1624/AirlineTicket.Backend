@@ -15,7 +15,7 @@ public class PromotionDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.HasDefaultSchema("dbo");
+        modelBuilder.HasDefaultSchema("promotions");
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PromotionDbContext).Assembly);
     }
 }
