@@ -52,9 +52,9 @@ public class BookingRepository : IBookingRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT Id, UserId, PnrCode, TotalPrice, Status, ContactEmail, ContactPhone, CreatedAt, UpdatedAt
-            FROM dbo.Bookings 
-            WHERE Id = @Id";
+            SELECT id, user_id, pnr_code, total_price, status, contact_email, contact_phone, created_at, updated_at
+            FROM bookings.bookings 
+            WHERE id = @Id";
         
         return await connection.QueryFirstOrDefaultAsync<BookingDto>(sql, new { Id = id });
     }
@@ -63,13 +63,13 @@ public class BookingRepository : IBookingRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT Id, UserId, PnrCode, TotalPrice, Status, ContactEmail, ContactPhone, CreatedAt, UpdatedAt
-            FROM dbo.Bookings 
-            WHERE UserId = @UserId
-            ORDER BY CreatedAt DESC
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            SELECT id, user_id, pnr_code, total_price, status, contact_email, contact_phone, created_at, updated_at
+            FROM bookings.bookings 
+            WHERE user_id = @UserId
+            ORDER BY created_at DESC
+            OFFSET @Offset LIMIT @PageSize";
         
-        const string countSql = "SELECT COUNT(*) FROM dbo.Bookings WHERE UserId = @UserId";
+        const string countSql = "SELECT COUNT(*) FROM bookings.bookings WHERE user_id = @UserId";
         
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { UserId = userId });
         var result = await connection.QueryAsync<BookingDto>(sql, new { UserId = userId, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
@@ -80,12 +80,12 @@ public class BookingRepository : IBookingRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT Id, UserId, PnrCode, TotalPrice, Status, ContactEmail, ContactPhone, CreatedAt, UpdatedAt
-            FROM dbo.Bookings 
-            ORDER BY CreatedAt DESC
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            SELECT id, user_id, pnr_code, total_price, status, contact_email, contact_phone, created_at, updated_at
+            FROM bookings.bookings 
+            ORDER BY created_at DESC
+            OFFSET @Offset LIMIT @PageSize";
         
-        const string countSql = "SELECT COUNT(*) FROM dbo.Bookings";
+        const string countSql = "SELECT COUNT(*) FROM bookings.bookings";
         
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
         var result = await connection.QueryAsync<BookingDto>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });

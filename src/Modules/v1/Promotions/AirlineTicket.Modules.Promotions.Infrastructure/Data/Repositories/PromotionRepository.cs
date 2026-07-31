@@ -25,8 +25,8 @@ public class PromotionRepository : IPromotionRepository
         const string sql = @"
             SELECT Id, Code as PromoCode, DiscountType, DiscountValue, 
                    UsageLimit as MaxUsage, UsageCount as CurrentUsage, StartDate, EndDate
-            FROM dbo.Coupons 
-            WHERE Code = @Code AND IsActive = 1";
+            FROM promotions.Coupons 
+            WHERE Code = @Code AND IsActive = TRUE";
         
         return await connection.QueryFirstOrDefaultAsync<PromotionDto>(sql, new { Code = code });
     }
@@ -36,8 +36,8 @@ public class PromotionRepository : IPromotionRepository
         var connection = _context.Database.GetDbConnection();
         var now = DateTime.UtcNow;
         const string sql = @"
-            SELECT * FROM dbo.Campaigns 
-            WHERE IsFeatured = 1 AND StartDate <= @Now AND EndDate >= @Now";
+            SELECT * FROM promotions.Campaigns 
+            WHERE Is_Featured = TRUE AND StartDate <= @Now AND EndDate >= @Now";
         
         var result = await connection.QueryAsync<Campaign>(sql, new { Now = now });
         return result.ToList();
@@ -47,11 +47,11 @@ public class PromotionRepository : IPromotionRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT * FROM dbo.Campaigns 
+            SELECT * FROM promotions.Campaigns 
             ORDER BY StartDate DESC
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            OFFSET @Offset LIMIT @PageSize";
 
-        const string countSql = "SELECT COUNT(*) FROM dbo.Campaigns";
+        const string countSql = "SELECT COUNT(*) FROM promotions.Campaigns";
 
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
         var result = await connection.QueryAsync<Campaign>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
@@ -62,14 +62,14 @@ public class PromotionRepository : IPromotionRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT * FROM dbo.Coupons 
-            WHERE AirlineId IS NULL AND IsDeleted = 0
+            SELECT * FROM promotions.Coupons 
+            WHERE AirlineId IS NULL AND IsDeleted = FALSE
             ORDER BY StartDate DESC
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            OFFSET @Offset LIMIT @PageSize";
 
         const string countSql = @"
-            SELECT COUNT(*) FROM dbo.Coupons 
-            WHERE AirlineId IS NULL AND IsDeleted = 0";
+            SELECT COUNT(*) FROM promotions.Coupons 
+            WHERE AirlineId IS NULL AND IsDeleted = FALSE";
 
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
         var result = await connection.QueryAsync<Coupon>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });

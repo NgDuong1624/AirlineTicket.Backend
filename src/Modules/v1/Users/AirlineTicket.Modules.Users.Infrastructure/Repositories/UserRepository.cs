@@ -18,13 +18,13 @@ public class UserRepository : IUserRepository
     public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        const string countSql = "SELECT COUNT(*) FROM dbo.Users";
+        const string countSql = "SELECT COUNT(*) FROM users.users";
         const string sql = @"
-            SELECT u.*, a.Name as AirlineName, a.LogoUrl as AirlineLogoUrl 
-            FROM dbo.Users u 
-            LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id
-            ORDER BY u.CreatedAt DESC
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            SELECT u.*, a.name as AirlineName, a.logo_url as AirlineLogoUrl 
+            FROM users.users u 
+            LEFT JOIN flights.airlines a ON u.airline_id = a.id
+            ORDER BY u.created_at DESC
+            OFFSET @Offset LIMIT @PageSize";
 
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
         var result = await connection.QueryAsync<User>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
@@ -34,14 +34,14 @@ public class UserRepository : IUserRepository
     public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetByAirlineIdAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        const string countSql = "SELECT COUNT(*) FROM dbo.Users WHERE AirlineId = @AirlineId AND IsDeleted = 0";
+        const string countSql = "SELECT COUNT(*) FROM users.users WHERE airline_id = @AirlineId AND is_deleted = FALSE";
         const string sql = @"
-            SELECT u.*, a.Name as AirlineName, a.LogoUrl as AirlineLogoUrl 
-            FROM dbo.Users u 
-            LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id 
-            WHERE u.AirlineId = @AirlineId AND u.IsDeleted = 0
-            ORDER BY u.CreatedAt DESC
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            SELECT u.*, a.name as AirlineName, a.logo_url as AirlineLogoUrl 
+            FROM users.users u 
+            LEFT JOIN flights.airlines a ON u.airline_id = a.id 
+            WHERE u.airline_id = @AirlineId AND u.is_deleted = FALSE
+            ORDER BY u.created_at DESC
+            OFFSET @Offset LIMIT @PageSize";
 
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { AirlineId = airlineId });
         var result = await connection.QueryAsync<User>(sql, new { AirlineId = airlineId, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
@@ -52,10 +52,10 @@ public class UserRepository : IUserRepository
     {
         var connection = _context.Database.GetDbConnection();
         return await connection.QueryFirstOrDefaultAsync<User>(@"
-            SELECT u.*, a.Name as AirlineName, a.LogoUrl as AirlineLogoUrl 
-            FROM dbo.Users u 
-            LEFT JOIN dbo.Airlines a ON u.AirlineId = a.Id 
-            WHERE u.Id = @Id", 
+            SELECT u.*, a.name as AirlineName, a.logo_url as AirlineLogoUrl 
+            FROM users.users u 
+            LEFT JOIN flights.airlines a ON u.airline_id = a.id 
+            WHERE u.id = @Id", 
             new { Id = id });
     }
 

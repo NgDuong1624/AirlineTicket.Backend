@@ -27,371 +27,471 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Manufacturer")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("manufacturer");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<int>("TotalSeats")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("total_seats");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_aircraft_models");
 
-                    b.ToTable("AircraftModels", "flights");
+                    b.ToTable("aircraft_models", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.AircraftModelSeatTemplate", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<Guid>("AircraftModelId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("aircraft_model_id");
 
                     b.Property<bool>("IsExtraLegroom")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_extra_legroom");
 
                     b.Property<decimal>("PriceMultiplier")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("price_multiplier");
 
                     b.Property<int>("SeatClass")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("seat_class");
 
                     b.Property<string>("SeatColumn")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("seat_column");
 
                     b.Property<string>("SeatNumber")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("seat_number");
 
                     b.Property<string>("SeatRow")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("seat_row");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_aircraft_model_seat_templates");
 
-                    b.HasIndex("AircraftModelId");
+                    b.HasIndex("AircraftModelId")
+                        .HasDatabaseName("ix_aircraft_model_seat_templates_aircraft_model_id");
 
-                    b.ToTable("AircraftModelSeatTemplates", "flights");
+                    b.ToTable("aircraft_model_seat_templates", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.Airline", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Address")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("address");
 
                     b.Property<string>("ApiEndpoint")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("api_endpoint");
 
                     b.Property<string>("ApiKey")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("api_key");
 
                     b.Property<string>("BaseCountry")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("base_country");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("IataCode")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("iata_code");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("LogoUrl")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("logo_url");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<string>("SupportEmail")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("support_email");
 
                     b.Property<string>("SupportPhone")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("support_phone");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_airlines");
 
-                    b.ToTable("Airlines", "flights");
+                    b.ToTable("airlines", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.Airplane", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<Guid?>("AircraftModelId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("aircraft_model_id");
 
                     b.Property<Guid>("AirlineId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("airline_id");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Model")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("model");
 
                     b.Property<string>("RegistrationNumber")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("registration_number");
 
                     b.Property<int>("TotalCapacity")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("total_capacity");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_airplanes");
 
-                    b.HasIndex("AircraftModelId");
+                    b.HasIndex("AircraftModelId")
+                        .HasDatabaseName("ix_airplanes_aircraft_model_id");
 
-                    b.HasIndex("AirlineId");
+                    b.HasIndex("AirlineId")
+                        .HasDatabaseName("ix_airplanes_airline_id");
 
-                    b.ToTable("Airplanes", "flights");
+                    b.ToTable("airplanes", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.AirplaneSeat", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<Guid>("AirplaneId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("airplane_id");
 
                     b.Property<bool>("IsExtraLegroom")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_extra_legroom");
 
                     b.Property<decimal>("PriceMultiplier")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("price_multiplier");
 
                     b.Property<int>("SeatClass")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("seat_class");
 
                     b.Property<string>("SeatColumn")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("seat_column");
 
                     b.Property<string>("SeatNumber")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("seat_number");
 
                     b.Property<string>("SeatRow")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("seat_row");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_airplane_seats");
 
-                    b.HasIndex("AirplaneId");
+                    b.HasIndex("AirplaneId")
+                        .HasDatabaseName("ix_airplane_seats_airplane_id");
 
-                    b.ToTable("AirplaneSeats", "flights");
+                    b.ToTable("airplane_seats", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.Airport", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("CityEn")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city_en");
 
                     b.Property<string>("CityVi")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city_vi");
 
                     b.Property<string>("CountryCode")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("country_code");
 
                     b.Property<string>("IataCode")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("iata_code");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<decimal?>("Latitude")
                         .HasPrecision(18, 6)
-                        .HasColumnType("numeric(18,6)");
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("latitude");
 
                     b.Property<decimal?>("Longitude")
                         .HasPrecision(18, 6)
-                        .HasColumnType("numeric(18,6)");
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("longitude");
 
                     b.Property<string>("NameEn")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name_en");
 
                     b.Property<string>("NameVi")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name_vi");
 
                     b.Property<string>("Timezone")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("timezone");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_airports");
 
                     b.HasIndex("IataCode")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasDatabaseName("ix_airports_iata_code");
 
-                    b.ToTable("Airports", "flights");
+                    b.ToTable("airports", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.Flight", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<Guid>("AirplaneId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("airplane_id");
 
                     b.Property<DateTime>("ArrivalTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("arrival_time");
 
                     b.Property<decimal>("BasePrice")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("base_price");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("currency");
 
                     b.Property<DateTime>("DepartureTime")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("departure_time");
 
                     b.Property<string>("ExternalId")
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("external_id");
 
                     b.Property<string>("FlightNumber")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("flight_number");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<Guid>("RouteId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("route_id");
 
                     b.Property<int>("Status")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_flights");
 
-                    b.HasIndex("AirplaneId");
+                    b.HasIndex("AirplaneId")
+                        .HasDatabaseName("ix_flights_airplane_id");
 
-                    b.HasIndex("RouteId");
+                    b.HasIndex("RouteId")
+                        .HasDatabaseName("ix_flights_route_id");
 
-                    b.ToTable("Flights", "flights");
+                    b.ToTable("flights", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.FlightSeat", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<Guid>("FlightId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("flight_id");
 
                     b.Property<bool>("IsAvailable")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_available");
 
                     b.Property<bool>("IsExtraLegroom")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_extra_legroom");
 
                     b.Property<decimal?>("PriceOverride")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("price_override");
 
                     b.Property<int>("SeatClass")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("seat_class");
 
                     b.Property<string>("SeatNumber")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("seat_number");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_flight_seats");
 
-                    b.HasIndex("FlightId");
+                    b.HasIndex("FlightId")
+                        .HasDatabaseName("ix_flight_seats_flight_id");
 
-                    b.ToTable("FlightSeats", "flights");
+                    b.ToTable("flight_seats", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.Route", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<Guid>("AirlineId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("airline_id");
 
                     b.Property<Guid>("DestinationAirportId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("destination_airport_id");
 
                     b.Property<decimal?>("DistanceKm")
                         .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("distance_km");
 
                     b.Property<int?>("EstimatedDurationMinutes")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("estimated_duration_minutes");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<Guid>("OriginAirportId")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("origin_airport_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_routes");
 
-                    b.HasIndex("AirlineId");
+                    b.HasIndex("AirlineId")
+                        .HasDatabaseName("ix_routes_airline_id");
 
-                    b.HasIndex("DestinationAirportId");
+                    b.HasIndex("DestinationAirportId")
+                        .HasDatabaseName("ix_routes_destination_airport_id");
 
-                    b.HasIndex("OriginAirportId");
+                    b.HasIndex("OriginAirportId")
+                        .HasDatabaseName("ix_routes_origin_airport_id");
 
-                    b.ToTable("Routes", "flights");
+                    b.ToTable("routes", "flights");
                 });
 
             modelBuilder.Entity("AirlineTicket.Modules.Flights.Domain.Entities.AircraftModelSeatTemplate", b =>
@@ -400,7 +500,8 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                         .WithMany("SeatTemplates")
                         .HasForeignKey("AircraftModelId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_aircraft_model_seat_templates_aircraft_models_aircraft_mode");
 
                     b.Navigation("AircraftModel");
                 });
@@ -410,13 +511,15 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.AircraftModel", "AircraftModel")
                         .WithMany("Airplanes")
                         .HasForeignKey("AircraftModelId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_airplanes_aircraft_models_aircraft_model_id");
 
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Airline", "Airline")
                         .WithMany("Airplanes")
                         .HasForeignKey("AirlineId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_airplanes_airlines_airline_id");
 
                     b.Navigation("AircraftModel");
 
@@ -429,7 +532,8 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                         .WithMany("AirplaneSeats")
                         .HasForeignKey("AirplaneId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_airplane_seats_airplanes_airplane_id");
 
                     b.Navigation("Airplane");
                 });
@@ -440,13 +544,15 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                         .WithMany("Flights")
                         .HasForeignKey("AirplaneId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_flights_airplanes_airplane_id");
 
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Route", "Route")
                         .WithMany("Flights")
                         .HasForeignKey("RouteId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_flights_routes_route_id");
 
                     b.Navigation("Airplane");
 
@@ -459,7 +565,8 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                         .WithMany("FlightSeats")
                         .HasForeignKey("FlightId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_flight_seats_flights_flight_id");
 
                     b.Navigation("Flight");
                 });
@@ -470,19 +577,22 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                         .WithMany("Routes")
                         .HasForeignKey("AirlineId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_routes_airlines_airline_id");
 
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Airport", "DestinationAirport")
                         .WithMany("DestinationRoutes")
                         .HasForeignKey("DestinationAirportId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_routes_airports_destination_airport_id");
 
                     b.HasOne("AirlineTicket.Modules.Flights.Domain.Entities.Airport", "OriginAirport")
                         .WithMany("OriginRoutes")
                         .HasForeignKey("OriginAirportId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("fk_routes_airports_origin_airport_id");
 
                     b.Navigation("Airline");
 

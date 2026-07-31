@@ -15,7 +15,8 @@ public static class DependencyInjection
         services.AddDbContext<BookingDbContext>(options =>
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                sqlOptions => sqlOptions.EnableRetryOnFailure()));
+                sqlOptions => sqlOptions.EnableRetryOnFailure())
+                .UseSnakeCaseNamingConvention());
         
         // Register repositories
         services.AddScoped<IBookingRepository, BookingRepository>();

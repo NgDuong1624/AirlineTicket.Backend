@@ -16,7 +16,7 @@ public class NotificationDbContextFactory : IDesignTimeDbContextFactory<Notifica
         }
 
         var optionsBuilder = new DbContextOptionsBuilder<NotificationDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
 
         return new NotificationDbContext(optionsBuilder.Options);
     }

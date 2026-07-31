@@ -24,7 +24,7 @@ public class NotificationTemplateConfiguration : IEntityTypeConfiguration<Notifi
         builder.Property(x => x.Language)
             .HasMaxLength(10);
             
-        builder.HasIndex(x => x.Code)
+        builder.HasIndex(x => new { x.Code, x.Language })
             .IsUnique();
     }
 }

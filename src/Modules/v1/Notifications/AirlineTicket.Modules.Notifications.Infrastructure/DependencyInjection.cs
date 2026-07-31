@@ -15,7 +15,8 @@ public static class DependencyInjection
         services.AddDbContext<NotificationDbContext>(options =>
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                sqlOptions => sqlOptions.EnableRetryOnFailure()));
+                sqlOptions => sqlOptions.EnableRetryOnFailure())
+                .UseSnakeCaseNamingConvention());
 
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<ITemplateRepository, TemplateRepository>();

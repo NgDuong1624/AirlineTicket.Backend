@@ -109,7 +109,7 @@ dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-ai-api-key"
 dotnet user-secrets set "Google:ClientId" "your-google-client-id"
 ```
 
-Update `src/Api/AirlineTicket.Api/appsettings.json` with your SQL Server connection string.
+Update `src/Api/AirlineTicket.Api/appsettings.json` with your Postgre connection string.
 
 ### Run
 
@@ -140,7 +140,7 @@ docker-compose -f deploy/docker/docker-compose.prod.yml up -d --build
 
 | Variable | Description |
 |----------|-------------|
-| `DB_CONNECTION_STRING` | SQL Server connection string |
+| `DB_CONNECTION_STRING` | Postgre connection string |
 | `REDIS_CONNECTION_STRING` | Redis connection string |
 | `CORS_ORIGINS` | Allowed CORS origins (frontend URL) |
 | `AI_SERVICE_API_KEY` | AI API key |

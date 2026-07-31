@@ -24,10 +24,10 @@ public class DashboardRepository : IDashboardRepository
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
             SELECT
-                (SELECT ISNULL(SUM(TotalPrice), 0) FROM dbo.Bookings WHERE Status = 1) as TotalRevenue,
-                (SELECT COUNT(*) FROM dbo.Bookings WHERE Status = 1) as TotalBookings,
-                (SELECT COUNT(*) FROM dbo.Users WHERE CreatedAt >= DATEADD(day, -30, GETUTCDATE())) as NewUsers,
-                (SELECT COUNT(*) FROM dbo.Flights WHERE DepartureTime >= DATEADD(day, -30, GETUTCDATE())) as TotalFlights";
+                (SELECT COALESCE(SUM(total_price), 0) FROM bookings.bookings WHERE status = 1) as TotalRevenue,
+                (SELECT COUNT(*) FROM bookings.bookings WHERE status = 1) as TotalBookings,
+                (SELECT COUNT(*) FROM users.users WHERE created_at >= NOW() - INTERVAL '30 days') as NewUsers,
+                (SELECT COUNT(*) FROM flights.flights WHERE departure_time >= NOW() - INTERVAL '30 days') as TotalFlights";
         return await connection.QueryFirstOrDefaultAsync<AdminDashboardStatsDto>(sql);
     }
 
@@ -35,15 +35,16 @@ public class DashboardRepository : IDashboardRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT TOP (@Count)
-                a.Name,
-                a.IataCode as Code,
-                (SELECT COUNT(*) FROM dbo.Flights f JOIN dbo.Routes r ON f.RouteId = r.Id WHERE r.AirlineId = a.Id) as FlightsCount,
-                CASE WHEN a.IsActive = 1 THEN 'Active' ELSE 'Inactive' END as Status,
-                CONVERT(varchar, a.CreatedAt, 23) as Joined
-            FROM dbo.Airlines a
-            WHERE a.IsDeleted = 0
-            ORDER BY a.CreatedAt DESC";
+            SELECT
+                a.name,
+                a.iata_code as Code,
+                (SELECT COUNT(*) FROM flights.flights f JOIN flights.routes r ON f.route_id = r.id WHERE r.airline_id = a.id) as FlightsCount,
+                CASE WHEN a.is_active = TRUE THEN 'Active' ELSE 'Inactive' END as Status,
+                TO_CHAR(a.created_at, 'YYYY-MM-DD') as Joined
+            FROM flights.airlines a
+            WHERE a.is_deleted = FALSE
+            ORDER BY a.created_at DESC
+            LIMIT @Count";
         var result = await connection.QueryAsync<AdminDashboardPartnerDto>(sql, new { Count = count });
         return result.ToList();
     }
@@ -52,12 +53,13 @@ public class DashboardRepository : IDashboardRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT TOP (@Count)
-                CONVERT(varchar, CreatedAt, 108) as Time,
-                Level as Type,
-                Message as LabelKey
-            FROM dbo.SystemLogs
-            ORDER BY CreatedAt DESC";
+            SELECT
+                TO_CHAR(created_at, 'HH24:MI:SS') as Time,
+                level as Type,
+                message as LabelKey
+            FROM logs.system_logs
+            ORDER BY created_at DESC
+            LIMIT @Count";
         var result = await connection.QueryAsync<AdminDashboardLogDto>(sql, new { Count = count });
         return result.ToList();
     }
@@ -67,25 +69,25 @@ public class DashboardRepository : IDashboardRepository
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
             SELECT
-                (SELECT COUNT(*) FROM dbo.Airplanes WHERE AirlineId = @AirlineId AND IsDeleted = 0) as ActiveAircraft,
-                (SELECT COUNT(*) FROM dbo.Users WHERE AirlineId = @AirlineId AND IsActive = 1) as TotalStaff,
-                (SELECT COUNT(*) FROM dbo.Bookings b
-                    WHERE b.Status = 1 AND CAST(b.CreatedAt AS DATE) = CAST(GETUTCDATE() AS DATE)
+                (SELECT COUNT(*) FROM flights.airplanes WHERE airline_id = @AirlineId AND is_deleted = FALSE) as ActiveAircraft,
+                (SELECT COUNT(*) FROM users.users WHERE airline_id = @AirlineId AND is_active = TRUE) as TotalStaff,
+                (SELECT COUNT(*) FROM bookings.bookings b
+                    WHERE b.status = 1 AND CAST(b.created_at AS DATE) = CAST(NOW() AS DATE)
                       AND EXISTS (
-                          SELECT 1 FROM dbo.Tickets t
-                          INNER JOIN dbo.Flights f ON t.FlightId = f.Id
-                          INNER JOIN dbo.Routes r ON f.RouteId = r.Id
-                          WHERE t.BookingId = b.Id AND r.AirlineId = @AirlineId
+                          SELECT 1 FROM bookings.tickets t
+                          INNER JOIN flights.flights f ON t.flight_id = f.id
+                          INNER JOIN flights.routes r ON f.route_id = r.id
+                          WHERE t.booking_id = b.id AND r.airline_id = @AirlineId
                       )
                 ) as TodayBookings,
-                ISNULL((
-                    SELECT SUM(b.TotalPrice) FROM dbo.Bookings b
-                    WHERE b.Status = 1 AND b.CreatedAt >= DATEADD(day, -30, GETUTCDATE())
+                COALESCE((
+                    SELECT SUM(b.total_price) FROM bookings.bookings b
+                    WHERE b.status = 1 AND b.created_at >= NOW() - INTERVAL '30 days'
                       AND EXISTS (
-                          SELECT 1 FROM dbo.Tickets t
-                          INNER JOIN dbo.Flights f ON t.FlightId = f.Id
-                          INNER JOIN dbo.Routes r ON f.RouteId = r.Id
-                          WHERE t.BookingId = b.Id AND r.AirlineId = @AirlineId
+                          SELECT 1 FROM bookings.tickets t
+                          INNER JOIN flights.flights f ON t.flight_id = f.id
+                          INNER JOIN flights.routes r ON f.route_id = r.id
+                          WHERE t.booking_id = b.id AND r.airline_id = @AirlineId
                       )
                 ), 0) as MonthlyRevenue";
 
@@ -105,11 +107,11 @@ public class DashboardRepository : IDashboardRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT TOP (@Count)
-                f.FlightNumber as Id,
-                (SELECT IataCode FROM dbo.Airports WHERE Id = r.OriginAirportId) + '-' + (SELECT IataCode FROM dbo.Airports WHERE Id = r.DestinationAirportId) as Route,
-                CONVERT(varchar, f.DepartureTime, 108) as Time,
-                CASE f.Status
+            SELECT
+                f.""FlightNumber"" as Id,
+                (SELECT ""IataCode"" FROM flights.""Airports"" WHERE ""Id"" = r.""OriginAirportId"") || '-' || (SELECT ""IataCode"" FROM flights.""Airports"" WHERE ""Id"" = r.""DestinationAirportId"") as Route,
+                TO_CHAR(f.""DepartureTime"", 'HH24:MI:SS') as Time,
+                CASE f.""Status""
                     WHEN 0 THEN 'Scheduled'
                     WHEN 1 THEN 'Delayed'
                     WHEN 2 THEN 'Boarding'
@@ -118,7 +120,7 @@ public class DashboardRepository : IDashboardRepository
                     WHEN 5 THEN 'Cancelled'
                     ELSE 'Unknown'
                 END as Status,
-                CASE f.Status
+                CASE f.""Status""
                     WHEN 0 THEN 'text-sky-600 bg-sky-500/10'
                     WHEN 1 THEN 'text-amber-600 bg-amber-500/10'
                     WHEN 2 THEN 'text-emerald-600 bg-emerald-500/10'
@@ -127,10 +129,11 @@ public class DashboardRepository : IDashboardRepository
                     WHEN 5 THEN 'text-rose-600 bg-rose-500/10'
                     ELSE 'text-muted-foreground bg-muted'
                 END as Color
-            FROM dbo.Flights f
-            INNER JOIN dbo.Routes r ON f.RouteId = r.Id
-            WHERE r.AirlineId = @AirlineId
-            ORDER BY f.DepartureTime DESC";
+            FROM flights.""Flights"" f
+            INNER JOIN flights.""Routes"" r ON f.""RouteId"" = r.""Id""
+            WHERE r.""AirlineId"" = @AirlineId
+            ORDER BY f.""DepartureTime"" DESC
+            LIMIT @Count";
 
         var result = await connection.QueryAsync<PartnerRecentFlightDto>(sql, new { AirlineId = airlineId, Count = count });
         return result.ToList();
@@ -140,25 +143,26 @@ public class DashboardRepository : IDashboardRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT TOP (@Count)
-                b.PnrCode as Id,
-                (SELECT TOP 1 (p.LastName + ' ' + p.FirstName) FROM dbo.Passengers p WHERE p.BookingId = b.Id) as Passenger,
-                f.FlightNumber as Flight,
-                fs.SeatNumber as Seat,
+            SELECT
+                b.""PnrCode"" as Id,
+                (SELECT (p.""LastName"" || ' ' || p.""FirstName"") FROM bookings.""Passengers"" p WHERE p.""BookingId"" = b.""Id"" LIMIT 1) as Passenger,
+                f.""FlightNumber"" as Flight,
+                fs.""SeatNumber"" as Seat,
                 'Economy' as Class,
-                '$' + CAST(b.TotalPrice AS varchar) as Amount,
+                '$' || CAST(b.""TotalPrice"" AS TEXT) as Amount,
                 CASE
-                    WHEN DATEDIFF(MINUTE, b.CreatedAt, GETUTCDATE()) < 60
-                    THEN CAST(DATEDIFF(MINUTE, b.CreatedAt, GETUTCDATE()) AS varchar) + ' mins ago'
-                    ELSE CONVERT(varchar, b.CreatedAt, 103)
+                    WHEN EXTRACT(EPOCH FROM (NOW() - b.""CreatedAt"")) / 60 < 60
+                    THEN CAST(FLOOR(EXTRACT(EPOCH FROM (NOW() - b.""CreatedAt"")) / 60) AS TEXT) || ' mins ago'
+                    ELSE TO_CHAR(b.""CreatedAt"", 'DD/MM/YYYY')
                 END as Date
-            FROM dbo.Bookings b
-            INNER JOIN dbo.Tickets t ON b.Id = t.BookingId
-            INNER JOIN dbo.FlightSeats fs ON t.SeatId = fs.Id
-            INNER JOIN dbo.Flights f ON t.FlightId = f.Id
-            INNER JOIN dbo.Routes r ON f.RouteId = r.Id
-            WHERE r.AirlineId = @AirlineId
-            ORDER BY b.CreatedAt DESC";
+            FROM bookings.""Bookings"" b
+            INNER JOIN bookings.""Tickets"" t ON b.""Id"" = t.""BookingId""
+            INNER JOIN flights.""FlightSeats"" fs ON t.""SeatId"" = fs.""Id""
+            INNER JOIN flights.""Flights"" f ON t.""FlightId"" = f.""Id""
+            INNER JOIN flights.""Routes"" r ON f.""RouteId"" = r.""Id""
+            WHERE r.""AirlineId"" = @AirlineId
+            ORDER BY b.""CreatedAt"" DESC
+            LIMIT @Count";
 
         var result = await connection.QueryAsync<PartnerRecentBookingDto>(sql, new { AirlineId = airlineId, Count = count });
         return result.ToList();

@@ -22,7 +22,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasIndex(x => x.GoogleId)
             .IsUnique()
-            .HasFilter("\"GoogleId\" IS NOT NULL");
+            .HasFilter("google_id IS NOT NULL");
 
         builder.Property(x => x.AuthProvider)
             .HasMaxLength(50);

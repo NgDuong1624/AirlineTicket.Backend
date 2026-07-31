@@ -19,10 +19,10 @@ public class PermissionRepository : IPermissionRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT * FROM dbo.Permissions
-            ORDER BY Id
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
-        const string countSql = "SELECT COUNT(*) FROM dbo.Permissions";
+            SELECT * FROM users.permissions
+            ORDER BY id
+            OFFSET @Offset LIMIT @PageSize";
+        const string countSql = "SELECT COUNT(*) FROM users.permissions";
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
         var result = await connection.QueryAsync<Permission>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
         return (result.ToList(), totalCount);
@@ -32,7 +32,7 @@ public class PermissionRepository : IPermissionRepository
     {
         var connection = _context.Database.GetDbConnection();
         return await connection.QueryFirstOrDefaultAsync<Permission>(
-            "SELECT * FROM dbo.Permissions WHERE Id = @Id", new { Id = id });
+            "SELECT * FROM users.permissions WHERE id = @Id", new { Id = id });
     }
 
     public async Task<int> CreateAsync(Permission permission, CancellationToken cancellationToken = default)

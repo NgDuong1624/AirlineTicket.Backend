@@ -59,7 +59,7 @@ erDiagram
 ### 2.1. Phân hệ Định danh (`dbo`)
 Quản lý người dùng, phân quyền truy cập hệ thống.
 
-#### Bảng `dbo.Users`
+#### Bảng `users.users`
 Lưu trữ thông tin người dùng (Khách hàng, Đối tác, Quản trị viên).
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
@@ -79,7 +79,7 @@ Lưu trữ thông tin người dùng (Khách hàng, Đối tác, Quản trị vi
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ khởi tạo |
 | `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ cập nhật mới nhất |
 
-#### Bảng `dbo.Roles`
+#### Bảng `users.roles`
 Danh sách vai trò hệ thống.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
@@ -88,7 +88,7 @@ Danh sách vai trò hệ thống.
 | `Name` | NVARCHAR(50) | UNIQUE, NOT NULL | Tên vai trò (Admin, Partner, Customer) |
 | `Description` | NVARCHAR(255) | NULL | Mô tả chi tiết vai trò |
 
-#### Bảng `dbo.Permissions`
+#### Bảng `users.permissions`
 Danh mục các chức năng/quyền hạn trong hệ thống.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
@@ -98,7 +98,7 @@ Danh mục các chức năng/quyền hạn trong hệ thống.
 | `Name` | NVARCHAR(100) | NOT NULL | Tên quyền hiển thị |
 | `Description` | NVARCHAR(255) | NULL | Mô tả chi tiết quyền |
 
-#### Bảng `dbo.RolePermissions`
+#### Bảng `users.role_permissions`
 Cấu hình quyền mặc định thuộc về từng Role.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
@@ -106,7 +106,7 @@ Cấu hình quyền mặc định thuộc về từng Role.
 | `RoleId` | INT | FOREIGN KEY -> Roles(Id) | Liên kết vai trò |
 | `PermissionId` | INT | FOREIGN KEY -> Permissions(Id) | Liên kết quyền |
 
-#### Bảng `dbo.UserPermissionScopes`
+#### Bảng `users.user_permission_scopes`
 Phân quyền chi tiết theo Trạm bay hoặc Hạn mức/Giới hạn số lượng.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
@@ -125,7 +125,7 @@ Phân quyền chi tiết theo Trạm bay hoặc Hạn mức/Giới hạn số l�
 ### 2.2. Phân hệ Chuyến bay (`dbo`)
 Quản lý lịch trình, hãng bay, sân bay, máy bay và ghế ngồi chuyến bay.
 
-#### Bảng `dbo.Airlines`
+#### Bảng `flights.airlines`
 Quản lý các đối tác Hãng hàng không tích hợp hệ thống.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
@@ -141,7 +141,7 @@ Quản lý các đối tác Hãng hàng không tích hợp hệ thống.
 | `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 | `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo lập đối tác |
 
-#### Bảng `dbo.Airports`
+#### Bảng `flights.airports`
 Danh sách thông tin sân bay trên thế giới.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
@@ -159,7 +159,7 @@ Danh sách thông tin sân bay trên thế giới.
 | `IsActive` | BIT | DEFAULT 1, NOT NULL | Trạng thái hoạt động sân bay |
 | `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 
-#### Bảng `dbo.AircraftModels`
+#### Bảng `flights.aircraft_models`
 Danh mục các dòng/mẫu máy bay trong hệ thống (dùng làm cấu hình mẫu).
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
@@ -170,13 +170,13 @@ Danh mục các dòng/mẫu máy bay trong hệ thống (dùng làm cấu hình 
 | `TotalSeats` | INT | NOT NULL | Tổng số ghế theo cấu hình mẫu |
 | `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 
-#### Bảng `dbo.AircraftModelSeatTemplates`
+#### Bảng `flights.aircraft_model_seat_templates`
 Cấu hình sơ đồ ghế mẫu cho từng dòng máy bay.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất ghế mẫu |
-| `AircraftModelId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.AircraftModels(Id) | Thuộc mẫu máy bay nào |
+| `AircraftModelId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.aircraft_models(id) | Thuộc mẫu máy bay nào |
 | `SeatNumber` | NVARCHAR(10) | NOT NULL | Số ghế (VD: 1A, 12B) |
 | `SeatRow` | NVARCHAR(10) | NOT NULL | Hàng ghế (VD: 1, 12) |
 | `SeatColumn` | NVARCHAR(10) | NOT NULL | Cột ghế (VD: A, B) |
@@ -184,26 +184,26 @@ Cấu hình sơ đồ ghế mẫu cho từng dòng máy bay.
 | `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Ghế có khoảng để chân rộng rãi không |
 | `PriceMultiplier` | DECIMAL(18, 2) | DEFAULT 1.0, NOT NULL | Hệ số nhân giá vé cho hạng ghế này |
 
-#### Bảng `dbo.Airplanes`
+#### Bảng `flights.airplanes`
 Hạ tầng đội bay của các hãng hàng không.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất tàu bay |
-| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Airlines(Id) | Thuộc sở hữu hãng bay nào |
-| `AircraftModelId` | UNIQUEIDENTIFIER | NULL, FOREIGN KEY -> dbo.AircraftModels(Id) | Liên kết cấu hình mẫu máy bay |
+| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airlines(id) | Thuộc sở hữu hãng bay nào |
+| `AircraftModelId` | UNIQUEIDENTIFIER | NULL, FOREIGN KEY -> flights.aircraft_models(id) | Liên kết cấu hình mẫu máy bay |
 | `Model` | NVARCHAR(100) | NOT NULL | Dòng máy bay (VD: Boeing 787, Airbus A350) |
 | `RegistrationNumber` | NVARCHAR(50) | UNIQUE, NOT NULL | Số đăng ký kiểm soát máy bay |
 | `TotalCapacity` | INT | NOT NULL | Tổng tải lượng số ghế |
 | `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 
-#### Bảng `dbo.AirplaneSeats`
+#### Bảng `flights.airplane_seats`
 Sơ đồ ghế thực tế của từng tàu bay cụ thể (được sinh ra từ cấu hình mẫu).
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất ghế tàu bay |
-| `AirplaneId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Airplanes(Id) | Thuộc tàu bay nào |
+| `AirplaneId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airplanes(id) | Thuộc tàu bay nào |
 | `SeatNumber` | NVARCHAR(10) | NOT NULL | Số ghế (VD: 1A, 12B) |
 | `SeatRow` | NVARCHAR(10) | NOT NULL | Hàng ghế (VD: 1, 12) |
 | `SeatColumn` | NVARCHAR(10) | NOT NULL | Cột ghế (VD: A, B) |
@@ -211,26 +211,26 @@ Sơ đồ ghế thực tế của từng tàu bay cụ thể (được sinh ra t
 | `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Ghế có khoảng để chân rộng rãi không |
 | `PriceMultiplier` | DECIMAL(18, 2) | DEFAULT 1.0, NOT NULL | Hệ số nhân giá vé cho hạng ghế này |
 
-#### Bảng `dbo.Routes`
+#### Bảng `flights.routes`
 Các tuyến đường bay kết nối giữa các sân bay.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh tuyến bay |
-| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Airlines(Id) | Hãng vận hành tuyến bay |
-| `OriginAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Airports(Id) | Sân bay điểm khởi hành |
-| `DestinationAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Airports(Id) | Sân bay điểm đến |
+| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airlines(id) | Hãng vận hành tuyến bay |
+| `OriginAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airports(id) | Sân bay điểm khởi hành |
+| `DestinationAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airports(id) | Sân bay điểm đến |
 | `DistanceKm` | DECIMAL(10, 2) | NULL | Khoảng cách tuyến bay (km) |
 | `EstimatedDurationMinutes` | INT | NULL | Thời gian bay dự kiến (phút) |
 | `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
 
-#### Bảng `dbo.Flights`
+#### Bảng `flights.flights`
 Thông tin chi tiết chuyến bay thực tế theo thời gian.
 
 | Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
 | :--- | :--- | :--- | :--- |
 | `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất chuyến bay |
-| `RouteId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Routes(Id) | Tuyến đường bay chi tiết |
+| `RouteId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.routes(id) | Tuyến đường bay chi tiết |
 | `AirplaneId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Airplanes(Id) | Tàu bay được phân công |
 | `FlightNumber` | NVARCHAR(20) | NOT NULL | Số hiệu chuyến bay (VD: VN213) |
 | `DepartureTime` | DATETIME2 | NOT NULL | Thời gian cất cánh dự kiến |
