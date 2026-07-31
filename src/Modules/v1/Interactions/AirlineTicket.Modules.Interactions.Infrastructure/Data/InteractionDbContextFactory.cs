@@ -16,7 +16,7 @@ public class InteractionDbContextFactory : IDesignTimeDbContextFactory<Interacti
         }
 
         var optionsBuilder = new DbContextOptionsBuilder<InteractionDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
 
         return new InteractionDbContext(optionsBuilder.Options);
     }

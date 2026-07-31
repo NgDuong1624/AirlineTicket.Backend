@@ -16,7 +16,7 @@ public class CMSDbContextFactory : IDesignTimeDbContextFactory<CMSDbContext>
         }
 
         var optionsBuilder = new DbContextOptionsBuilder<CMSDbContext>();
-        optionsBuilder.UseNpgsql(connectionString);
+        optionsBuilder.UseNpgsql(connectionString).UseSnakeCaseNamingConvention();
 
         return new CMSDbContext(optionsBuilder.Options);
     }

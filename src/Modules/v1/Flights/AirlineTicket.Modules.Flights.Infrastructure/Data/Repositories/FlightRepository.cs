@@ -25,11 +25,11 @@ public class FlightRepository : IFlightRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
-                   r.AirlineId
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            WHERE f.Id = @Id AND f.IsDeleted = 0 AND r.IsDeleted = 0";
+            SELECT f.id, f.route_id, f.airplane_id, f.flight_number, f.base_price, f.departure_time, f.arrival_time, f.currency, f.status,
+                   r.airline_id
+            FROM flights.flights f
+            JOIN flights.routes r ON f.route_id = r.id
+            WHERE f.id = @Id AND f.is_deleted = FALSE AND r.is_deleted = FALSE";
         
         return await connection.QueryFirstOrDefaultAsync<FlightDto>(sql, new { Id = id });
     }
@@ -52,15 +52,15 @@ public class FlightRepository : IFlightRepository
         var connection = _context.Database.GetDbConnection();
         
         var baseSql = @"
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
-            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
-            JOIN dbo.Airlines a ON r.AirlineId = a.Id
-            WHERE oa.IataCode = @Origin 
-              AND da.IataCode = @Destination 
-              AND CAST(f.DepartureTime AS DATE) = CAST(@Date AS DATE)
-              AND f.IsDeleted = 0 AND r.IsDeleted = 0";
+            FROM flights.flights f
+            JOIN flights.routes r ON f.route_id = r.id
+            JOIN flights.airports oa ON r.origin_airport_id = oa.id
+            JOIN flights.airports da ON r.destination_airport_id = da.id
+            JOIN flights.airlines a ON r.airline_id = a.id
+            WHERE oa.iata_code = @Origin 
+              AND da.iata_code = @Destination 
+              AND f.departure_time::date = @Date::date
+              AND f.is_deleted = FALSE AND r.is_deleted = FALSE";
 
         var parameters = new DynamicParameters();
         parameters.Add("Origin", origin);
@@ -69,42 +69,37 @@ public class FlightRepository : IFlightRepository
 
         if (airlines != null && airlines.Any())
         {
-            baseSql += " AND a.Name IN @Airlines";
+            baseSql += " AND a.name IN @Airlines";
             parameters.Add("Airlines", airlines);
         }
 
         if (priceRangeMin.HasValue)
         {
-            baseSql += " AND f.BasePrice >= @MinPrice";
+            baseSql += " AND f.base_price >= @MinPrice";
             parameters.Add("MinPrice", priceRangeMin.Value);
         }
         
         if (priceRangeMax.HasValue)
         {
-            baseSql += " AND f.BasePrice <= @MaxPrice";
+            baseSql += " AND f.base_price <= @MaxPrice";
             parameters.Add("MaxPrice", priceRangeMax.Value);
         }
 
         var countSql = "SELECT COUNT(*) " + baseSql;
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
 
-        var selectSql = @"
-            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
-                   f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
-                   oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName"
-            + baseSql;
-
-        if (!string.IsNullOrEmpty(sortBy))
-        {
-            if (sortBy.Equals("price_asc", StringComparison.OrdinalIgnoreCase))
-                selectSql += " ORDER BY f.BasePrice ASC";
-            else if (sortBy.Equals("price_desc", StringComparison.OrdinalIgnoreCase))
-                selectSql += " ORDER BY f.BasePrice DESC";
-        }
-        else
-        {
-            selectSql += " ORDER BY f.DepartureTime OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
-        }
+        var selectSql = $@"
+            SELECT f.id, f.route_id, f.airplane_id, f.flight_number, f.base_price, 
+                   f.departure_time, f.arrival_time, f.currency, f.status,
+                   oa.iata_code as OriginCode, da.iata_code as DestinationCode, a.name as AirlineName
+            {baseSql}
+            {(string.IsNullOrEmpty(sortBy) 
+                ? " ORDER BY f.departure_time OFFSET @Offset LIMIT @PageSize" 
+                : (sortBy.Equals("price_asc", StringComparison.OrdinalIgnoreCase) 
+                    ? " ORDER BY f.base_price ASC" 
+                    : (sortBy.Equals("price_desc", StringComparison.OrdinalIgnoreCase) 
+                        ? " ORDER BY f.BasePrice DESC" 
+                        : "")))}";
         parameters.Add("Offset", (pageIndex - 1) * pageSize);
         parameters.Add("PageSize", pageSize);
 
@@ -158,16 +153,17 @@ public class FlightRepository : IFlightRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT TOP 5 f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
+            SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice, 
                          f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
                          oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
-            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
-            JOIN dbo.Airlines a ON r.AirlineId = a.Id
-            WHERE f.IsDeleted = 0 AND r.IsDeleted = 0
-            ORDER BY f.BasePrice ASC";
+            FROM flights.Flights f
+            JOIN flights.Routes r ON f.RouteId = r.Id
+            JOIN flights.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN flights.Airports da ON r.DestinationAirportId = da.Id
+            JOIN flights.Airlines a ON r.AirlineId = a.Id
+            WHERE f.IsDeleted = FALSE AND r.IsDeleted = FALSE
+            ORDER BY f.BasePrice ASC
+            LIMIT 5";
         
         var result = await connection.QueryAsync<FlightDto>(sql);
         return result.ToList();
@@ -177,11 +173,11 @@ public class FlightRepository : IFlightRepository
     {
         var connection = _context.Database.GetDbConnection();
         var baseSql = @"
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
-            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
-            WHERE f.IsDeleted = 0";
+            FROM flights.Flights f
+            JOIN flights.Routes r ON f.RouteId = r.Id
+            JOIN flights.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN flights.Airports da ON r.DestinationAirportId = da.Id
+            WHERE f.IsDeleted = FALSE";
 
         var parameters = new DynamicParameters();
         if (!string.IsNullOrWhiteSpace(search))
@@ -202,10 +198,10 @@ public class FlightRepository : IFlightRepository
         var sql = @"
             SELECT f.Id, f.FlightNumber, f.DepartureTime, f.ArrivalTime, f.BasePrice, f.Currency, f.Status,
                    oa.IataCode as OriginCode, da.IataCode as DestinationCode,
-                   (SELECT COUNT(*) FROM dbo.FlightSeats WHERE FlightId = f.Id) as TotalSeats,
-                   (SELECT COUNT(*) FROM dbo.FlightSeats WHERE FlightId = f.Id AND IsAvailable = 1) as AvailableSeats "
+                   (SELECT COUNT(*) FROM flights.FlightSeats WHERE FlightId = f.Id) as TotalSeats,
+                   (SELECT COUNT(*) FROM flights.FlightSeats WHERE FlightId = f.Id AND IsAvailable = TRUE) as AvailableSeats "
             + baseSql
-            + " ORDER BY f.DepartureTime DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            + " ORDER BY f.DepartureTime DESC OFFSET @Offset LIMIT @PageSize";
 
         parameters.Add("Offset", (pageIndex - 1) * pageSize);
         parameters.Add("PageSize", pageSize);
@@ -221,20 +217,20 @@ public class FlightRepository : IFlightRepository
             SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice,
                    f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
                    oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
-            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
-            JOIN dbo.Airlines a ON r.AirlineId = a.Id
-            WHERE r.AirlineId = @AirlineId AND f.IsDeleted = 0 AND r.IsDeleted = 0
+            FROM flights.Flights f
+            JOIN flights.Routes r ON f.RouteId = r.Id
+            JOIN flights.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN flights.Airports da ON r.DestinationAirportId = da.Id
+            JOIN flights.Airlines a ON r.AirlineId = a.Id
+            WHERE r.AirlineId = @AirlineId AND f.IsDeleted = FALSE AND r.IsDeleted = FALSE
             ORDER BY f.DepartureTime DESC
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            OFFSET @Offset LIMIT @PageSize";
 
         const string countSql = @"
             SELECT COUNT(*)
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            WHERE r.AirlineId = @AirlineId AND f.IsDeleted = 0 AND r.IsDeleted = 0";
+            FROM flights.Flights f
+            JOIN flights.Routes r ON f.RouteId = r.Id
+            WHERE r.AirlineId = @AirlineId AND f.IsDeleted = FALSE AND r.IsDeleted = FALSE";
 
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { AirlineId = airlineId });
         var result = await connection.QueryAsync<FlightDto>(sql, new { AirlineId = airlineId, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
@@ -248,20 +244,20 @@ public class FlightRepository : IFlightRepository
             SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice,
                    f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
                    oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
-            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
-            JOIN dbo.Airlines a ON r.AirlineId = a.Id
-            WHERE f.IsDeleted = 0 AND r.IsDeleted = 0
+            FROM flights.Flights f
+            JOIN flights.Routes r ON f.RouteId = r.Id
+            JOIN flights.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN flights.Airports da ON r.DestinationAirportId = da.Id
+            JOIN flights.Airlines a ON r.AirlineId = a.Id
+            WHERE f.IsDeleted = FALSE AND r.IsDeleted = FALSE
             ORDER BY f.DepartureTime DESC
-            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+            OFFSET @Offset LIMIT @PageSize";
 
         const string countSql = @"
             SELECT COUNT(*)
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            WHERE f.IsDeleted = 0 AND r.IsDeleted = 0";
+            FROM flights.Flights f
+            JOIN flights.Routes r ON f.RouteId = r.Id
+            WHERE f.IsDeleted = FALSE AND r.IsDeleted = FALSE";
 
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
         var result = await connection.QueryAsync<FlightDto>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
@@ -324,12 +320,12 @@ public class FlightRepository : IFlightRepository
             SELECT f.Id, f.RouteId, f.AirplaneId, f.FlightNumber, f.BasePrice,
                    f.DepartureTime, f.ArrivalTime, f.Currency, f.Status,
                    oa.IataCode as OriginCode, da.IataCode as DestinationCode, a.Name as AirlineName
-            FROM dbo.Flights f
-            JOIN dbo.Routes r ON f.RouteId = r.Id
-            JOIN dbo.Airports oa ON r.OriginAirportId = oa.Id
-            JOIN dbo.Airports da ON r.DestinationAirportId = da.Id
-            JOIN dbo.Airlines a ON r.AirlineId = a.Id
-            WHERE f.Id IN @Ids AND f.IsDeleted = 0 AND r.IsDeleted = 0";
+            FROM flights.Flights f
+            JOIN flights.Routes r ON f.RouteId = r.Id
+            JOIN flights.Airports oa ON r.OriginAirportId = oa.Id
+            JOIN flights.Airports da ON r.DestinationAirportId = da.Id
+            JOIN flights.Airlines a ON r.AirlineId = a.Id
+            WHERE f.Id = ANY(@Ids) AND f.IsDeleted = FALSE AND r.IsDeleted = FALSE";
 
         var result = await connection.QueryAsync<FlightDto>(sql, new { Ids = ids });
         return result.ToList();
@@ -349,14 +345,14 @@ public class AirportRepository : IAirportRepository
     {
         var connection = _context.Database.GetDbConnection();
         return await connection.QueryFirstOrDefaultAsync<Airport>(
-            "SELECT * FROM dbo.Airports WHERE Id = @Id AND IsDeleted = 0", new { Id = id });
+            "SELECT * FROM flights.Airports WHERE Id = @Id AND IsDeleted = FALSE", new { Id = id });
     }
 
     public async Task<(List<Airport> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, string? search = null, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        string sql = "SELECT * FROM dbo.Airports WHERE IsDeleted = 0";
-        string countSql = "SELECT COUNT(*) FROM dbo.Airports WHERE IsDeleted = 0";
+        string sql = "SELECT * FROM flights.Airports WHERE IsDeleted = FALSE";
+        string countSql = "SELECT COUNT(*) FROM flights.Airports WHERE IsDeleted = FALSE";
         
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -365,7 +361,7 @@ public class AirportRepository : IAirportRepository
             search = $"%{search}%";
         }
         
-        sql += " ORDER BY NameEn OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY";
+        sql += " ORDER BY NameEn OFFSET @Offset LIMIT @PageSize";
         
         var items = (await connection.QueryAsync<Airport>(sql, new { Search = search, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize })).ToList();
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = search });

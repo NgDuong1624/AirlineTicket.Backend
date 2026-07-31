@@ -273,222 +273,215 @@ ON CONFLICT (role_id, permission_id) DO NOTHING;
 -- === Merged from seed_aircraft_models.sql ===
 
 
-PRINT '==========================================================='
+RAISE NOTICE '===========================================================';
 
-PRINT '==========================================================='
+RAISE NOTICE '===========================================================';
 
 
 -- 1. Define Aircraft Model IDs
-DO $$ DECLARE _modelB787 UUID := 'B7879000-BCDE-4F01-2345-6789ABCDEF01';
-DECLARE _modelA350 UUID := 'A3509000-BCDE-4F01-2345-6789ABCDEF02';
-DECLARE _modelA321 UUID := 'A3212000-BCDE-4F01-2345-6789ABCDEF03';
+DO $$
+DECLARE
+    _modelB787 UUID := 'B7879000-BCDE-4F01-2345-6789ABCDEF01';
+    _modelA350 UUID := 'A3509000-BCDE-4F01-2345-6789ABCDEF02';
+    _modelA321 UUID := 'A3212000-BCDE-4F01-2345-6789ABCDEF03';
+BEGIN
 
 -- 2. Insert Aircraft Models
-IF NOT EXISTS (SELECT 1 FROM flights.aircraft_models WHERE Id = @ModelB787)
-BEGIN
-    INSERT INTO flights.aircraft_models (Id, Name, Manufacturer, TotalSeats, IsDeleted)
-    VALUES (@ModelB787, 'Boeing 787-9 Dreamliner', 'Boeing', 294, FALSE);
-END
+IF NOT EXISTS (SELECT 1 FROM flights.aircraft_models WHERE id = _modelB787) THEN
+    INSERT INTO flights.aircraft_models (id, name, manufacturer, total_seats, is_deleted)
+    VALUES (_modelB787, 'Boeing 787-9 Dreamliner', 'Boeing', 294, FALSE);
+END IF;;
 
-IF NOT EXISTS (SELECT 1 FROM flights.aircraft_models WHERE Id = @ModelA350)
-BEGIN
-    INSERT INTO flights.aircraft_models (Id, Name, Manufacturer, TotalSeats, IsDeleted)
-    VALUES (@ModelA350, 'Airbus A350-900', 'Airbus', 305, FALSE);
-END
+IF NOT EXISTS (SELECT 1 FROM flights.aircraft_models WHERE id = _modelA350) THEN
+    INSERT INTO flights.aircraft_models (id, name, manufacturer, total_seats, is_deleted)
+    VALUES (_modelA350, 'Airbus A350-900', 'Airbus', 305, FALSE);
+END IF;;
 
-IF NOT EXISTS (SELECT 1 FROM flights.aircraft_models WHERE Id = @ModelA321)
-BEGIN
-    INSERT INTO flights.aircraft_models (Id, Name, Manufacturer, TotalSeats, IsDeleted)
-    VALUES (@ModelA321, 'Airbus A321neo', 'Airbus', 230, FALSE);
-END
+IF NOT EXISTS (SELECT 1 FROM flights.aircraft_models WHERE id = _modelA321) THEN
+    INSERT INTO flights.aircraft_models (id, name, manufacturer, total_seats, is_deleted)
+    VALUES (_modelA321, 'Airbus A321neo', 'Airbus', 230, FALSE);
+END IF;;
 
 -- 3. Generate Seat Templates using loops to avoid massive SQL file size
 
 
 -- Helper table for columns
-IF OBJECT_ID('tempdb..#Cols') IS NOT NULL DROP TABLE #Cols;
-CREATE TABLE #Cols (Col CHAR(1), ColIndex INT);
-INSERT INTO #Cols VALUES ('A', 1), ('B', 2), ('C', 3), ('D', 4), ('E', 5), ('F', 6), ('G', 7), ('H', 8), ('K', 9);
+DROP TEMPORARY TABLE IF EXISTS temp_cols;
+CREATE TEMPORARY TABLE temp_cols (col CHAR(1), col_index INTEGER);
+INSERT INTO temp_cols VALUES ('A', 1), ('B', 2), ('C', 3), ('D', 4), ('E', 5), ('F', 6), ('G', 7), ('H', 8), ('K', 9);
 
 -- --- Boeing 787-9 Seat Template ---
 -- Business Class: Rows 1-5, 1-2-1 layout (A, D, G, K)
-DECLARE @Row INT = 1;
-WHILE @Row <= 5
-BEGIN
-    INSERT INTO flights.aircraft_model_seat_templates (Id, AircraftModelId, SeatNumber, SeatRow, SeatColumn, SeatClass, IsExtraLegroom, PriceMultiplier)
+_row INTEGER := 1;
+WHILE _row <= 5 LOOP
+    INSERT INTO flights.aircraft_model_seat_templates (id, aircraft_model_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
     SELECT 
         gen_random_uuid(), 
-        @ModelB787, 
-        CAST(@Row AS VARCHAR(2)) + Col, 
-        CAST(@Row AS VARCHAR(2)), 
-        Col, 
+        _modelB787, 
+        _row::VARCHAR(2) || col, 
+        _row::VARCHAR(2), 
+        col, 
         2, -- Business
-        1, -- Extra legroom for Business
+        TRUE, -- Extra legroom for Business
         2.5 -- 2.5x price
-    FROM #Cols WHERE Col IN ('A', 'D', 'G', 'K')
-    AND NOT EXISTS (SELECT 1 FROM flights.aircraft_model_seat_templates WHERE AircraftModelId = @ModelB787 AND SeatNumber = CAST(@Row AS VARCHAR(2)) + Col);
+    FROM temp_cols WHERE col IN ('A', 'D', 'G', 'K')
+    ON CONFLICT (aircraft_model_id, seat_number) DO NOTHING;
     
-    SET @Row = @Row + 1;
-END
+    _row := _row + 1;
+END LOOP;;
 
 -- Premium Economy: Rows 10-15, 2-3-2 layout (A, C, D, F, G, H, K)
-SET @Row = 10;
-WHILE @Row <= 15
-BEGIN
-    INSERT INTO flights.aircraft_model_seat_templates (Id, AircraftModelId, SeatNumber, SeatRow, SeatColumn, SeatClass, IsExtraLegroom, PriceMultiplier)
+_row := 10;
+WHILE _row <= 15 LOOP
+    INSERT INTO flights.aircraft_model_seat_templates (id, aircraft_model_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
     SELECT 
         gen_random_uuid(), 
-        @ModelB787, 
-        CAST(@Row AS VARCHAR(2)) + Col, 
-        CAST(@Row AS VARCHAR(2)), 
-        Col, 
+        _modelB787, 
+        _row::VARCHAR(2) || col, 
+        _row::VARCHAR(2), 
+        col, 
         1, -- Premium Economy
-        0, 
+        FALSE, 
         1.5 -- 1.5x price
-    FROM #Cols WHERE Col IN ('A', 'C', 'D', 'F', 'G', 'H', 'K')
-    AND NOT EXISTS (SELECT 1 FROM flights.aircraft_model_seat_templates WHERE AircraftModelId = @ModelB787 AND SeatNumber = CAST(@Row AS VARCHAR(2)) + Col);
+    FROM temp_cols WHERE col IN ('A', 'C', 'D', 'F', 'G', 'H', 'K')
+    ON CONFLICT (aircraft_model_id, seat_number) DO NOTHING;
     
-    SET @Row = @Row + 1;
-END
+    _row := _row + 1;
+END LOOP;;
 
 -- Economy: Rows 20-45, 3-3-3 layout (A, B, C, D, E, F, G, H, K)
-SET @Row = 20;
-WHILE @Row <= 45
-BEGIN
-    INSERT INTO flights.aircraft_model_seat_templates (Id, AircraftModelId, SeatNumber, SeatRow, SeatColumn, SeatClass, IsExtraLegroom, PriceMultiplier)
+_row := 20;
+WHILE _row <= 45 LOOP
+    INSERT INTO flights.aircraft_model_seat_templates (id, aircraft_model_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
     SELECT 
         gen_random_uuid(), 
-        @ModelB787, 
-        CAST(@Row AS VARCHAR(2)) + Col, 
-        CAST(@Row AS VARCHAR(2)), 
-        Col, 
+        _modelB787, 
+        _row::VARCHAR(2) || col, 
+        _row::VARCHAR(2), 
+        col, 
         0, -- Economy
-        CASE WHEN @Row = 20 THEN TRUE ELSE FALSE END, -- Row 20 has extra legroom
-        CASE WHEN @Row = 20 THEN 1.2 ELSE 1.0 END
-    FROM #Cols WHERE Col IN ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K')
-    AND NOT EXISTS (SELECT 1 FROM flights.aircraft_model_seat_templates WHERE AircraftModelId = @ModelB787 AND SeatNumber = CAST(@Row AS VARCHAR(2)) + Col);
+        CASE WHEN _row = 20 THEN TRUE ELSE FALSE END, -- Row 20 has extra legroom
+        CASE WHEN _row = 20 THEN 1.2 ELSE 1.0 END
+    FROM temp_cols WHERE col IN ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K')
+    ON CONFLICT (aircraft_model_id, seat_number) DO NOTHING;
     
-    SET @Row = @Row + 1;
-END
+    _row := _row + 1;
+END LOOP;;
 
 
 -- --- Airbus A350-900 Seat Template ---
 -- Business Class: Rows 1-6, 1-2-1 layout (A, D, G, K)
-SET @Row = 1;
-WHILE @Row <= 6
-BEGIN
-    INSERT INTO flights.aircraft_model_seat_templates (Id, AircraftModelId, SeatNumber, SeatRow, SeatColumn, SeatClass, IsExtraLegroom, PriceMultiplier)
+_row := 1;
+WHILE _row <= 6 LOOP
+    INSERT INTO flights.aircraft_model_seat_templates (id, aircraft_model_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
     SELECT 
         gen_random_uuid(), 
-        @ModelA350, 
-        CAST(@Row AS VARCHAR(2)) + Col, 
-        CAST(@Row AS VARCHAR(2)), 
-        Col, 
+        _modelA350, 
+        _row::VARCHAR(2) || col, 
+        _row::VARCHAR(2), 
+        col, 
         2, -- Business
-        1, 
+        TRUE, 
         2.5
-    FROM #Cols WHERE Col IN ('A', 'D', 'G', 'K')
-    AND NOT EXISTS (SELECT 1 FROM flights.aircraft_model_seat_templates WHERE AircraftModelId = @ModelA350 AND SeatNumber = CAST(@Row AS VARCHAR(2)) + Col);
+    FROM temp_cols WHERE col IN ('A', 'D', 'G', 'K')
+    ON CONFLICT (aircraft_model_id, seat_number) DO NOTHING;
     
-    SET @Row = @Row + 1;
-END
+    _row := _row + 1;
+END LOOP;;
 
 -- Premium Economy: Rows 10-16, 2-4-2 layout (A, C, D, E, F, G, H, K)
-SET @Row = 10;
-WHILE @Row <= 16
-BEGIN
-    INSERT INTO flights.aircraft_model_seat_templates (Id, AircraftModelId, SeatNumber, SeatRow, SeatColumn, SeatClass, IsExtraLegroom, PriceMultiplier)
+_row := 10;
+WHILE _row <= 16 LOOP
+    INSERT INTO flights.aircraft_model_seat_templates (id, aircraft_model_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
     SELECT 
         gen_random_uuid(), 
-        @ModelA350, 
-        CAST(@Row AS VARCHAR(2)) + Col, 
-        CAST(@Row AS VARCHAR(2)), 
-        Col, 
+        _modelA350, 
+        _row::VARCHAR(2) || col, 
+        _row::VARCHAR(2), 
+        col, 
         1, -- Premium Economy
-        0, 
+        FALSE, 
         1.5
-    FROM #Cols WHERE Col IN ('A', 'C', 'D', 'E', 'F', 'G', 'H', 'K')
-    AND NOT EXISTS (SELECT 1 FROM flights.aircraft_model_seat_templates WHERE AircraftModelId = @ModelA350 AND SeatNumber = CAST(@Row AS VARCHAR(2)) + Col);
+    FROM temp_cols WHERE col IN ('A', 'C', 'D', 'E', 'F', 'G', 'H', 'K')
+    ON CONFLICT (aircraft_model_id, seat_number) DO NOTHING;
     
-    SET @Row = @Row + 1;
-END
+    _row := _row + 1;
+END LOOP;;
 
 -- Economy: Rows 20-46, 3-3-3 layout (A, B, C, D, E, F, G, H, K)
-SET @Row = 20;
-WHILE @Row <= 46
-BEGIN
-    INSERT INTO flights.aircraft_model_seat_templates (Id, AircraftModelId, SeatNumber, SeatRow, SeatColumn, SeatClass, IsExtraLegroom, PriceMultiplier)
+_row := 20;
+WHILE _row <= 46 LOOP
+    INSERT INTO flights.aircraft_model_seat_templates (id, aircraft_model_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
     SELECT 
         gen_random_uuid(), 
-        @ModelA350, 
-        CAST(@Row AS VARCHAR(2)) + Col, 
-        CAST(@Row AS VARCHAR(2)), 
-        Col, 
+        _modelA350, 
+        _row::VARCHAR(2) || col, 
+        _row::VARCHAR(2), 
+        col, 
         0, -- Economy
-        CASE WHEN @Row = 20 THEN 1 ELSE 0 END, 
-        CASE WHEN @Row = 20 THEN 1.2 ELSE 1.0 END
-    FROM #Cols WHERE Col IN ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K')
-    AND NOT EXISTS (SELECT 1 FROM flights.aircraft_model_seat_templates WHERE AircraftModelId = @ModelA350 AND SeatNumber = CAST(@Row AS VARCHAR(2)) + Col);
+        CASE WHEN _row = 20 THEN TRUE ELSE FALSE END, 
+        CASE WHEN _row = 20 THEN 1.2 ELSE 1.0 END
+    FROM temp_cols WHERE col IN ('A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'K')
+    ON CONFLICT (aircraft_model_id, seat_number) DO NOTHING;
     
-    SET @Row = @Row + 1;
-END
+    _row := _row + 1;
+END LOOP;;
 
 
 -- --- Airbus A321neo Seat Template ---
 -- Business Class: Rows 1-2, 2-2 layout (A, C, H, K)
-SET @Row = 1;
-WHILE @Row <= 2
-BEGIN
-    INSERT INTO flights.aircraft_model_seat_templates (Id, AircraftModelId, SeatNumber, SeatRow, SeatColumn, SeatClass, IsExtraLegroom, PriceMultiplier)
+_row := 1;
+WHILE _row <= 2 LOOP
+    INSERT INTO flights.aircraft_model_seat_templates (id, aircraft_model_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
     SELECT 
         gen_random_uuid(), 
-        @ModelA321, 
-        CAST(@Row AS VARCHAR(2)) + Col, 
-        CAST(@Row AS VARCHAR(2)), 
-        Col, 
+        _modelA321, 
+        _row::VARCHAR(2) || col, 
+        _row::VARCHAR(2), 
+        col, 
         2, -- Business
-        1, 
+        TRUE, 
         2.0
-    FROM #Cols WHERE Col IN ('A', 'C', 'H', 'K')
-    AND NOT EXISTS (SELECT 1 FROM flights.aircraft_model_seat_templates WHERE AircraftModelId = @ModelA321 AND SeatNumber = CAST(@Row AS VARCHAR(2)) + Col);
+    FROM temp_cols WHERE col IN ('A', 'C', 'H', 'K')
+    ON CONFLICT (aircraft_model_id, seat_number) DO NOTHING;
     
-    SET @Row = @Row + 1;
-END
+    _row := _row + 1;
+END LOOP;;
 
 -- Economy: Rows 3-38, 3-3 layout (A, B, C, H, J, K)
-SET @Row = 3;
-WHILE @Row <= 38
-BEGIN
-    INSERT INTO flights.aircraft_model_seat_templates (Id, AircraftModelId, SeatNumber, SeatRow, SeatColumn, SeatClass, IsExtraLegroom, PriceMultiplier)
+_row := 3;
+WHILE _row <= 38 LOOP
+    INSERT INTO flights.aircraft_model_seat_templates (id, aircraft_model_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
     SELECT 
         gen_random_uuid(), 
-        @ModelA321, 
-        CAST(@Row AS VARCHAR(2)) + Col, 
-        CAST(@Row AS VARCHAR(2)), 
-        Col, 
+        _modelA321, 
+        _row::VARCHAR(2) || col, 
+        _row::VARCHAR(2), 
+        col, 
         0, -- Economy
-        CASE WHEN @Row IN (11, 12) THEN TRUE ELSE FALSE END, -- Exit rows
-        CASE WHEN @Row IN (11, 12) THEN 1.2 ELSE 1.0 END
-    FROM #Cols WHERE Col IN ('A', 'B', 'C', 'G', 'H', 'K') -- Map G to J for simplicity
-    AND NOT EXISTS (SELECT 1 FROM flights.aircraft_model_seat_templates WHERE AircraftModelId = @ModelA321 AND SeatNumber = CAST(@Row AS VARCHAR(2)) + Col);
+        CASE WHEN _row IN (11, 12) THEN TRUE ELSE FALSE END, -- Exit rows
+        CASE WHEN _row IN (11, 12) THEN 1.2 ELSE 1.0 END
+    FROM temp_cols WHERE col IN ('A', 'B', 'C', 'G', 'H', 'K') -- Map G to J for simplicity
+    ON CONFLICT (aircraft_model_id, seat_number) DO NOTHING;
     
-    SET @Row = @Row + 1;
-END
+    _row := _row + 1;
+END LOOP;
+END $$;
 
 -- 4. Update existing Airplanes to link to Aircraft Models
 
 
 UPDATE flights.airplanes
-SET AircraftModelId = @ModelB787
-WHERE Id IN ('81F3E2D4-BCDE-4F01-2345-6789ABCDEF01', '84F3E2D4-BCDE-4F01-2345-6789ABCDEF04');
+SET aircraft_model_id = _modelB787
+WHERE id IN ('81F3E2D4-BCDE-4F01-2345-6789ABCDEF01', '84F3E2D4-BCDE-4F01-2345-6789ABCDEF04');
 
 UPDATE flights.airplanes
-SET AircraftModelId = @ModelA350
-WHERE Id = '82F3E2D4-BCDE-4F01-2345-6789ABCDEF02';
+SET aircraft_model_id = _modelA350
+WHERE id = '82F3E2D4-BCDE-4F01-2345-6789ABCDEF02';
 
 UPDATE flights.airplanes
-SET AircraftModelId = @ModelA321
-WHERE Id = '83F3E2D4-BCDE-4F01-2345-6789ABCDEF03';
+SET aircraft_model_id = _modelA321
+WHERE id = '83F3E2D4-BCDE-4F01-2345-6789ABCDEF03';
 
 -- 5. Generate AirplaneSeats for existing Airplanes from templates
 
@@ -500,63 +493,65 @@ DELETE FROM flights.airplane_seats;
 INSERT INTO flights.airplane_seats (id, airplane_id, seat_number, seat_row, seat_column, seat_class, is_extra_legroom, price_multiplier)
 SELECT 
     gen_random_uuid(),
-    a.Id,
-    t.SeatNumber,
-    t.SeatRow,
-    t.SeatColumn,
-    t.SeatClass,
-    t.IsExtraLegroom,
-    t.PriceMultiplier
+    a.id,
+    t.seat_number,
+    t.seat_row,
+    t.seat_column,
+    t.seat_class,
+    t.is_extra_legroom,
+    t.price_multiplier
 FROM flights.airplanes a
-JOIN flights.aircraft_model_seat_templates t ON a.AircraftModelId = t.AircraftModelId;
+JOIN flights.aircraft_models am ON a.aircraft_model_id = am.id
+JOIN flights.aircraft_model_seat_templates t ON am.id = t.aircraft_model_id
+ON CONFLICT (airplane_id, seat_number) DO NOTHING;
 
 
-PRINT '==========================================================='
+RAISE NOTICE '===========================================================';
 
 
 -- === Merged from seed_routes_flights.sql ===
 
 
-IF DB_ID('AirlineTicketDb') IS NOT NULL
-BEGIN
-    END
+IF EXISTS (SELECT 1 FROM pg_database WHERE datname = 'AirlineTicketDb') THEN
+    NULL;
+END IF;
 
 
-PRINT '==========================================================='
+RAISE NOTICE '===========================================================';
 
-PRINT '==========================================================='
+RAISE NOTICE '===========================================================';
 
 
 -- Variables
-DECLARE @HubSGN UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM flights.airports WHERE IataCode = 'SGN');
-DECLARE @HubHAN UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM flights.airports WHERE IataCode = 'HAN');
-
-IF @HubSGN IS NULL OR @HubHAN IS NULL
+DO $$
+DECLARE
+    _hubSGN UUID := (SELECT id FROM flights.airports WHERE iata_code = 'SGN' LIMIT 1);
+    _hubHAN UUID := (SELECT id FROM flights.airports WHERE iata_code = 'HAN' LIMIT 1);
 BEGIN
-
+IF _hubSGN IS NULL OR _hubHAN IS NULL THEN
     RETURN;
-END
+END IF;
 
 -- Create a temporary table to store the routes we want to insert
-IF OBJECT_ID('tempdb..#RoutesToInsert') IS NOT NULL DROP TABLE #RoutesToInsert;
-CREATE TABLE #RoutesToInsert (
-    OriginAirportId UNIQUEIDENTIFIER,
-    DestinationAirportId UNIQUEIDENTIFIER
+DROP TEMPORARY TABLE IF EXISTS temp_routes_to_insert;
+CREATE TEMPORARY TABLE temp_routes_to_insert (
+    origin_airport_id UUID,
+    destination_airport_id UUID
 );
 
 -- Generate Routes to/from SGN for all airports (except SGN itself)
-INSERT INTO #RoutesToInsert (OriginAirportId, DestinationAirportId)
-SELECT @HubSGN, Id FROM flights.airports WHERE Id <> @HubSGN;
+INSERT INTO temp_routes_to_insert (origin_airport_id, destination_airport_id)
+SELECT _hubSGN, id FROM flights.airports WHERE id <> _hubSGN;
 
-INSERT INTO #RoutesToInsert (OriginAirportId, DestinationAirportId)
-SELECT Id, @HubSGN FROM flights.airports WHERE Id <> @HubSGN;
+INSERT INTO temp_routes_to_insert (origin_airport_id, destination_airport_id)
+SELECT id, _hubSGN FROM flights.airports WHERE id <> _hubSGN;
 
 -- Generate Routes to/from HAN for all airports (except HAN itself)
-INSERT INTO #RoutesToInsert (OriginAirportId, DestinationAirportId)
-SELECT @HubHAN, Id FROM flights.airports WHERE Id <> @HubHAN;
+INSERT INTO temp_routes_to_insert (origin_airport_id, destination_airport_id)
+SELECT _hubHAN, id FROM flights.airports WHERE id <> _hubHAN;
 
-INSERT INTO #RoutesToInsert (OriginAirportId, DestinationAirportId)
-SELECT Id, @HubHAN FROM flights.airports WHERE Id <> @HubHAN;
+INSERT INTO temp_routes_to_insert (origin_airport_id, destination_airport_id)
+SELECT id, _hubHAN FROM flights.airports WHERE id <> _hubHAN;
 
 
 
@@ -564,116 +559,112 @@ SELECT Id, @HubHAN FROM flights.airports WHERE Id <> @HubHAN;
 INSERT INTO flights.routes (id, airline_id, origin_airport_id, destination_airport_id, distance_km, estimated_duration_minutes, is_deleted)
 SELECT 
     gen_random_uuid(),
-    (SELECT TOP 1 Id FROM flights.airlines ORDER BY gen_random_uuid()), -- Random Airline
+    (SELECT id FROM flights.airlines ORDER BY gen_random_uuid() LIMIT 1), -- Random Airline
     r.origin_airport_id, 
-    r.destination_airport_id,d,d,
-    ABS(CHECKSUM(gen_random_uuid())) % 2000 + 500 AS DistanceKm, -- Random Distance between 500 and 2500
-    ABS(CHECKSUM(gen_random_uuid())) % 180 + 60 AS EstimatedDurationMinutes, -- Random Duration between 60 and 240 mins
-    0
-FROM #RoutesToInsert r
+    r.destination_airport_id,
+    FLOOR(RANDOM() * 2000 + 500) AS distance_km, -- Random Distance between 500 and 2500
+    FLOOR(RANDOM() * 180 + 60) AS estimated_duration_minutes, -- Random Duration between 60 and 240 mins
+    FALSE
+FROM temp_routes_to_insert r
 WHERE NOT EXISTS (
     SELECT 1 FROM flights.routes existing 
     WHERE existing.origin_airport_id = r.origin_airport_id 
-    AND existing.destination_airport_id = r.destination_airport_irt_irt_id
+    AND existing.destination_airport_id = r.destination_airport_id
 );
 
 
 
 
 -- Create Flights
-DECLARE @RouteId UNIQUEIDENTIFIER;
-DECLARE @AirlineId UNIQUEIDENTIFIER;
-DECLARE @OriginIata NVARCHAR(10);
-DECLARE @EstimatedDurationMinutes INT;
-DECLARE @FlightCount INT;
-DECLARE @I INT;
-
-DECLARE route_cursor CURSOR FOR 
+DECLARE
+    _routeId UUID;
+    _airlineId UUID;
+    _originIata VARCHAR(10);
+    _estimatedDurationMinutes INTEGER;
+    _flightCount INTEGER;
+    _i INTEGER;
+BEGIN
+FOR route_record IN 
 SELECT 
-    r.Id, 
-    r.AirlineId, 
-    a.IataCode,
-    ISNULL(r.EstimatedDurationMinutes, 180)
+    r.id, 
+    r.airline_id, 
+    a.iata_code,
+    COALESCE(r.estimated_duration_minutes, 180)
 FROM flights.routes r
-JOIN flights.airports a ON r.OriginAirportId = a.Id;
-
-OPEN route_cursor;
-FETCH NEXT FROM route_cursor INTO @RouteId, @AirlineId, @OriginIata, @EstimatedDurationMinutes;
+JOIN flights.airports a ON r.origin_airport_id = a.id
+LOOP
+    _routeId := route_record.id;
+    _airlineId := route_record.airline_id;
+    _originIata := route_record.iata_code;
+    _estimatedDurationMinutes := route_record.coalesce;
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
     -- Check how many flights already exist for this route
     SELECT @FlightCount = COUNT(*) FROM flights.flights WHERE route_id = @RouteId AND is_deleted = FALSE;
     
-    SET @I = @FlightCount;
+    _i := _flightCount;
     WHILE @I < 5
     BEGIN
-        DECLARE @NewFlightId UNIQUEIDENTIFIER = gen_random_uuid();
-        DECLARE @AirplaneId UNIQUEIDENTIFIER = (SELECT TOP 1 id FROM flights.airplanes WHERE airline_id = @AirlineId ORDER BY gen_random_uuid());
+        _newFlightId UUID := gen_random_uuid();
+        _airplaneId UUID := (SELECT id FROM flights.airplanes WHERE airline_id = _airlineId ORDER BY gen_random_uuid() LIMIT 1);
         
         -- Fallback if airline has no airplane, just pick any
-        IF @AirplaneId IS NULL
-        BEGIN
-            SET @AirplaneId = (SELECT TOP 1 Id FROM flights.airplanes ORDER BY gen_random_uuid());
-        END
+        IF _airplaneId IS NULL THEN
+            _airplaneId := (SELECT id FROM flights.airplanes ORDER BY gen_random_uuid() LIMIT 1);
+        END IF;
 
-        IF @AirplaneId IS NOT NULL
-        BEGIN
+        IF _airplaneId IS NOT NULL THEN
             -- Generate flight departure time randomly within next 30 days
-            DECLARE @DaysToAdd INT = ABS(CHECKSUM(gen_random_uuid())) % 30;
-            DECLARE @HoursToAdd INT = ABS(CHECKSUM(gen_random_uuid())) % 24;
-            DECLARE @MinutesToAdd INT = (ABS(CHECKSUM(gen_random_uuid())) % 12) * 5; -- Multiple of 5
+            _daysToAdd INTEGER := FLOOR(RANDOM() * 30);
+            _hoursToAdd INTEGER := FLOOR(RANDOM() * 24);
+            _minutesToAdd INTEGER := (FLOOR(RANDOM() * 12)) * 5; -- Multiple of 5
             
 
-            DECLARE @BasePrice DECIMAL(18,2) = CAST((ABS(CHECKSUM(gen_random_uuid())) % 751 + 50) AS DECIMAL(18,2)); -- Random between 50 and 800
+            _basePrice DECIMAL(18,2) := CAST(FLOOR(RANDOM() * 751 + 50) AS DECIMAL(18,2)); -- Random between 50 and 800
             
             -- Insert Flight
             INSERT INTO flights.flights (id, route_id, airplane_id, flight_number, departure_time, arrival_time, base_price, currency, status, external_id, is_deleted, created_at, updated_at)
             VALUES (
-                @NewFlightId,
-                @RouteId,
-                @AirplaneId,
-                'FL' + @OriginIata + CAST((@I + 1) AS NVARCHAR(10)),
-                @DepartureTime,
-                @ArrivalTime,
-                @BasePrice,
+                _newFlightId,
+                _routeId,
+                _airplaneId,
+                'FL' || _originIata || (_i + 1)::TEXT,
+                NOW() + (_daysToAdd || ' days')::INTERVAL + (_hoursToAdd || ' hours')::INTERVAL + (_minutesToAdd || ' minutes')::INTERVAL,
+                NOW() + (_daysToAdd || ' days')::INTERVAL + (_hoursToAdd || ' hours')::INTERVAL + (_minutesToAdd || ' minutes')::INTERVAL + (_estimatedDurationMinutes || ' minutes')::INTERVAL,
+                _basePrice,
                 'USD',
                 0, -- Scheduled
                 gen_random_uuid(),
-                0,
+                FALSE,
                 NOW(),
                 NOW()
             );
 
             -- Insert 10 FlightSeats for this flight
-            DECLARE @SeatIndex INT = 1;
-            WHILE @SeatIndex <= 10
-            BEGIN
+            _seatIndex INTEGER := 1;
+            WHILE _seatIndex <= 10 LOOP
                 INSERT INTO flights.flight_seats (id, flight_id, seat_number, seat_class, price_override, is_available, is_extra_legroom)
                 VALUES (
                     gen_random_uuid(),
                     @NewFlightId,
-                    (@SeatIndex)::text + CASE WHEN @SeatIndex % 2 = 0 THEN 'A' ELSE 'B' END,
-                    CASE WHEN @SeatIndex <= 2 THEN 2 ELSE 0 END, -- First 2 are Business(2), rest Economy(0)
-                    CASE WHEN @SeatIndex <= 2 THEN @BasePrice * 2 ELSE NULL END,
+                    (_seatIndex)::TEXT || CASE WHEN _seatIndex % 2 = 0 THEN 'A' ELSE 'B' END,
+                    CASE WHEN _seatIndex <= 2 THEN 2 ELSE 0 END, -- First 2 are Business(2), rest Economy(0)
+                    CASE WHEN _seatIndex <= 2 THEN _basePrice * 2 ELSE NULL END,
                     TRUE,
-                    CASE WHEN @SeatIndex <= 4 THEN 1 ELSE 0 END
+                    CASE WHEN _seatIndex <= 4 THEN TRUE ELSE FALSE END
                 );
-                SET @SeatIndex = @SeatIndex + 1;
-            END
-        END
+                _seatIndex := _seatIndex + 1;
+            END LOOP;
+        END IF;
         
-        SET @I = @I + 1;
-    END
-
-    FETCH NEXT FROM route_cursor INTO @RouteId, @AirlineId, @OriginIata, @EstimatedDurationMinutes;
-END
-
-CLOSE route_cursor;
-DEALLOCATE route_cursor;
+        _i := _i + 1;
+    END LOOP;
+END LOOP;
+END $$;
 
 
-PRINT '==========================================================='
+RAISE NOTICE '===========================================================';
 
 
 -- === Merged from seed_notification_templates.sql ===
@@ -685,51 +676,39 @@ PRINT '==========================================================='
 
 
 -- 1. English (en)
-IF NOT EXISTS (SELECT 1 FROM notifications.notification_templates WHERE Code = 'FLIGHT_CREATED' AND Language = 'en')
-BEGIN
-    INSERT INTO notifications.notification_templates (Id, Code, Subject, BodyTemplate, Language, CreatedAt)
+INSERT INTO notifications.notification_templates (id, code, subject, body_template, language, created_at)
     VALUES (gen_random_uuid(), 'FLIGHT_CREATED', 'New Flight Created: {{FlightNumber}}', 'A new flight {{FlightNumber}} from {{Origin}} to {{Destination}} has been created by a partner.', 'en', NOW())
-END
+ON CONFLICT (code, language) DO NOTHING;
 
 
 -- 2. Vietnamese (vi)
-IF NOT EXISTS (SELECT 1 FROM notifications.notification_templates WHERE Code = 'FLIGHT_CREATED' AND Language = 'vi')
-BEGIN
-    INSERT INTO notifications.notification_templates (Id, Code, Subject, BodyTemplate, Language, CreatedAt)
+INSERT INTO notifications.notification_templates (id, code, subject, body_template, language, created_at)
     VALUES (gen_random_uuid(), 'FLIGHT_CREATED', 'Chuyến bay mới được tạo: {{FlightNumber}}', 'Chuyến bay mới {{FlightNumber}} từ {{Origin}} đến {{Destination}} vừa được tạo bởi đối tác.', 'vi', NOW())
-END
+ON CONFLICT (code, language) DO NOTHING;
 
 
 -- 3. Chinese (zh)
-IF NOT EXISTS (SELECT 1 FROM notifications.notification_templates WHERE Code = 'FLIGHT_CREATED' AND Language = 'zh')
-BEGIN
-    INSERT INTO notifications.notification_templates (Id, Code, Subject, BodyTemplate, Language, CreatedAt)
+INSERT INTO notifications.notification_templates (id, code, subject, body_template, language, created_at)
     VALUES (gen_random_uuid(), 'FLIGHT_CREATED', '新航班已创建: {{FlightNumber}}', '合作伙伴已创建从 {{Origin}} 到 {{Destination}} 的新航班 {{FlightNumber}}。', 'zh', NOW())
-END
+ON CONFLICT (code, language) DO NOTHING;
 
 
 -- 4. Japanese (ja)
-IF NOT EXISTS (SELECT 1 FROM notifications.notification_templates WHERE Code = 'FLIGHT_CREATED' AND Language = 'ja')
-BEGIN
-    INSERT INTO notifications.notification_templates (Id, Code, Subject, BodyTemplate, Language, CreatedAt)
+INSERT INTO notifications.notification_templates (id, code, subject, body_template, language, created_at)
     VALUES (gen_random_uuid(), 'FLIGHT_CREATED', '新しいフライトが作成されました: {{FlightNumber}}', 'パートナーによって {{Origin}} から {{Destination}} への新しいフライト {{FlightNumber}} が作成されました。', 'ja', NOW())
-END
+ON CONFLICT (code, language) DO NOTHING;
 
 
 -- 5. Korean (ko)
-IF NOT EXISTS (SELECT 1 FROM notifications.notification_templates WHERE Code = 'FLIGHT_CREATED' AND Language = 'ko')
-BEGIN
-    INSERT INTO notifications.notification_templates (Id, Code, Subject, BodyTemplate, Language, CreatedAt)
+INSERT INTO notifications.notification_templates (id, code, subject, body_template, language, created_at)
     VALUES (gen_random_uuid(), 'FLIGHT_CREATED', '새 항공편 생성됨: {{FlightNumber}}', '파트너가 {{Origin}}에서 {{Destination}}으로 가는 새 항공편 {{FlightNumber}}을(를) 생성했습니다.', 'ko', NOW())
-END
+ON CONFLICT (code, language) DO NOTHING;
 
 
 -- 6. French (fr)
-IF NOT EXISTS (SELECT 1 FROM notifications.notification_templates WHERE Code = 'FLIGHT_CREATED' AND Language = 'fr')
-BEGIN
-    INSERT INTO notifications.notification_templates (Id, Code, Subject, BodyTemplate, Language, CreatedAt)
+INSERT INTO notifications.notification_templates (id, code, subject, body_template, language, created_at)
     VALUES (gen_random_uuid(), 'FLIGHT_CREATED', 'Nouveau vol créé : {{FlightNumber}}', 'Un nouveau vol {{FlightNumber}} de {{Origin}} à {{Destination}} a été créé par un partenaire.', 'fr', NOW())
-END
+ON CONFLICT (code, language) DO NOTHING;
 
 
 -- === Merged from seed_extra_data.sql ===
@@ -750,90 +729,90 @@ END
 -- For simplicity in the script, I'll use a loop or just explicit statements.
 -- Since I need to generate 100, I'll use a script to do it.
 
-DECLARE @Count INT = 0;
-DECLARE @AirlineId UNIQUEIDENTIFIER;
-DECLARE @RouteId UNIQUEIDENTIFIER;
-DECLARE @AirplaneId UNIQUEIDENTIFIER;
-DECLARE @OriginAirportId UNIQUEIDENTIFIER;
-DECLARE @DestinationAirportId UNIQUEIDENTIFIER;
-DECLARE @FlightNumber NVARCHAR(20);
-    DECLARE @DepartureTime TIMESTAMP = NOW() + INTERVAL '1 day';
-    DECLARE @ArrivalTime TIMESTAMP = @DepartureTime + INTERVAL '3 hours';
-
--- Helper to pick random values would be great, but T-SQL random is tricky.
--- I'll hardcode some and use gen_random_uuid() for variations.
-
-WHILE @Count < 100
+DO $$
+DECLARE
+    _count INTEGER := 0;
+    _airlineId UUID;
+    _routeId UUID;
+    _airplaneId UUID;
+    _originAirportId UUID;
+    _destinationAirportId UUID;
+    _flightNumber VARCHAR(20);
+    _departureTime TIMESTAMP := NOW() + INTERVAL '1 day';
+    _arrivalTime TIMESTAMP := _departureTime + INTERVAL '3 hours';
 BEGIN
-    SET @Count = @Count + 1;
+WHILE _count < 100 LOOP
+    _count := _count + 1;
     
     -- Pick a random airline (simplified, I'll pick one of the 8)
     -- This is a bit complex for a simple script, I will just hardcode combinations
     
     -- Let's pick a random route and airplane
-    SELECT TOP 1 @RouteId = Id, @AirlineId = AirlineId, @OriginAirportId = OriginAirportId, @DestinationAirportId = DestinationAirportId FROM flights.routes ORDER BY gen_random_uuid();
-    SELECT TOP 1 @AirplaneId = Id FROM flights.airplanes WHERE AirlineId = @AirlineId ORDER BY gen_random_uuid();
+    SELECT id INTO _routeId FROM flights.routes ORDER BY gen_random_uuid() LIMIT 1;
+    SELECT id INTO _airplaneId FROM flights.airplanes WHERE airline_id = _airlineId ORDER BY gen_random_uuid() LIMIT 1;
     
     -- If no airplane for this airline, pick any
-    IF @AirplaneId IS NULL
-        SELECT TOP 1 @AirplaneId = Id FROM flights.airplanes ORDER BY gen_random_uuid();
+    IF _airplaneId IS NULL THEN
+        SELECT id INTO _airplaneId FROM flights.airplanes ORDER BY gen_random_uuid() LIMIT 1;
+    END IF;
 
-    SET @FlightNumber = 'FL' + (1000 + @Count)::text;
+    _flightNumber := 'FL' || (1000 + _count)::text;
 
 
-    DECLARE @FlightId UNIQUEIDENTIFIER = gen_random_uuid();
+    _flightId UUID := gen_random_uuid();
 
-    INSERT INTO flights.flights (Id, RouteId, AirplaneId, FlightNumber, DepartureTime, ArrivalTime, BasePrice, Currency, Status, IsDeleted, CreatedAt, UpdatedAt)
-    VALUES (@FlightId, @RouteId, @AirplaneId, @FlightNumber, @DepartureTime, @ArrivalTime, 100.00, 'USD', 0, FALSE, NOW(), NOW());
+    INSERT INTO flights.flights (id, route_id, airplane_id, flight_number, departure_time, arrival_time, base_price, currency, status, is_deleted, created_at, updated_at)
+    VALUES (_flightId, _routeId, _airplaneId, _flightNumber, _departureTime, _arrivalTime, 100.00, 'USD', 0, FALSE, NOW(), NOW());
 
     -- 2. Generate 10-20 seats for this flight
-    DECLARE @SeatCount INT = 0;
-    DECLARE @TotalSeats INT = 10 + (ABS(CHECKSUM(gen_random_uuid())) % 11);
+    _seatCount INTEGER := 0;
+    _totalSeats INTEGER := 10 + (FLOOR(RANDOM() * 11));
     
-    WHILE @SeatCount < @TotalSeats
-    BEGIN
-        SET @SeatCount = @SeatCount + 1;
-        INSERT INTO flights.flight_seats (Id, FlightId, SeatNumber, SeatClass, PriceOverride, IsAvailable, IsExtraLegroom)
-        VALUES (gen_random_uuid(), @FlightId, CAST(@SeatCount AS NVARCHAR(5)) + 'A', 0, NULL, TRUE, FALSE);
-    END
-END
+    WHILE _seatCount < _totalSeats LOOP
+        _seatCount := _seatCount + 1;
+        INSERT INTO flights.flight_seats (id, flight_id, seat_number, seat_class, price_override, is_available, is_extra_legroom)
+        VALUES (gen_random_uuid(), _flightId, _seatCount::TEXT || 'A', 0, NULL, TRUE, FALSE);
+    END LOOP;
+END LOOP;
+END $$;
 
 
 -- 3. 50 new Bookings with corresponding Passengers, Tickets, and Payments
-DECLARE @BookingCount INT = 0;
-DECLARE @UserId UNIQUEIDENTIFIER;
-DECLARE @FlightId UNIQUEIDENTIFIER;
-DECLARE @SeatId UNIQUEIDENTIFIER;
-DECLARE @BookingId UNIQUEIDENTIFIER;
-DECLARE @PassengerId UNIQUEIDENTIFIER;
-
-SELECT TOP 1 @UserId = id FROM users.users WHERE email = 'client@gmail.com';
-
-WHILE @BookingCount < 50
+DO $$
+DECLARE
+    _bookingCount INTEGER := 0;
+    _userId UUID;
+    _flightId UUID;
+    _seatId UUID;
+    _bookingId UUID;
+    _passengerId UUID;
 BEGIN
-    SET @BookingCount = @BookingCount + 1;
+    SELECT id INTO _userId FROM users.users WHERE email = 'client@gmail.com' LIMIT 1;
+
+    WHILE _bookingCount < 50 LOOP
+    _bookingCount := _bookingCount + 1;
     
-    SELECT TOP 1 @FlightId = id FROM flights.flights ORDER BY gen_random_uuid();
-    SELECT TOP 1 @SeatId = id FROM flights.flight_seats WHERE flight_id = @FlightId AND is_available = TRUE ORDER BY gen_random_uuid();
+    SELECT id INTO _flightId FROM flights.flights ORDER BY gen_random_uuid() LIMIT 1;
+    SELECT id INTO _seatId FROM flights.flight_seats WHERE flight_id = _flightId AND is_available = TRUE ORDER BY gen_random_uuid() LIMIT 1;
     
-    IF @SeatId IS NOT NULL
-    BEGIN
-        SET @BookingId = gen_random_uuid();
-        SET @PassengerId = gen_random_uuid();
+    IF _seatId IS NOT NULL THEN
+        _bookingId := gen_random_uuid();
+        _passengerId := gen_random_uuid();
         
         INSERT INTO bookings.bookings (id, user_id, pnr_code, total_price, currency, status, contact_email, contact_phone, special_requests, is_deleted, created_at, updated_at)
-        VALUES (@BookingId, @UserId, 'PNR' + (1000 + @BookingCount)::text, 100.00, 'USD', 1, 'client@gmail.com', '0987654321', NULL, FALSE, NOW(), NOW());
+        VALUES (_bookingId, _userId, 'PNR' || (1000 + _bookingCount)::TEXT, 100.00, 'USD', 1, 'client@gmail.com', '0987654321', NULL, FALSE, NOW(), NOW());
         
         INSERT INTO bookings.passengers (id, booking_id, first_name, last_name, gender, date_of_birth, nationality, passport_number, passport_expiry_date)
-        VALUES (@PassengerId, @BookingId, 'Passenger', (@BookingCount)::text, 0, '1990-01-01', 'VN', 'PS' + (@BookingCount)::text, '2030-01-01');
+        VALUES (_passengerId, _bookingId, 'Passenger', (_bookingCount)::TEXT, 0, '1990-01-01', 'VN', 'PS' || (_bookingCount)::TEXT, '2030-01-01');
         
-        INSERT INTO bookings.tickets (Id, BookingId, PassengerId, FlightId, SeatId, TicketNumber, Gate, BoardingTime, Status)
-        VALUES (gen_random_uuid(), @BookingId, @PassengerId, @FlightId, @SeatId, 'TK' + (1000 + @BookingCount)::text, 'Gate A', DATEADD(hour, -1, NOW()), 0);
+        INSERT INTO bookings.tickets (id, booking_id, passenger_id, flight_id, seat_id, ticket_number, gate, boarding_time, status)
+        VALUES (gen_random_uuid(), _bookingId, _passengerId, _flightId, _seatId, 'TK' || (1000 + _bookingCount)::TEXT, 'Gate A', DATE_TRUNC('hour', NOW()) + INTERVAL '-1 hour', 0);
         
         INSERT INTO bookings.payments (id, booking_id, transaction_id, amount, payment_method, provider_status, is_successful, raw_response, created_at)
-        VALUES (gen_random_uuid(), @BookingId, 'TXN' + (1000 + @BookingCount)::text, 100.00, 'CreditCard', 'Success', TRUE, NULL, NOW());
+        VALUES (gen_random_uuid(), _bookingId, 'TXN' || (1000 + _bookingCount)::TEXT, 100.00, 'CreditCard', 'Success', TRUE, NULL, NOW());
         
-        UPDATE flights.flight_seats SET IsAvailable = FALSE WHERE Id = @SeatId;
-    END
-END
+        UPDATE flights.flight_seats SET is_available = FALSE WHERE id = _seatId;
+    END IF;
+END LOOP;
+END $$;
 

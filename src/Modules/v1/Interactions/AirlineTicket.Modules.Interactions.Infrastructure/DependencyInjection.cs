@@ -25,7 +25,8 @@ public static class DependencyInjection
         services.AddDbContext<InteractionDbContext>(options =>
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                sqlOptions => sqlOptions.EnableRetryOnFailure()));
+                sqlOptions => sqlOptions.EnableRetryOnFailure())
+                .UseSnakeCaseNamingConvention());
 
         // Register AI client as a typed HttpClient (using IHttpClientFactory to manage connection pooling).
         services.AddHttpClient<IAirTicketAiClient, OpenAiCompatibleQaClient>((sp, client) =>

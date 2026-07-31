@@ -26,7 +26,8 @@ public static class DependencyInjection
         services.AddDbContext<LogsDbContext>(options =>
             options.UseNpgsql(
                 configuration.GetConnectionString("DefaultConnection"),
-                sqlOptions => sqlOptions.EnableRetryOnFailure()));
+                sqlOptions => sqlOptions.EnableRetryOnFailure())
+                .UseSnakeCaseNamingConvention());
 
         services.AddScoped<ISystemLogService, SystemLogService>();
         services.AddScoped<ILogRepository, LogRepository>();

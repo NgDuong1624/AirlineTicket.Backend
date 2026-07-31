@@ -23,12 +23,12 @@ public class RevenueRepository : IRevenueRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT COUNT(*) as TotalBookings, ISNULL(SUM(TotalPrice), 0) as TotalRevenue, ISNULL(AVG(TotalPrice), 0) as AvgTicketPrice
-            FROM bookings.Bookings b
-            JOIN flights.Flights f ON b.FlightId = f.Id
-            JOIN flights.Routes r ON f.RouteId = r.Id
-            WHERE r.AirlineId = @AirlineId AND b.CreatedAt >= @FromDate AND b.CreatedAt <= @ToDate
-              AND b.Status = 'Confirmed'";
+            SELECT COUNT(*) as TotalBookings, COALESCE(SUM(total_price), 0) as TotalRevenue, COALESCE(AVG(total_price), 0) as AvgTicketPrice
+            FROM bookings.bookings b
+            JOIN flights.flights f ON b.flight_id = f.id
+            JOIN flights.routes r ON f.route_id = r.id
+            WHERE r.airline_id = @AirlineId AND b.created_at >= @FromDate AND b.created_at <= @ToDate
+              AND b.status = 'Confirmed'";
 
         return await connection.QueryFirstOrDefaultAsync<DailySalesSummary>(sql, new { AirlineId = airlineId, FromDate = fromDate, ToDate = toDate });
     }
@@ -37,14 +37,14 @@ public class RevenueRepository : IRevenueRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT CAST(f.DepartureTime AS DATE) as Date, f.FlightNumber,
-                   CAST(COUNT(t.SeatId) AS FLOAT) / NULLIF(fs.TotalSeats, 0) * 100 as OccupancyPercent
-            FROM flights.Flights f
-            JOIN flights.Routes r ON f.RouteId = r.Id
-            LEFT JOIN bookings.Tickets t ON t.FlightId = f.Id
-            LEFT JOIN (SELECT FlightId, COUNT(*) as TotalSeats FROM flights.FlightSeats GROUP BY FlightId) fs ON fs.FlightId = f.Id
-            WHERE r.AirlineId = @AirlineId AND f.DepartureTime >= @FromDate AND f.DepartureTime < @ToDate
-            GROUP BY CAST(f.DepartureTime AS DATE), f.FlightNumber, fs.TotalSeats";
+            SELECT f.departure_time::date as Date, f.flight_number,
+                   COUNT(t.seat_id)::float / NULLIF(fs.total_seats, 0) * 100 as OccupancyPercent
+            FROM flights.flights f
+            JOIN flights.routes r ON f.route_id = r.id
+            LEFT JOIN bookings.tickets t ON t.flight_id = f.id
+            LEFT JOIN (SELECT flight_id, COUNT(*) as total_seats FROM flights.flight_seats GROUP BY flight_id) fs ON fs.flight_id = f.id
+            WHERE r.airline_id = @AirlineId AND f.departure_time >= @FromDate AND f.departure_time < @ToDate
+            GROUP BY f.departure_time::date, f.flight_number, fs.total_seats";
 
         var result = await connection.QueryAsync<DailyOccupancy>(sql, new { AirlineId = airlineId, FromDate = fromDate, ToDate = toDate });
         return result.ToList();
@@ -54,12 +54,12 @@ public class RevenueRepository : IRevenueRepository
     {
         var connection = _context.Database.GetDbConnection();
         const string sql = @"
-            SELECT CAST(CreatedAt AS DATE) as Date, SUM(TotalPrice) as Revenue
-            FROM bookings.Bookings b
-            JOIN flights.Flights f ON b.FlightId = f.Id
-            JOIN flights.Routes r ON f.RouteId = r.Id
-            WHERE r.AirlineId = @AirlineId AND b.Status = 'Confirmed' AND b.CreatedAt >= @FromDate AND b.CreatedAt <= @ToDate
-            GROUP BY CAST(CreatedAt AS DATE) ORDER BY Date";
+            SELECT created_at::date as Date, SUM(total_price) as Revenue
+            FROM bookings.bookings b
+            JOIN flights.flights f ON b.flight_id = f.id
+            JOIN flights.routes r ON f.route_id = r.id
+            WHERE r.airline_id = @AirlineId AND b.status = 'Confirmed' AND b.created_at >= @FromDate AND b.created_at <= @ToDate
+            GROUP BY created_at::date ORDER BY Date";
 
         var result = await connection.QueryAsync<DailyRevenue>(sql, new { AirlineId = airlineId, FromDate = fromDate, ToDate = toDate });
         return result.ToList();
