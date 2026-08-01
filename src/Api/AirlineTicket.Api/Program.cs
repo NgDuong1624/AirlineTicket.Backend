@@ -1,45 +1,57 @@
-using FluentValidation;
+// System and Microsoft Framework Usings
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using System.Text;
+
+// Third-Party Library Usings
+using FluentValidation;
+using Scalar.AspNetCore;
+using Serilog;
+
+// AirlineTicket API Specific Usings
+using AirlineTicket.Api;
+
+// AirlineTicket Building Blocks Usings
 using AirlineTicket.BuildingBlocks.Api.Auth;
-using AirlineTicket.BuildingBlocks.Api.Endpoints;
-using AirlineTicket.BuildingBlocks.Infrastructure;
-using AirlineTicket.BuildingBlocks.Behaviors;
 using AirlineTicket.BuildingBlocks.Api.Behaviors;
+using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Api.Middleware;
 using AirlineTicket.BuildingBlocks.Application.Data;
+using AirlineTicket.BuildingBlocks.Behaviors;
+using AirlineTicket.BuildingBlocks.Infrastructure;
 using AirlineTicket.BuildingBlocks.Infrastructure.Data;
-using AirlineTicket.Modules.Users.Infrastructure.Data;
-using AirlineTicket.Modules.Promotions.Infrastructure.Data;
-using AirlineTicket.Modules.Interactions.Infrastructure.Data;
-using AirlineTicket.Modules.CMS.Infrastructure.Data;
-using AirlineTicket.Modules.Flights.Infrastructure.Data;
-using AirlineTicket.Modules.Bookings.Infrastructure.Data;
-using AirlineTicket.Modules.Notifications.Infrastructure.Data;
-using AirlineTicket.Modules.Logs.Infrastructure.Data;
-using AirlineTicket.Modules.Flights.Infrastructure;
-using AirlineTicket.Modules.Bookings.Infrastructure;
-using AirlineTicket.Modules.Users.Infrastructure;
-using AirlineTicket.Modules.Promotions.Infrastructure;
-using AirlineTicket.Modules.CMS.Infrastructure;
-using AirlineTicket.Modules.Interactions.Infrastructure;
-using AirlineTicket.Modules.Notifications.Infrastructure;
-using AirlineTicket.Modules.Logs.Infrastructure;
+
+// AirlineTicket Module Application Usings
 using AirlineTicket.Modules.Bookings.Application;
+using AirlineTicket.Modules.Bookings.Application.Contracts;
+using AirlineTicket.Modules.CMS.Application;
 using AirlineTicket.Modules.Flights.Application;
+using AirlineTicket.Modules.Flights.Application.Contracts;
+using AirlineTicket.Modules.Interactions.Application;
+using AirlineTicket.Modules.Logs.Application;
+using AirlineTicket.Modules.Notifications.Application;
 using AirlineTicket.Modules.Promotions.Application;
 using AirlineTicket.Modules.Users.Application;
-using AirlineTicket.Modules.Interactions.Application;
-using AirlineTicket.Modules.CMS.Application;
-using AirlineTicket.Modules.Notifications.Application;
-using AirlineTicket.Modules.Logs.Application;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Scalar.AspNetCore;
-using AirlineTicket.Modules.Bookings.Application.Contracts;
-using AirlineTicket.Modules.Flights.Application.Contracts;
-using Microsoft.EntityFrameworkCore;
-using Serilog;
+
+// AirlineTicket Module Infrastructure Usings
+using AirlineTicket.Modules.Bookings.Infrastructure;
+using AirlineTicket.Modules.Bookings.Infrastructure.Data;
+using AirlineTicket.Modules.CMS.Infrastructure;
+using AirlineTicket.Modules.CMS.Infrastructure.Data;
+using AirlineTicket.Modules.Flights.Infrastructure;
+using AirlineTicket.Modules.Flights.Infrastructure.Data;
+using AirlineTicket.Modules.Interactions.Infrastructure;
+using AirlineTicket.Modules.Interactions.Infrastructure.Data;
+using AirlineTicket.Modules.Logs.Infrastructure;
+using AirlineTicket.Modules.Logs.Infrastructure.Data;
+using AirlineTicket.Modules.Notifications.Infrastructure;
+using AirlineTicket.Modules.Notifications.Infrastructure.Data;
+using AirlineTicket.Modules.Promotions.Infrastructure;
+using AirlineTicket.Modules.Promotions.Infrastructure.Data;
+using AirlineTicket.Modules.Users.Infrastructure;
+using AirlineTicket.Modules.Users.Infrastructure.Data;
 
 // Set up Serilog Bootstrap Logger
 Log.Logger = new LoggerConfiguration()
@@ -261,8 +273,26 @@ app.UseCors(WebCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();   // Route Controllers from Modules (e.g., QaController)
+app.MapControllers();
 app.MapEndpoints();
+
+// Handle database migrations and seeding
+if (args.Contains("--migrate") || args.Contains("--seed-core") || args.Contains("--seed-dev"))
+{
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+    
+    if (args.Contains("--migrate"))
+        await DatabaseInitializer.MigrateAsync(services);
+        
+    if (args.Contains("--seed-core"))
+        await DatabaseInitializer.SeedCoreAsync(services);
+        
+    if (args.Contains("--seed-dev"))
+        await DatabaseInitializer.SeedDevAsync(services);
+        
+    return;
+}
 
 app.MapGet("/api/health/live", () => Results.Ok(new { status = "Healthy", server = "Running", timestamp = DateTime.UtcNow }))
     .WithName("GetHealthLiveness")

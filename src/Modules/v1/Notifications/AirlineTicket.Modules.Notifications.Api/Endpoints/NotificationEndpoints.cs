@@ -198,27 +198,11 @@ public class NotificationEndpoints : IEndpoint
             .Produces(200)
             .Produces(404);
 
-        // POST /api/admin/notifications/templates — Create template
-        templateGroup.MapPost("/", async (
-                [FromBody] CreateTemplateRequest request,
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                // Validate language matches routing locales: vi, en, zh, ja, ko, fr
-                var allowedLocales = new[] { "vi", "en", "zh", "ja", "ko", "fr" };
-                if (Array.IndexOf(allowedLocales, request.Language.ToLower()) < 0)
-                {
-                    return Results.BadRequest($"Invalid language. Allowed locales: {string.Join(", ", allowedLocales)}");
-                }
-
-                var command = new CreateTemplateCommand(request.Code, request.Subject, request.BodyTemplate, request.Language);
-                var id = await sender.Send(command, ct);
-                return Results.Created($"/api/admin/notifications/templates/{id}", new { Id = id });
-            })
+        // POST /api/admin/notifications/templates — Create template (DISABLED: Managed via core database seeds)
+        templateGroup.MapPost("/", () => Results.Problem("Method not allowed. Templates are managed via core database seeds.", statusCode: 405))
             .WithName("CreateTemplate")
-            .WithSummary("Create a new notification template")
-            .Produces(201)
-            .Produces(400);
+            .WithSummary("Create a new notification template (Disabled)")
+            .Produces(405);
 
         // PUT /api/admin/notifications/templates/{id} — Update template
         templateGroup.MapPut("/{id:guid}", async (
@@ -243,20 +227,11 @@ public class NotificationEndpoints : IEndpoint
             .Produces(400)
             .Produces(404);
 
-        // DELETE /api/admin/notifications/templates/{id} — Delete template
-        templateGroup.MapDelete("/{id:guid}", async (
-                Guid id,
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                var command = new DeleteTemplateCommand(id);
-                var result = await sender.Send(command, ct);
-                return result ? Results.NoContent() : Results.NotFound();
-            })
+        // DELETE /api/admin/notifications/templates/{id} — Delete template (DISABLED: Managed via core database seeds)
+        templateGroup.MapDelete("/{id:guid}", () => Results.Problem("Method not allowed. Templates are managed via core database seeds.", statusCode: 405))
             .WithName("DeleteTemplate")
-            .WithSummary("Delete a notification template")
-            .Produces(204)
-            .Produces(404);
+            .WithSummary("Delete a notification template (Disabled)")
+            .Produces(405);
     }
 }
 

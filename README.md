@@ -62,14 +62,27 @@ The system follows a **Modular Monolith** architecture with 8 independent busine
 
 ## Database
 
-**SQL Server** with 8 schemas as bounded contexts:
-- `dbo` (default for identity, bookings, promotions, interactions, cms, logs, notifications)
-- `flights` (explicit schema for flights module)
+**PostgreSQL** with 8 schemas as bounded contexts:
+- `users` (for identity)
+- `flights` (for flights module)
+- `bookings` (for bookings module)
+- `promotions` (for promotions module)
+- `interactions` (for interactions module)
+- `cms` (for CMS module)
+- `logs` (for logs module)
+- `notifications` (for notifications module)
+
+### Seed Data
+The database includes a modular seeding system to populate initial data. Seed files are organized into `core`, `development`, and `test` categories.
+
+- **`core/`**: Essential reference data (roles, permissions, airlines, airports, aircraft models, notification templates, system admin user). This data is critical for the system's basic operation.
+- **`development/`**: Sample data for local development and demonstration purposes (sample users, airline admins/staff, airplanes, routes, flights, bookings, promotions, CMS content, reviews).
+- **`test/`**: Minimal data sets specifically designed for integration and unit testing.
 
 ### Key Design Decisions
-- **Soft Delete** — `IsDeleted` column + SQL Server `INSTEAD OF DELETE` triggers on all major tables
+- **Soft Delete** — `IsDeleted` column + PostgreSQL triggers (if applicable) or application-level handling
 - **Performance Indexes** — On `DepartureTime`, `RouteId`, `PnrCode`, `TicketNumber`, `UserId`
-- **UUID Primary Keys** — `UNIQUEIDENTIFIER` for all entity IDs
+- **UUID Primary Keys** — `UUID` for all entity IDs
 
 ## API Endpoints
 
@@ -94,7 +107,7 @@ Full interactive API documentation available at `/scalar/v1` when running.
 
 ### Prerequisites
 - .NET 10 SDK
-- SQL Server 2022+
+- Postgres 16+
 - Redis (optional — falls back to in-memory cache)
 - EF Core CLI: `dotnet tool install --global dotnet-ef`
 
@@ -114,8 +127,8 @@ Update `src/Api/AirlineTicket.Api/appsettings.json` with your Postgre connection
 ### Run
 
 ```bash
-# Apply database migrations
-./run_ef.sh
+# Apply database migrations and seed core data
+./run_ef.sh "postgres://postgres:Admin@123@localhost:5432/AirlineTicketDb"
 
 # Start the API
 dotnet run --project src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj
@@ -125,15 +138,34 @@ API available at `http://localhost:5179`. Scalar docs at `/scalar/v1`.
 
 ### Docker
 
+The Docker container automatically applies database migrations and seeds core data on startup. If `ASPNETCORE_ENVIRONMENT` is set to `Development`, it also seeds development sample data.
+
+You have two options for running the application with Docker:
+
+**Option A: Connect to an external database**
+Requires the `DB_CONNECTION_STRING` environment variable to be set.
 ```bash
-# Local (API + SQL Server)
-docker-compose -f deploy/docker/docker-compose.local.yml up -d --build
+# Local
+docker compose -f deploy/docker/docker-compose.local.yml up -d --build
 
 # Development
-docker-compose -f deploy/docker/docker-compose.dev.yml up -d --build
+docker compose -f deploy/docker/docker-compose.dev.yml up -d --build
 
-# Production (with Nginx reverse proxy)
-docker-compose -f deploy/docker/docker-compose.prod.yml up -d --build
+# Production
+docker compose -f deploy/docker/docker-compose.prod.yml up -d --build
+```
+
+**Option B: Create a local PostgreSQL database container**
+Combines the base compose file with the `docker-compose.db.yml` override to spin up a PostgreSQL container alongside the API.
+```bash
+# Local (API + Postgres)
+docker compose -f deploy/docker/docker-compose.local.yml -f deploy/docker/docker-compose.db.yml up -d --build
+
+# Development (API + Postgres)
+docker compose -f deploy/docker/docker-compose.dev.yml -f deploy/docker/docker-compose.db.yml up -d --build
+
+# Production (API + Postgres)
+docker compose -f deploy/docker/docker-compose.prod.yml -f deploy/docker/docker-compose.db.yml up -d --build
 ```
 
 ### Environment Variables (Docker)
@@ -180,13 +212,14 @@ AirlineTicket.Backend/
 │       ├── Notifications/
 │       ├── Promotions/
 │       └── Users/
-├── database/                            # SQL scripts
-│   ├── init_v1.sql                      # Schema + table creation
-│   ├── seed_v1.sql                      # Base seed data
-│   ├── seed_aircraft_models.sql         # Aircraft models & seat templates seed data
-│   ├── seed_routes_flights.sql          # Route & flight seed data
-│   ├── seed_extra_data.sql              # Additional seed data
-│   └── triggers_soft_delete_v1.sql      # Soft delete triggers
+├── database/                            # SQL scripts for seeding
+│   ├── core/                            # Core reference data
+│   ├── development/                     # Sample data for local dev/demo
+│   ├── test/                            # Minimal data for integration/unit tests
+│   ├── run_seeds.sh                     # Master script to run core + dev seeds
+│   ├── run_seed_core.sh                 # Run core seeds only
+│   ├── run_seed_dev.sh                  # Run development seeds only
+│   └── run_seed_test.sh                 # Run test seeds only
 ├── deploy/                              # Docker & Nginx configs
 ├── docs/                                # Documentation
 │   ├── api/api-list.md                  # Complete API endpoint reference
