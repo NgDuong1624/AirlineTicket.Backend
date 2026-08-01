@@ -73,9 +73,6 @@ coverage/
 *.sqlite
 *.sqlite3
 
-# Docker
-.dockerignore
-
 # PR_DESCRIPTION
 PR_DESCRIPTION.md
 
