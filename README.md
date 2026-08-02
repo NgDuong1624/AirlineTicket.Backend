@@ -143,41 +143,48 @@ The Docker container automatically applies database migrations and seeds core da
 You have two options for running the application with Docker:
 
 **Option A: Connect to an external database**
-Requires the `DB_CONNECTION_STRING` environment variable to be set.
+Requires database environment variables (`DB_HOST`, `DB_PASSWORD`, etc.) to be set in your `.env` file.
 ```bash
 # Local
-docker compose -f deploy/docker/docker-compose.local.yml up -d --build
+docker compose --env-file deploy/docker/.env.local -f deploy/docker/docker-compose.local.yml up -d --build
 
 # Development
-docker compose -f deploy/docker/docker-compose.dev.yml up -d --build
+docker compose --env-file deploy/docker/.env.dev -f deploy/docker/docker-compose.dev.yml up -d --build
 
 # Production
-docker compose -f deploy/docker/docker-compose.prod.yml up -d --build
+docker compose --env-file deploy/docker/.env.prod -f deploy/docker/docker-compose.prod.yml up -d --build
 ```
 
 **Option B: Create a local PostgreSQL database container**
 Combines the base compose file with the `docker-compose.db.yml` override to spin up a PostgreSQL container alongside the API.
 ```bash
 # Local (API + Postgres)
-docker compose -f deploy/docker/docker-compose.local.yml -f deploy/docker/docker-compose.db.yml up -d --build
+docker compose --env-file deploy/docker/.env.local -f deploy/docker/docker-compose.local.yml -f deploy/docker/docker-compose.db.yml up -d --build
 
 # Development (API + Postgres)
-docker compose -f deploy/docker/docker-compose.dev.yml -f deploy/docker/docker-compose.db.yml up -d --build
+docker compose --env-file deploy/docker/.env.dev -f deploy/docker/docker-compose.dev.yml -f deploy/docker/docker-compose.db.yml up -d --build
 
 # Production (API + Postgres)
-docker compose -f deploy/docker/docker-compose.prod.yml -f deploy/docker/docker-compose.db.yml up -d --build
+docker compose --env-file deploy/docker/.env.prod -f deploy/docker/docker-compose.prod.yml -f deploy/docker/docker-compose.db.yml up -d --build
 ```
 
 ### Environment Variables (Docker)
 
 | Variable | Description |
 |----------|-------------|
-| `DB_CONNECTION_STRING` | Postgre connection string |
+| `DB_HOST` | Database host (use `host.docker.internal` for external DB on host) |
+| `DB_PORT` | Database port (default: 5432) |
+| `DB_NAME` | Database name (default: AirlineTicketDb) |
+| `DB_USER` | Database user (default: postgres) |
+| `DB_PASSWORD` | Database password |
+| `DB_POOLING` | Enable connection pooling (default: true) |
+| `DB_MIN_POOL_SIZE` | Minimum connection pool size (default: 10) |
+| `DB_MAX_POOL_SIZE` | Maximum connection pool size (default: 100) |
 | `REDIS_CONNECTION_STRING` | Redis connection string |
 | `CORS_ORIGINS` | Allowed CORS origins (frontend URL) |
 | `AI_SERVICE_API_KEY` | AI API key |
 | `AI_SERVICE_BASE_URL` | AI API base URL |
-| `AI_SERVICE_MODEL` | AI model name (e.g., DeepSeek V4 Flash) |
+| `AI_SERVICE_MODEL` | AI model name |
 | `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
 | `LUCKY_PENNY_MEDIATR_LICENSE_KEY` | MediatR license key |
 
@@ -201,11 +208,20 @@ AirlineTicket.Backend/
 │   ├── Api/AirlineTicket.Api/           # API Gateway Host
 │   │   ├── Program.cs                   # Bootstrap, middleware, DI
 │   │   ├── ModuleRegistration.cs        # Module assembly registration
-│   │   └── Realtime/                    # SignalR Hubs
+│   │   └── DatabaseInitializer.cs       # Migrations & seeding entry
 │   ├── BuildingBlock/                   # Shared infrastructure (4 projects)
-│   └── Modules/v1/                      # 8 Business modules (4 layers each)
-│       ├── Bookings/
-│       ├── CMS/
+│   ├── Modules/v1/                      # 8 Business modules (4 layers each)
+│   │   ├── Bookings/
+│   │   ├── CMS/
+│   │   ├── Flights/
+│   │   ├── Interactions/
+│   │   ├── Logs/
+│   │   ├── Notifications/
+│   │   ├── Promotions/
+│   │   └── Users/
+│   ├── Realtime/AirlineTicket.SignalR/  # SignalR Hubs (seats, support chat, notifications)
+│   └── Workers/AirlineTicket.Worker/    # Background workers
+├── database/                            # SQL scripts for seeding
 │       ├── Flights/
 │       ├── Interactions/
 │       ├── Logs/
@@ -216,10 +232,11 @@ AirlineTicket.Backend/
 │   ├── core/                            # Core reference data
 │   ├── development/                     # Sample data for local dev/demo
 │   ├── test/                            # Minimal data for integration/unit tests
-│   ├── run_seeds.sh                     # Master script to run core + dev seeds
-│   ├── run_seed_core.sh                 # Run core seeds only
-│   ├── run_seed_dev.sh                  # Run development seeds only
-│   └── run_seed_test.sh                 # Run test seeds only
+│   ├── scripts/                         # Seed runner scripts
+│   │   ├── run_seed_core.sh             # Run core seeds only
+│   │   ├── run_seed_dev.sh              # Run development seeds only
+│   │   └── run_seed_test.sh             # Run test seeds only
+│   └── run_seeds.sh                     # Master script to run core + dev seeds
 ├── deploy/                              # Docker & Nginx configs
 ├── docs/                                # Documentation
 │   ├── api/api-list.md                  # Complete API endpoint reference
