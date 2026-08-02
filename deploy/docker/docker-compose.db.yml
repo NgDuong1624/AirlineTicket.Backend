@@ -1,0 +1,42 @@
+# =============================================================
+# DB override - Option B: Create PostgreSQL database
+# Combine with base compose file:
+#   docker compose -f docker-compose.<env>.yml -f docker-compose.db.yml up -d
+# Overrides ConnectionStrings__DefaultConnection to point to the local postgres service.
+# =============================================================
+name: airline-ticket
+
+services:
+  airlineticket-api:
+    environment:
+      ConnectionStrings__DefaultConnection: Host=${DB_HOST:-postgres};Port=${DB_PORT:-5432};Database=${DB_NAME:-AirlineTicketDb};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-Admin@123};Pooling=${DB_POOLING:-true};Minimum Pool Size=${DB_MIN_POOL_SIZE:-10};Maximum Pool Size=${DB_MAX_POOL_SIZE:-100};
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  airlineticket-signalr:
+    environment:
+      ConnectionStrings__DefaultConnection: Host=${DB_HOST:-postgres};Port=${DB_PORT:-5432};Database=${DB_NAME:-AirlineTicketDb};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-Admin@123};Pooling=${DB_POOLING:-true};Minimum Pool Size=${DB_MIN_POOL_SIZE:-10};Maximum Pool Size=${DB_MAX_POOL_SIZE:-100};
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-Admin@123}
+      POSTGRES_DB: ${DB_NAME:-AirlineTicketDb}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ${POSTGRES_VOLUME:-postgres-data}:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d AirlineTicketDb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

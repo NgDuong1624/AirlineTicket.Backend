@@ -1,0 +1,11 @@
+.git
+.gitignore
+.vscode
+bin
+obj
+deploy/nginx
+deploy/scripts
+docs
+tests
+*.user
+*.lock
