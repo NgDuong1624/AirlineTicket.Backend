@@ -108,7 +108,17 @@ public static class DatabaseInitializer
             {
                 Console.WriteLine($"Executing seed file: {file}");
                 var sql = await File.ReadAllTextAsync(fullPath);
-                await dbContext.Database.ExecuteSqlRawAsync(sql);
+                
+                // Use ADO.NET directly to avoid ExecuteSqlRawAsync formatting issues with JSON curly braces
+                var connection = dbContext.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+                
+                using var command = connection.CreateCommand();
+                command.CommandText = sql;
+                await command.ExecuteNonQueryAsync();
             }
             else
             {

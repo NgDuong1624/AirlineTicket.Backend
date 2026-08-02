@@ -25,9 +25,9 @@ public class DashboardRepository : IDashboardRepository
         const string sql = @"
             SELECT
                 (SELECT COALESCE(SUM(total_price), 0) FROM bookings.bookings WHERE status = 1) as TotalRevenue,
-                (SELECT COUNT(*) FROM bookings.bookings WHERE status = 1) as TotalBookings,
-                (SELECT COUNT(*) FROM users.users WHERE created_at >= NOW() - INTERVAL '30 days') as NewUsers,
-                (SELECT COUNT(*) FROM flights.flights WHERE departure_time >= NOW() - INTERVAL '30 days') as TotalFlights";
+                (SELECT COUNT(*)::integer FROM bookings.bookings WHERE status = 1) as TotalBookings,
+                (SELECT COUNT(*)::integer FROM users.users WHERE created_at >= NOW() - INTERVAL '30 days') as NewUsers,
+                (SELECT COUNT(*)::integer FROM flights.flights WHERE departure_time >= NOW() - INTERVAL '30 days') as TotalFlights";
         return await connection.QueryFirstOrDefaultAsync<AdminDashboardStatsDto>(sql);
     }
 
@@ -38,7 +38,7 @@ public class DashboardRepository : IDashboardRepository
             SELECT
                 a.name,
                 a.iata_code as Code,
-                (SELECT COUNT(*) FROM flights.flights f JOIN flights.routes r ON f.route_id = r.id WHERE r.airline_id = a.id) as FlightsCount,
+                (SELECT COUNT(*)::integer FROM flights.flights f JOIN flights.routes r ON f.route_id = r.id WHERE r.airline_id = a.id) as FlightsCount,
                 CASE WHEN a.is_active = TRUE THEN 'Active' ELSE 'Inactive' END as Status,
                 TO_CHAR(a.created_at, 'YYYY-MM-DD') as Joined
             FROM flights.airlines a

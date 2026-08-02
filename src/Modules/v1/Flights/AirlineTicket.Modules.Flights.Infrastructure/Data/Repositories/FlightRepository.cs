@@ -627,16 +627,16 @@ public class AirlineRepository : IAirlineRepository
     {
         var connection = _context.Database.GetDbConnection();
         return await connection.QueryFirstOrDefaultAsync<Airline>(
-            "SELECT * FROM dbo.Airlines WHERE Id = @Id AND IsDeleted = 0", new { Id = id });
+            "SELECT * FROM flights.Airlines WHERE id = @Id AND is_deleted = 0", new { Id = id });
     }
 
     public async Task<(List<Airline> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
         var items = (await connection.QueryAsync<Airline>(
-            "SELECT * FROM dbo.Airlines WHERE IsDeleted = 0 ORDER BY Name OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY",
+            "SELECT * FROM flights.Airlines WHERE is_deleted = 0 ORDER BY name OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY",
             new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize })).ToList();
-        var totalCount = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM dbo.Airlines WHERE IsDeleted = 0");
+        var totalCount = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM flights.Airlines WHERE is_deleted = 0");
         return (items, totalCount);
     }
 
@@ -688,14 +688,14 @@ public class AircraftModelRepository : IAircraftModelRepository
     public async Task<List<AircraftModel>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
-        return (await connection.QueryAsync<AircraftModel>("SELECT * FROM dbo.AircraftModels WHERE IsDeleted = 0")).ToList();
+        return (await connection.QueryAsync<AircraftModel>("SELECT * FROM flights.AircraftModels WHERE is_deleted = 0")).ToList();
     }
 
     public async Task<AircraftModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var connection = _context.Database.GetDbConnection();
         return await connection.QueryFirstOrDefaultAsync<AircraftModel>(
-            "SELECT * FROM dbo.AircraftModels WHERE Id = @Id AND IsDeleted = 0", new { Id = id });
+            "SELECT * FROM flights.AircraftModels WHERE id = @Id AND is_deleted = 0", new { Id = id });
     }
 
     public async Task<Guid> CreateAsync(AircraftModel model, CancellationToken cancellationToken = default)
