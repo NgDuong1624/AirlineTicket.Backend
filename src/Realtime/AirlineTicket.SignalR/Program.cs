@@ -120,10 +120,6 @@ if (!string.IsNullOrEmpty(redisConn) && multiplexer != null)
         options.Configuration.ChannelPrefix = RedisChannel.Literal("AirlineTicketSignalR");
     });
 }
-else
-{
-    builder.Services.AddDistributedMemoryCache();
-}
 
 builder.Services.AddScoped<IFlightSeatReservation, FlightSeatReservation>();
 builder.Services.AddScoped<IStaffSalesReader, StaffSalesReader>();

@@ -13,6 +13,7 @@ INSERT INTO users.permissions (code, name, description) VALUES
 ('MANAGE_AIRPORTS', 'permission.manage_airports.name', 'permission.manage_airports.desc'),
 ('MANAGE_BOOKINGS', 'permission.manage_bookings.name', 'permission.manage_bookings.desc'),
 ('MANAGE_ARTICLES', 'permission.manage_articles.name', 'permission.manage_articles.desc'),
+('MANAGE_NOTIFICATIONS', 'permission.manage_notifications.name', 'permission.manage_notifications.desc'),
 ('MANAGE_PERMISSIONS', 'permission.manage_permissions.name', 'permission.manage_permissions.desc'),
 ('MANAGE_ROLES', 'permission.manage_roles.name', 'permission.manage_roles.desc')
 ON CONFLICT (code) DO NOTHING;
