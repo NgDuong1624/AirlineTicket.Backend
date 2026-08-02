@@ -1,3 +1,13 @@
+# =============================================================
+# DEV - Option A: Connect to an EXTERNAL database
+# Usage: docker compose -f docker-compose.dev.yml up -d
+# Requires: DB_HOST, DB_PASSWORD env vars
+#
+# Option B: Create database with docker-compose.db.yml
+# Usage: docker compose -f docker-compose.dev.yml -f docker-compose.db.yml up -d
+# =============================================================
+name: airline-ticket
+
 services:
   airlineticket-api:
     image: airlineticket-backend:dev
@@ -5,10 +15,12 @@ services:
       context: ../../
       dockerfile: Dockerfile
     ports:
-      - "${PORT:-5000}:8080"
+      - "${API_PORT:-5179}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - ConnectionStrings__DefaultConnection=Host=${DB_HOST:-localhost};Port=${DB_PORT:-5432};Database=${DB_NAME:-AirlineTicketDb};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-Admin@123};Pooling=${DB_POOLING:-true};Minimum Pool Size=${DB_MIN_POOL_SIZE:-10};Maximum Pool Size=${DB_MAX_POOL_SIZE:-100};
       - ConnectionStrings__Redis=${REDIS_CONNECTION_STRING}
       - Cors__AllowedOrigins__0=${CORS_ORIGINS}
       - AiService__ModelStore__ApiKey=${AI_SERVICE_API_KEY}
@@ -22,21 +34,32 @@ services:
       - AiService__ModelStore__ReasoningEffort=${AI_SERVICE_REASONING_EFFORT}
       - LuckyPenny__MediatR__LicenseKey=${LUCKY_PENNY_MEDIATR_LICENSE_KEY}
       - Google__ClientId=${GOOGLE_CLIENT_ID}
-    depends_on:
-      - postgres
     restart: always
 
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Admin@123
-      POSTGRES_DB: AirlineTicketDb
+  airlineticket-signalr:
+    image: airlineticket-backend:dev
+    build:
+      context: ../../
+      dockerfile: Dockerfile
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data-dev:/var/lib/postgresql/data
+      - "${SIGNALR_PORT:-5084}:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ConnectionStrings__DefaultConnection=Host=${DB_HOST:-localhost};Port=${DB_PORT:-5432};Database=${DB_NAME:-AirlineTicketDb};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-Admin@123};Pooling=${DB_POOLING:-true};Minimum Pool Size=${DB_MIN_POOL_SIZE:-10};Maximum Pool Size=${DB_MAX_POOL_SIZE:-100};
+      - ConnectionStrings__Redis=${REDIS_CONNECTION_STRING}
+      - Cors__AllowedOrigins__0=${CORS_ORIGINS}
+      - AiService__ModelStore__ApiKey=${AI_SERVICE_API_KEY}
+      - AiService__ModelStore__BaseUrl=${AI_SERVICE_BASE_URL}
+      - AiService__ModelStore__Model=${AI_SERVICE_MODEL}
+      - AiService__ModelStore__MaxTokens=${AI_SERVICE_MAX_TOKENS}
+      - AiService__ModelStore__Temperature=${AI_SERVICE_TEMPERATURE}
+      - AiService__ModelStore__TopP=${AI_SERVICE_TOP_P}
+      - AiService__ModelStore__TimeoutSeconds=${AI_SERVICE_TIMEOUT_SECONDS}
+      - AiService__ModelStore__EnableThinking=${AI_SERVICE_ENABLE_THINKING}
+      - AiService__ModelStore__ReasoningEffort=${AI_SERVICE_REASONING_EFFORT}
+      - LuckyPenny__MediatR__LicenseKey=${LUCKY_PENNY_MEDIATR_LICENSE_KEY}
+      - Google__ClientId=${GOOGLE_CLIENT_ID}
+    command: ["bash", "-c", "cd signalr && exec dotnet AirlineTicket.SignalR.dll"]
     restart: always
-
-volumes:
-  postgres-data-dev:
