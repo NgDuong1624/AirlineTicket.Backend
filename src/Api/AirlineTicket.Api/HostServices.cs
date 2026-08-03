@@ -8,6 +8,7 @@ using AirlineTicket.Modules.Bookings.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Domain.Entities;
+using AirlineTicket.Modules.Notifications.Application.Features.Commands;
 using MediatR;
 
 namespace AirlineTicket.Api.Services;
@@ -188,16 +189,16 @@ public class BookingConfirmedEventHandler : INotificationHandler<BookingConfirme
 {
     private readonly IBookingRepository _bookingRepository;
     private readonly IFlightRepository _flightRepository;
-    private readonly INotificationRepository _notificationRepository;
+    private readonly IMediator _mediator;
 
     public BookingConfirmedEventHandler(
         IBookingRepository bookingRepository,
         IFlightRepository flightRepository,
-        INotificationRepository notificationRepository)
+        IMediator mediator)
     {
         _bookingRepository = bookingRepository;
         _flightRepository = flightRepository;
-        _notificationRepository = notificationRepository;
+        _mediator = mediator;
     }
 
     public async Task Handle(BookingConfirmedEvent notification, CancellationToken cancellationToken)
@@ -209,21 +210,19 @@ public class BookingConfirmedEventHandler : INotificationHandler<BookingConfirme
         var flight = await _flightRepository.GetByIdAsync(bookingDetails.FlightId.Value, cancellationToken);
         if (flight == null) return;
 
-        var emailContent = $"Booking confirmed! View details: {notification.Origin}/bookings/detail/{bookingDetails.PnrCode}";
-
-        var notificationEntity = new Notification
-        {
-            UserId = null, // We don't have UserId in BookingConfirmedDetailsDto, so we leave it null or we could fetch it.
-            Type = "BookingConfirmed",
-            Severity = 0, // Info
-            Title = "Booking Confirmed",
-            Content = emailContent,
-            ActionUrl = $"/bookings/detail/{bookingDetails.PnrCode}",
-            ReferenceId = notification.BookingId,
-            ReferenceType = "Booking"
-        };
-
-        await _notificationRepository.AddAsync(notificationEntity);
-        await _notificationRepository.SaveChangesAsync();
+        await _mediator.Send(new CreateNotificationCommand(
+            UserId: null,
+            TemplateCode: "BOOKING_CONFIRMED",
+            TemplateParameters: new Dictionary<string, string>
+            {
+                { "PassengerName", bookingDetails.PassengerName },
+                { "PnrCode", bookingDetails.PnrCode },
+                { "FlightNumber", flight.FlightNumber }
+            },
+            Severity: 0,
+            ActionUrl: $"/bookings/detail/{bookingDetails.PnrCode}",
+            ReferenceId: notification.BookingId,
+            ReferenceType: "Booking"
+        ), cancellationToken);
     }
 }

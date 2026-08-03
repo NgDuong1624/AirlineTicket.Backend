@@ -32,8 +32,11 @@ using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Interactions.Application;
 using AirlineTicket.Modules.Logs.Application;
 using AirlineTicket.Modules.Notifications.Application;
+using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Promotions.Application;
 using AirlineTicket.Modules.Users.Application;
+using AirlineTicket.SignalR.Hubs;
+using AirlineTicket.SignalR.Services;
 
 // AirlineTicket Module Infrastructure Usings
 using AirlineTicket.Modules.Bookings.Infrastructure;
@@ -191,6 +194,9 @@ builder.Services.AddBuildingBlocksAuth();
 // Cross-module service implementations (reside in API host to avoid circular refs between modules)
 builder.Services.AddScoped<IFlightSeatReservation, AirlineTicket.Api.Services.FlightSeatReservation>();
 builder.Services.AddScoped<IStaffSalesReader, AirlineTicket.Api.Services.StaffSalesReader>();
+builder.Services.AddScoped<INotificationPusher, NotificationPusher>();
+
+builder.Services.AddSignalR();
 
 builder.Services.AddCors(options =>
 {
@@ -272,6 +278,8 @@ app.UseCors(WebCorsPolicy);
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.MapControllers();
 app.MapEndpoints();

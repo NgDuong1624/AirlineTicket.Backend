@@ -23,11 +23,13 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
 {
     private readonly INotificationRepository _repository;
     private readonly INotificationTemplateService _templateService;
+    private readonly INotificationPusher _notificationPusher;
 
-    public CreateNotificationCommandHandler(INotificationRepository repository, INotificationTemplateService templateService)
+    public CreateNotificationCommandHandler(INotificationRepository repository, INotificationTemplateService templateService, INotificationPusher notificationPusher)
     {
         _repository = repository;
         _templateService = templateService;
+        _notificationPusher = notificationPusher;
     }
 
     public async Task<Guid> Handle(CreateNotificationCommand request, CancellationToken cancellationToken)
@@ -62,6 +64,17 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
 
         await _repository.AddAsync(notification);
         await _repository.SaveChangesAsync();
+
+        if (request.UserId.HasValue)
+        {
+            var notificationDto = new AirlineTicket.Modules.Notifications.Application.DTOs.NotificationDto(
+                notification.Id,
+                request.UserId.Value,
+                notification.Title,
+                notification.Content,
+                notification.CreatedAt);
+            await _notificationPusher.PushNotificationAsync(request.UserId.Value, notificationDto, cancellationToken);
+        }
 
         return notification.Id;
     }

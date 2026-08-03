@@ -23,6 +23,7 @@
     <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Infrastructure\AirlineTicket.Modules.Flights.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Interactions\AirlineTicket.Modules.Interactions.Infrastructure\AirlineTicket.Modules.Interactions.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Infrastructure\AirlineTicket.Modules.Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Notifications\AirlineTicket.Modules.Notifications.Application\AirlineTicket.Modules.Notifications.Application.csproj" />
   </ItemGroup>
 
 </Project>

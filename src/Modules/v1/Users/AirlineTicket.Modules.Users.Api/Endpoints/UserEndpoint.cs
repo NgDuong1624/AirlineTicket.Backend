@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using AirlineTicket.Modules.Users.Application.Features.Commands;
 
 namespace AirlineTicket.Modules.Users.Api.Endpoints;
 
@@ -103,6 +104,30 @@ public class UserEndpoint : IEndpoint
             .Produces(200)
             .Produces(401)
             .Produces(404)
+            .RequireAuthorization();
+
+        // PUT /api/users/language - Update user language preference
+        authGroup.MapPut("/language", async (
+                [FromBody] UpdateLanguageRequest request,
+                [FromServices] ISender sender,
+                ClaimsPrincipal user,
+                CancellationToken ct) =>
+            {
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (!Guid.TryParse(userIdClaim, out var userId))
+                {
+                    return Results.Unauthorized();
+                }
+
+                var command = new UpdateLanguageCommand(userId, request.Language);
+                var result = await sender.Send(command, ct);
+                return result.IsSuccess ? Results.Ok() : result.ToErrorResult();
+            })
+            .WithName("UpdateLanguage")
+            .WithSummary("Update user language preference")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401)
             .RequireAuthorization();
 
         // POST /api/auth/refresh — Refresh access token

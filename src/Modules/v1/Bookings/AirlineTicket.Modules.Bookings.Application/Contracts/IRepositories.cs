@@ -34,6 +34,7 @@ public class BookingConfirmedDetailsDto
     public Guid Id { get; set; }
     public string PnrCode { get; set; } = string.Empty;
     public string ContactEmail { get; set; } = string.Empty;
+    public string PassengerName { get; set; } = string.Empty;
     public Guid? FlightId { get; set; }
 }
 
