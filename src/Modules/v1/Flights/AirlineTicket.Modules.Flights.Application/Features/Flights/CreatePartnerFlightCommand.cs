@@ -81,7 +81,9 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
             {
                 { "FlightNumber", request.FlightNumber },
                 { "Origin", route.OriginAirport.IataCode },
-                { "Destination", route.DestinationAirport.IataCode }
+                { "Destination", route.DestinationAirport.IataCode },
+                { "DepartureTime", request.DepartureTime.ToString("yyyy-MM-dd HH:mm:ss") },
+                { "BasePrice", request.BasePrice.ToString("F2") }
             },
             Severity: 0, // Info
             ActionUrl: $"/staff/flights/{id}/seats",

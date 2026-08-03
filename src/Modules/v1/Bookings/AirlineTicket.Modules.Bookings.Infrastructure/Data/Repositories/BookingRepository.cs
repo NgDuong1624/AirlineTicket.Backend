@@ -200,17 +200,35 @@ public class BookingRepository : IBookingRepository
 
     public async Task<BookingConfirmedDetailsDto?> GetBookingConfirmedDetailsAsync(Guid bookingId, CancellationToken cancellationToken = default)
     {
-        return await _context.Bookings
+        var raw = await _context.Bookings
             .AsNoTracking()
             .Where(b => b.Id == bookingId)
-            .Select(b => new BookingConfirmedDetailsDto
+            .Select(b => new
             {
-                Id = b.Id,
-                PnrCode = b.PnrCode,
-                ContactEmail = b.ContactEmail,
+                b.Id,
+                b.PnrCode,
+                b.ContactEmail,
+                PassengerNames = b.Passengers.Select(p => p.FirstName + " " + p.LastName).ToList(),
                 FlightId = b.Tickets.Select(t => (Guid?)t.FlightId).FirstOrDefault()
             })
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (raw == null) return null;
+
+        var passengerName = raw.PassengerNames.FirstOrDefault() ?? string.Empty;
+        if (raw.PassengerNames.Count > 1)
+        {
+            passengerName += $" and {raw.PassengerNames.Count - 1} others";
+        }
+
+        return new BookingConfirmedDetailsDto
+        {
+            Id = raw.Id,
+            PnrCode = raw.PnrCode,
+            ContactEmail = raw.ContactEmail,
+            PassengerName = passengerName,
+            FlightId = raw.FlightId
+        };
     }
 
     private static BookingDto MapToDto(Booking b) => new()

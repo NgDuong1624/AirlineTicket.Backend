@@ -49,6 +49,7 @@
     <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Api\AirlineTicket.Modules.Logs.Api.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Application\AirlineTicket.Modules.Logs.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Infrastructure\AirlineTicket.Modules.Logs.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Realtime\AirlineTicket.SignalR\AirlineTicket.SignalR.csproj" />
   </ItemGroup>
 
 </Project>
