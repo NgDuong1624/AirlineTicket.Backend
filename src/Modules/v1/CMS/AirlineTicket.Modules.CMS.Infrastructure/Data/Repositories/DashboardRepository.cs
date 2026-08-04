@@ -1,12 +1,17 @@
-using Dapper;
 using Microsoft.EntityFrameworkCore;
-using AirlineTicket.Modules.CMS.Application.Contracts;
-using AirlineTicket.Modules.CMS.Application.Features.Dashboard;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.Modules.Bookings.Domain.Entities;
+using AirlineTicket.Modules.Flights.Domain.Entities;
+using AirlineTicket.Modules.Flights.Domain.Enums;
+using AirlineTicket.Modules.Bookings.Domain.Enums;
+using AirlineTicket.Modules.Logs.Domain.Entities;
+using AirlineTicket.Modules.CMS.Application.Contracts;
+using AirlineTicket.Modules.CMS.Application.Features.Dashboard;
+using AirlineTicket.Modules.Users.Domain.Entities;
 
 namespace AirlineTicket.Modules.CMS.Infrastructure.Data.Repositories;
 
@@ -21,151 +26,154 @@ public class DashboardRepository : IDashboardRepository
 
     public async Task<AdminDashboardStatsDto?> GetAdminStatsAsync(CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT
-                (SELECT COALESCE(SUM(total_price), 0) FROM bookings.bookings WHERE status = 1) as TotalRevenue,
-                (SELECT COUNT(*)::integer FROM bookings.bookings WHERE status = 1) as TotalBookings,
-                (SELECT COUNT(*)::integer FROM users.users WHERE created_at >= NOW() - INTERVAL '30 days') as NewUsers,
-                (SELECT COUNT(*)::integer FROM flights.flights WHERE departure_time >= NOW() - INTERVAL '30 days') as TotalFlights";
-        return await connection.QueryFirstOrDefaultAsync<AdminDashboardStatsDto>(sql);
+        var totalRevenue = await _context.Set<Booking>()
+            .Where(b => b.Status == BookingStatus.Confirmed)
+            .SumAsync(b => b.TotalPrice, cancellationToken);
+
+        var totalBookings = await _context.Set<Booking>()
+            .Where(b => b.Status == BookingStatus.Confirmed)
+            .CountAsync(cancellationToken);
+
+        var newUsers = await _context.Set<User>()
+            .Where(u => u.CreatedAt >= DateTime.UtcNow.AddDays(-30))
+            .CountAsync(cancellationToken);
+
+        var totalFlights = await _context.Set<Flight>()
+            .Where(f => f.DepartureTime >= DateTime.UtcNow.AddDays(-30))
+            .CountAsync(cancellationToken);
+
+        return new AdminDashboardStatsDto(totalRevenue, totalBookings, newUsers, totalFlights);
     }
 
     public async Task<List<AdminDashboardPartnerDto>> GetRecentPartnersAsync(int count = 5, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT
-                a.name,
-                a.iata_code as Code,
-                (SELECT COUNT(*)::integer FROM flights.flights f JOIN flights.routes r ON f.route_id = r.id WHERE r.airline_id = a.id) as FlightsCount,
-                CASE WHEN a.is_active = TRUE THEN 'Active' ELSE 'Inactive' END as Status,
-                TO_CHAR(a.created_at, 'YYYY-MM-DD') as Joined
-            FROM flights.airlines a
-            WHERE a.is_deleted = FALSE
-            ORDER BY a.created_at DESC
-            LIMIT @Count";
-        var result = await connection.QueryAsync<AdminDashboardPartnerDto>(sql, new { Count = count });
-        return result.ToList();
+        var partners = await _context.Set<Airline>()
+            .Where(a => !a.IsDeleted)
+            .OrderByDescending(a => a.CreatedAt)
+            .Take(count)
+            .Select(a => new AdminDashboardPartnerDto(
+                a.Name,
+                a.IataCode,
+                _context.Set<Flight>().Count(f => f.Route.AirlineId == a.Id),
+                a.IsActive ? "Active" : "Inactive",
+                a.CreatedAt.ToString("yyyy-MM-dd")
+            ))
+            .ToListAsync(cancellationToken);
+
+        return partners;
     }
 
     public async Task<List<AdminDashboardLogDto>> GetCriticalLogsAsync(int count = 4, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT
-                TO_CHAR(created_at, 'HH24:MI:SS') as Time,
-                level as Type,
-                message as LabelKey
-            FROM logs.system_logs
-            ORDER BY created_at DESC
-            LIMIT @Count";
-        var result = await connection.QueryAsync<AdminDashboardLogDto>(sql, new { Count = count });
-        return result.ToList();
+        var logs = await _context.Set<SystemLog>()
+            .OrderByDescending(l => l.CreatedAt)
+            .Take(count)
+            .Select(l => new AdminDashboardLogDto(
+                l.CreatedAt.ToString("HH:mm:ss"),
+                l.Level,
+                l.Message
+            ))
+            .ToListAsync(cancellationToken);
+
+        return logs;
     }
 
     public async Task<List<PartnerStatDto>> GetPartnerStatsAsync(Guid airlineId, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT
-                (SELECT COUNT(*) FROM flights.airplanes WHERE airline_id = @AirlineId AND is_deleted = FALSE) as ActiveAircraft,
-                (SELECT COUNT(*) FROM users.users WHERE airline_id = @AirlineId AND is_active = TRUE) as TotalStaff,
-                (SELECT COUNT(*) FROM bookings.bookings b
-                    WHERE b.status = 1 AND CAST(b.created_at AS DATE) = CAST(NOW() AS DATE)
-                      AND EXISTS (
-                          SELECT 1 FROM bookings.tickets t
-                          INNER JOIN flights.flights f ON t.flight_id = f.id
-                          INNER JOIN flights.routes r ON f.route_id = r.id
-                          WHERE t.booking_id = b.id AND r.airline_id = @AirlineId
-                      )
-                ) as TodayBookings,
-                COALESCE((
-                    SELECT SUM(b.total_price) FROM bookings.bookings b
-                    WHERE b.status = 1 AND b.created_at >= NOW() - INTERVAL '30 days'
-                      AND EXISTS (
-                          SELECT 1 FROM bookings.tickets t
-                          INNER JOIN flights.flights f ON t.flight_id = f.id
-                          INNER JOIN flights.routes r ON f.route_id = r.id
-                          WHERE t.booking_id = b.id AND r.airline_id = @AirlineId
-                      )
-                ), 0) as MonthlyRevenue";
+        var activeAircraft = await _context.Set<Airplane>()
+            .Where(a => a.AirlineId == airlineId && !a.IsDeleted)
+            .CountAsync(cancellationToken);
 
-        var result = await connection.QueryFirstOrDefaultAsync<PartnerStatsQueryResult>(sql, new { AirlineId = airlineId });
-        if (result == null) return new List<PartnerStatDto>();
+        var totalStaff = await _context.Set<User>()
+            .Where(u => u.AirlineId == airlineId && u.IsActive)
+            .CountAsync(cancellationToken);
+
+        var todayBookings = await _context.Set<Booking>()
+            .Where(b => b.Status == BookingStatus.Confirmed && b.CreatedAt.Date == DateTime.UtcNow.Date)
+            .Where(b => _context.Set<Ticket>()
+                .Any(t => t.BookingId == b.Id && _context.Set<Flight>()
+                    .Any(f => f.Id == t.FlightId && f.Route.AirlineId == airlineId)))
+            .CountAsync(cancellationToken);
+
+        var monthlyRevenue = await _context.Set<Booking>()
+            .Where(b => b.Status == BookingStatus.Confirmed && b.CreatedAt >= DateTime.UtcNow.AddDays(-30))
+            .Where(b => _context.Set<Ticket>()
+                .Any(t => t.BookingId == b.Id && _context.Set<Flight>()
+                    .Any(f => f.Id == t.FlightId && f.Route.AirlineId == airlineId)))
+            .SumAsync(b => b.TotalPrice, cancellationToken);
 
         return new List<PartnerStatDto>
         {
-            new(result.ActiveAircraft.ToString()),
-            new(result.TotalStaff.ToString()),
-            new(result.TodayBookings.ToString()),
-            new($"${result.MonthlyRevenue:N0}")
+            new(activeAircraft.ToString()),
+            new(totalStaff.ToString()),
+            new(todayBookings.ToString()),
+            new($"${monthlyRevenue:N0}")
         };
     }
 
     public async Task<List<PartnerRecentFlightDto>> GetPartnerRecentFlightsAsync(Guid airlineId, int count = 5, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT
-                f.""FlightNumber"" as Id,
-                (SELECT ""IataCode"" FROM flights.""Airports"" WHERE ""Id"" = r.""OriginAirportId"") || '-' || (SELECT ""IataCode"" FROM flights.""Airports"" WHERE ""Id"" = r.""DestinationAirportId"") as Route,
-                TO_CHAR(f.""DepartureTime"", 'HH24:MI:SS') as Time,
-                CASE f.""Status""
-                    WHEN 0 THEN 'Scheduled'
-                    WHEN 1 THEN 'Delayed'
-                    WHEN 2 THEN 'Boarding'
-                    WHEN 3 THEN 'InAir'
-                    WHEN 4 THEN 'Landed'
-                    WHEN 5 THEN 'Cancelled'
-                    ELSE 'Unknown'
-                END as Status,
-                CASE f.""Status""
-                    WHEN 0 THEN 'text-sky-600 bg-sky-500/10'
-                    WHEN 1 THEN 'text-amber-600 bg-amber-500/10'
-                    WHEN 2 THEN 'text-emerald-600 bg-emerald-500/10'
-                    WHEN 3 THEN 'text-indigo-600 bg-indigo-500/10'
-                    WHEN 4 THEN 'text-gray-600 bg-gray-500/10'
-                    WHEN 5 THEN 'text-rose-600 bg-rose-500/10'
-                    ELSE 'text-muted-foreground bg-muted'
-                END as Color
-            FROM flights.""Flights"" f
-            INNER JOIN flights.""Routes"" r ON f.""RouteId"" = r.""Id""
-            WHERE r.""AirlineId"" = @AirlineId
-            ORDER BY f.""DepartureTime"" DESC
-            LIMIT @Count";
+        var flights = await _context.Set<Flight>()
+            .Where(f => f.Route.AirlineId == airlineId)
+            .OrderByDescending(f => f.DepartureTime)
+            .Take(count)
+            .Select(f => new PartnerRecentFlightDto(
+                f.FlightNumber,
+                f.Route.OriginAirport.IataCode + "-" + f.Route.DestinationAirport.IataCode,
+                f.DepartureTime.ToString("HH:mm:ss"),
+                f.Status == FlightStatus.Scheduled ? "Scheduled" :
+                f.Status == FlightStatus.Delayed ? "Delayed" :
+                f.Status == FlightStatus.Boarding ? "Boarding" :
+                f.Status == FlightStatus.InAir ? "InAir" :
+                f.Status == FlightStatus.Landed ? "Landed" :
+                f.Status == FlightStatus.Cancelled ? "Cancelled" : "Unknown",
+                f.Status == FlightStatus.Scheduled ? "text-sky-600 bg-sky-500/10" :
+                f.Status == FlightStatus.Delayed ? "text-amber-600 bg-amber-500/10" :
+                f.Status == FlightStatus.Boarding ? "text-emerald-600 bg-emerald-500/10" :
+                f.Status == FlightStatus.InAir ? "text-indigo-600 bg-indigo-500/10" :
+                f.Status == FlightStatus.Landed ? "text-gray-600 bg-gray-500/10" :
+                f.Status == FlightStatus.Cancelled ? "text-rose-600 bg-rose-500/10" : "text-muted-foreground bg-muted"
+            ))
+            .ToListAsync(cancellationToken);
 
-        var result = await connection.QueryAsync<PartnerRecentFlightDto>(sql, new { AirlineId = airlineId, Count = count });
-        return result.ToList();
+        return flights;
     }
 
     public async Task<List<PartnerRecentBookingDto>> GetPartnerRecentBookingsAsync(Guid airlineId, int count = 5, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT
-                b.""PnrCode"" as Id,
-                (SELECT (p.""LastName"" || ' ' || p.""FirstName"") FROM bookings.""Passengers"" p WHERE p.""BookingId"" = b.""Id"" LIMIT 1) as Passenger,
-                f.""FlightNumber"" as Flight,
-                fs.""SeatNumber"" as Seat,
-                'Economy' as Class,
-                '$' || CAST(b.""TotalPrice"" AS TEXT) as Amount,
-                CASE
-                    WHEN EXTRACT(EPOCH FROM (NOW() - b.""CreatedAt"")) / 60 < 60
-                    THEN CAST(FLOOR(EXTRACT(EPOCH FROM (NOW() - b.""CreatedAt"")) / 60) AS TEXT) || ' mins ago'
-                    ELSE TO_CHAR(b.""CreatedAt"", 'DD/MM/YYYY')
-                END as Date
-            FROM bookings.""Bookings"" b
-            INNER JOIN bookings.""Tickets"" t ON b.""Id"" = t.""BookingId""
-            INNER JOIN flights.""FlightSeats"" fs ON t.""SeatId"" = fs.""Id""
-            INNER JOIN flights.""Flights"" f ON t.""FlightId"" = f.""Id""
-            INNER JOIN flights.""Routes"" r ON f.""RouteId"" = r.""Id""
-            WHERE r.""AirlineId"" = @AirlineId
-            ORDER BY b.""CreatedAt"" DESC
-            LIMIT @Count";
+        var bookings = await (from b in _context.Set<Booking>()
+                              join t in _context.Set<Ticket>() on b.Id equals t.BookingId
+                              join fs in _context.Set<FlightSeat>() on t.SeatId equals fs.Id
+                              join f in _context.Set<Flight>() on t.FlightId equals f.Id
+                              join r in _context.Set<Route>() on f.RouteId equals r.Id
+                              where r.AirlineId == airlineId
+                              orderby b.CreatedAt descending
+                              select new
+                              {
+                                  b.PnrCode,
+                                  PassengerName = _context.Set<Passenger>()
+                                      .Where(p => p.BookingId == b.Id)
+                                      .Select(p => p.LastName + " " + p.FirstName)
+                                      .FirstOrDefault() ?? string.Empty,
+                                  f.FlightNumber,
+                                  fs.SeatNumber,
+                                  b.TotalPrice,
+                                  b.CreatedAt
+                              })
+                              .Take(count)
+                              .ToListAsync(cancellationToken);
 
-        var result = await connection.QueryAsync<PartnerRecentBookingDto>(sql, new { AirlineId = airlineId, Count = count });
-        return result.ToList();
+        return bookings.Select(b => new PartnerRecentBookingDto(
+            b.PnrCode,
+            b.PassengerName,
+            b.FlightNumber,
+            b.SeatNumber,
+            "Economy",
+            "$" + b.TotalPrice.ToString(),
+            (DateTime.UtcNow - b.CreatedAt).TotalMinutes < 60
+                ? Math.Floor((DateTime.UtcNow - b.CreatedAt).TotalMinutes).ToString() + " mins ago"
+                : b.CreatedAt.ToString("dd/MM/yyyy")
+        )).ToList();
     }
 }
 

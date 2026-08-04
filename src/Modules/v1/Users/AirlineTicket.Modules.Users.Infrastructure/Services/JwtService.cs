@@ -22,7 +22,7 @@ public class JwtService : IJwtService
 
     public TokenResponse GenerateToken(User user)
     {
-        var secret = (_configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
+        var secret = (_configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret is not configured.")).Trim();
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         var keyId = _configuration["Jwt:KeyId"];
         if (!string.IsNullOrEmpty(keyId))
@@ -59,8 +59,8 @@ public class JwtService : IJwtService
         }
 
         var accessTokenStr = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"] ?? "AirlineTicketApi",
-            audience: _configuration["Jwt:Audience"] ?? "AirlineTicketClient",
+            issuer: _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is not configured."),
+            audience: _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured."),
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(
                 _configuration.GetValue<int>("Jwt:AccessTokenExpiryMinutes", 15)),

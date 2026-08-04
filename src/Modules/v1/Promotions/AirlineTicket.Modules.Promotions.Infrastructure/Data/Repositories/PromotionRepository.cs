@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using AirlineTicket.Modules.Promotions.Application.Contracts;
 using AirlineTicket.Modules.Promotions.Domain.Entities;
-using Dapper;
 
 namespace AirlineTicket.Modules.Promotions.Infrastructure.Data.Repositories;
 
@@ -21,59 +20,103 @@ public class PromotionRepository : IPromotionRepository
 
     public async Task<PromotionDto?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT Id, Code as PromoCode, DiscountType, DiscountValue, 
-                   UsageLimit as MaxUsage, UsageCount as CurrentUsage, StartDate, EndDate
-            FROM promotions.Coupons 
-            WHERE Code = @Code AND IsActive = TRUE";
-        
-        return await connection.QueryFirstOrDefaultAsync<PromotionDto>(sql, new { Code = code });
+        return await _context.Coupons
+            .AsNoTracking()
+            .Where(c => c.Code == code && c.IsActive)
+            .Select(c => new PromotionDto
+            {
+                Id = c.Id,
+                PromoCode = c.Code,
+                DiscountType = c.DiscountType.ToString(),
+                DiscountValue = c.DiscountValue,
+                MaxUsage = c.UsageLimit,
+                CurrentUsage = c.UsageCount,
+                StartDate = c.StartDate,
+                EndDate = c.EndDate
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<List<Campaign>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
         var now = DateTime.UtcNow;
-        const string sql = @"
-            SELECT * FROM promotions.Campaigns 
-            WHERE Is_Featured = TRUE AND StartDate <= @Now AND EndDate >= @Now";
-        
-        var result = await connection.QueryAsync<Campaign>(sql, new { Now = now });
-        return result.ToList();
+        return await _context.Campaigns
+            .AsNoTracking()
+            .Where(c => c.IsFeatured && c.StartDate <= now && c.EndDate >= now && !c.IsDeleted)
+            .Select(c => new Campaign
+            {
+                Id = c.Id,
+                Title = c.Title,
+                BannerUrl = c.BannerUrl,
+                Content = c.Content,
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                IsFeatured = c.IsFeatured,
+                IsDeleted = c.IsDeleted,
+                AirlineId = c.AirlineId
+            })
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<(List<Campaign> Items, int TotalCount)> GetAllCampaignsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT * FROM promotions.Campaigns 
-            ORDER BY StartDate DESC
-            OFFSET @Offset LIMIT @PageSize";
-
-        const string countSql = "SELECT COUNT(*) FROM promotions.Campaigns";
-
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
-        var result = await connection.QueryAsync<Campaign>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
-        return (result.ToList(), totalCount);
+        var query = _context.Campaigns.AsNoTracking();
+        
+        var totalCount = await query.CountAsync(cancellationToken);
+        
+        var items = await query
+            .OrderByDescending(c => c.StartDate)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(c => new Campaign
+            {
+                Id = c.Id,
+                Title = c.Title,
+                BannerUrl = c.BannerUrl,
+                Content = c.Content,
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                IsFeatured = c.IsFeatured,
+                IsDeleted = c.IsDeleted,
+                AirlineId = c.AirlineId
+            })
+            .ToListAsync(cancellationToken);
+            
+        return (items, totalCount);
     }
 
     public async Task<(List<Coupon> Items, int TotalCount)> GetAllCouponsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT * FROM promotions.Coupons 
-            WHERE AirlineId IS NULL AND IsDeleted = FALSE
-            ORDER BY StartDate DESC
-            OFFSET @Offset LIMIT @PageSize";
-
-        const string countSql = @"
-            SELECT COUNT(*) FROM promotions.Coupons 
-            WHERE AirlineId IS NULL AND IsDeleted = FALSE";
-
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
-        var result = await connection.QueryAsync<Coupon>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
-        return (result.ToList(), totalCount);
+        var query = _context.Coupons
+            .AsNoTracking()
+            .Where(c => c.AirlineId == null && !c.IsDeleted);
+            
+        var totalCount = await query.CountAsync(cancellationToken);
+        
+        var items = await query
+            .OrderByDescending(c => c.StartDate)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(c => new Coupon
+            {
+                Id = c.Id,
+                Code = c.Code,
+                Description = c.Description,
+                DiscountType = c.DiscountType,
+                DiscountValue = c.DiscountValue,
+                MinOrderValue = c.MinOrderValue,
+                MaxDiscountAmount = c.MaxDiscountAmount,
+                StartDate = c.StartDate,
+                EndDate = c.EndDate,
+                UsageLimit = c.UsageLimit,
+                UsageCount = c.UsageCount,
+                IsActive = c.IsActive,
+                IsDeleted = c.IsDeleted,
+                AirlineId = c.AirlineId
+            })
+            .ToListAsync(cancellationToken);
+            
+        return (items, totalCount);
     }
 
     public async Task<Guid> CreateAsync(PromotionDto promotion, CancellationToken cancellationToken = default)

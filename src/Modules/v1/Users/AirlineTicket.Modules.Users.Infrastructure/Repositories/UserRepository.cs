@@ -1,8 +1,8 @@
+using AirlineTicket.Modules.Flights.Domain.Entities;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Domain.Entities;
 using AirlineTicket.Modules.Users.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Dapper;
 
 namespace AirlineTicket.Modules.Users.Infrastructure.Repositories;
 
@@ -17,52 +17,91 @@ public class UserRepository : IUserRepository
 
     public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string countSql = "SELECT COUNT(*) FROM users.users";
-        const string sql = @"
-            SELECT u.*, a.name as AirlineName, a.logo_url as AirlineLogoUrl 
-            FROM users.users u 
-            LEFT JOIN flights.airlines a ON u.airline_id = a.id
-            ORDER BY u.created_at DESC
-            OFFSET @Offset LIMIT @PageSize";
-
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
-        var result = await connection.QueryAsync<User>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
-        return (result.ToList(), totalCount);
+        var query = _context.Users.AsNoTracking();
+        
+        var totalCount = await query.CountAsync(cancellationToken);
+        
+        var items = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(u => new User
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FullName = u.FullName,
+                Phone = u.Phone,
+                IsActive = u.IsActive,
+                IsDeleted = u.IsDeleted,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                AirlineId = u.AirlineId,
+                Role = u.Role,
+                AirlineName = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
+                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
+            })
+            .ToListAsync(cancellationToken);
+            
+        return (items, totalCount);
     }
 
     public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetByAirlineIdAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string countSql = "SELECT COUNT(*) FROM users.users WHERE airline_id = @AirlineId AND is_deleted = FALSE";
-        const string sql = @"
-            SELECT u.*, a.name as AirlineName, a.logo_url as AirlineLogoUrl 
-            FROM users.users u 
-            LEFT JOIN flights.airlines a ON u.airline_id = a.id 
-            WHERE u.airline_id = @AirlineId AND u.is_deleted = FALSE
-            ORDER BY u.created_at DESC
-            OFFSET @Offset LIMIT @PageSize";
-
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { AirlineId = airlineId });
-        var result = await connection.QueryAsync<User>(sql, new { AirlineId = airlineId, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
-        return (result.ToList(), totalCount);
+        var query = _context.Users
+            .AsNoTracking()
+            .Where(u => u.AirlineId == airlineId && !u.IsDeleted);
+            
+        var totalCount = await query.CountAsync(cancellationToken);
+        
+        var items = await query
+            .OrderByDescending(u => u.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(u => new User
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FullName = u.FullName,
+                Phone = u.Phone,
+                IsActive = u.IsActive,
+                IsDeleted = u.IsDeleted,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                AirlineId = u.AirlineId,
+                Role = u.Role,
+                AirlineName = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
+                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
+            })
+            .ToListAsync(cancellationToken);
+            
+        return (items, totalCount);
     }
 
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        return await connection.QueryFirstOrDefaultAsync<User>(@"
-            SELECT u.*, a.name as AirlineName, a.logo_url as AirlineLogoUrl 
-            FROM users.users u 
-            LEFT JOIN flights.airlines a ON u.airline_id = a.id 
-            WHERE u.id = @Id", 
-            new { Id = id });
+        return await _context.Users
+            .AsNoTracking()
+            .Where(u => u.Id == id)
+            .Select(u => new User
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FullName = u.FullName,
+                Phone = u.Phone,
+                IsActive = u.IsActive,
+                IsDeleted = u.IsDeleted,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                AirlineId = u.AirlineId,
+                Role = u.Role,
+                AirlineName = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
+                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
-        // Keeping EF for this one due to complex includes (RoleEntity, RolePermissions, Permission)
-        // Dapper multi-mapping for 4 levels deep is complex and error-prone.
         return await _context.Users
             .Include(u => u.RoleEntity)
                 .ThenInclude(r => r.RolePermissions)

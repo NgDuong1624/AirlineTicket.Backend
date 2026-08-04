@@ -165,7 +165,7 @@ builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<Intera
 builder.Services.AddScoped<IEntitySnapshotReader, DbContextSnapshotReader<LogsDbContext>>();
 
 // Configure JWT Authentication
-var jwtSecret = (builder.Configuration["Jwt:Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
+var jwtSecret = (builder.Configuration["Jwt:Secret"] ?? throw new InvalidOperationException("Jwt:Secret is not configured.")).Trim();
 var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 var jwtKeyId = builder.Configuration["Jwt:KeyId"];
 if (!string.IsNullOrEmpty(jwtKeyId))
@@ -182,8 +182,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "AirlineTicketApi",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "AirlineTicketClient",
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is not configured."),
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured."),
             IssuerSigningKey = jwtKey
         };
     });

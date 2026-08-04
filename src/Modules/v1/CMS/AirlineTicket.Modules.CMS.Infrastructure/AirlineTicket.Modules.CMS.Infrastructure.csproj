@@ -3,10 +3,14 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Infrastructure\AirlineTicket.BuildingBlocks.Infrastructure.csproj" />
     <ProjectReference Include="..\AirlineTicket.Modules.CMS.Application\AirlineTicket.Modules.CMS.Application.csproj" />
+    <ProjectReference Include="..\..\Bookings\AirlineTicket.Modules.Bookings.Domain\AirlineTicket.Modules.Bookings.Domain.csproj" />
+    <ProjectReference Include="..\..\Flights\AirlineTicket.Modules.Flights.Domain\AirlineTicket.Modules.Flights.Domain.csproj" />
+    <ProjectReference Include="..\..\Logs\AirlineTicket.Modules.Logs.Domain\AirlineTicket.Modules.Logs.Domain.csproj" />
+    <ProjectReference Include="..\..\Users\AirlineTicket.Modules.Users.Domain\AirlineTicket.Modules.Users.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.1.79" />
+
     <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
