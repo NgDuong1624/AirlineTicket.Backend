@@ -1,4 +1,3 @@
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using AirlineTicket.Modules.Bookings.Infrastructure.Data;
@@ -21,47 +20,68 @@ public class RevenueRepository : IRevenueRepository
 
     public async Task<DailySalesSummary?> GetSalesSummaryAsync(Guid airlineId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT COUNT(*) as TotalBookings, COALESCE(SUM(total_price), 0) as TotalRevenue, COALESCE(AVG(total_price), 0) as AvgTicketPrice
-            FROM bookings.bookings b
-            JOIN flights.flights f ON b.flight_id = f.id
-            JOIN flights.routes r ON f.route_id = r.id
-            WHERE r.airline_id = @AirlineId AND b.created_at >= @FromDate AND b.created_at <= @ToDate
-              AND b.status = 'Confirmed'";
+        var query = from b in _context.Bookings
+                    join t in _context.Tickets on b.Id equals t.BookingId
+                    join f in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Flight>() on t.FlightId equals f.Id
+                    join r in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Route>() on f.RouteId equals r.Id
+                    where r.AirlineId == airlineId && b.CreatedAt >= fromDate && b.CreatedAt <= toDate && b.Status == AirlineTicket.Modules.Bookings.Domain.Enums.BookingStatus.Confirmed
+                    select b;
 
-        return await connection.QueryFirstOrDefaultAsync<DailySalesSummary>(sql, new { AirlineId = airlineId, FromDate = fromDate, ToDate = toDate });
+        var result = await query
+            .Distinct()
+            .GroupBy(b => 1) // Group by a constant to aggregate all results
+            .Select(g => new DailySalesSummary(
+                g.Count(),
+                g.Sum(b => b.TotalPrice),
+                g.Average(b => b.TotalPrice)
+            ))
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return result;
     }
 
     public async Task<List<DailyOccupancy>> GetOccupancyRatesAsync(Guid airlineId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT f.departure_time::date as Date, f.flight_number,
-                   COUNT(t.seat_id)::float / NULLIF(fs.total_seats, 0) * 100 as OccupancyPercent
-            FROM flights.flights f
-            JOIN flights.routes r ON f.route_id = r.id
-            LEFT JOIN bookings.tickets t ON t.flight_id = f.id
-            LEFT JOIN (SELECT flight_id, COUNT(*) as total_seats FROM flights.flight_seats GROUP BY flight_id) fs ON fs.flight_id = f.id
-            WHERE r.airline_id = @AirlineId AND f.departure_time >= @FromDate AND f.departure_time < @ToDate
-            GROUP BY f.departure_time::date, f.flight_number, fs.total_seats";
+        var query = from f in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Flight>()
+                    join r in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Route>() on f.RouteId equals r.Id
+                    where r.AirlineId == airlineId && f.DepartureTime >= fromDate && f.DepartureTime < toDate
+                    select new
+                    {
+                        f.DepartureTime,
+                        f.FlightNumber,
+                        FlightSeatsCount = _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.FlightSeat>().Count(fs => fs.FlightId == f.Id),
+                        TicketsCount = _context.Tickets.Count(t => t.FlightId == f.Id)
+                    };
 
-        var result = await connection.QueryAsync<DailyOccupancy>(sql, new { AirlineId = airlineId, FromDate = fromDate, ToDate = toDate });
-        return result.ToList();
+        var result = await query
+            .GroupBy(x => new { Date = x.DepartureTime.Date, x.FlightNumber })
+            .Select(g => new DailyOccupancy(
+                g.Key.Date,
+                g.Key.FlightNumber,
+                g.Sum(x => x.FlightSeatsCount) == 0 ? 0m : (decimal)g.Sum(x => x.TicketsCount) * 100m / g.Sum(x => x.FlightSeatsCount)
+            ))
+            .ToListAsync(cancellationToken);
+
+        return result;
     }
 
     public async Task<List<DailyRevenue>> GetRevenueTrendsAsync(Guid airlineId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT created_at::date as Date, SUM(total_price) as Revenue
-            FROM bookings.bookings b
-            JOIN flights.flights f ON b.flight_id = f.id
-            JOIN flights.routes r ON f.route_id = r.id
-            WHERE r.airline_id = @AirlineId AND b.status = 'Confirmed' AND b.created_at >= @FromDate AND b.created_at <= @ToDate
-            GROUP BY created_at::date ORDER BY Date";
+        var query = from b in _context.Bookings
+                    join t in _context.Tickets on b.Id equals t.BookingId
+                    join f in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Flight>() on t.FlightId equals f.Id
+                    join r in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Route>() on f.RouteId equals r.Id
+                    where r.AirlineId == airlineId
+                          && b.Status == AirlineTicket.Modules.Bookings.Domain.Enums.BookingStatus.Confirmed
+                          && b.CreatedAt >= fromDate
+                          && b.CreatedAt <= toDate
+                    group b by b.CreatedAt.Date into g
+                    orderby g.Key
+                    select new DailyRevenue(
+                        g.Key,
+                        g.Distinct().Sum(b => b.TotalPrice)
+                    );
 
-        var result = await connection.QueryAsync<DailyRevenue>(sql, new { AirlineId = airlineId, FromDate = fromDate, ToDate = toDate });
-        return result.ToList();
+        return await query.ToListAsync(cancellationToken);
     }
 }

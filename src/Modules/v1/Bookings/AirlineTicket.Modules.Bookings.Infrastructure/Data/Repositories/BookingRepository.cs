@@ -7,7 +7,6 @@ using AirlineTicket.Modules.Bookings.Application.Contracts;
 using AirlineTicket.Modules.Bookings.Domain.Entities;
 using AirlineTicket.Modules.Bookings.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using Dapper;
 
 namespace AirlineTicket.Modules.Bookings.Infrastructure.Data.Repositories;
 
@@ -50,46 +49,78 @@ public class BookingRepository : IBookingRepository
 
     public async Task<BookingDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT id, user_id, pnr_code, total_price, status, contact_email, contact_phone, created_at, updated_at
-            FROM bookings.bookings 
-            WHERE id = @Id";
-        
-        return await connection.QueryFirstOrDefaultAsync<BookingDto>(sql, new { Id = id });
+        return await _context.Bookings
+            .AsNoTracking()
+            .Where(b => b.Id == id)
+            .Select(b => new BookingDto
+            {
+                Id = b.Id,
+                UserId = b.UserId,
+                PnrCode = b.PnrCode,
+                TotalPrice = b.TotalPrice,
+                Status = b.Status.ToString(),
+                ContactEmail = b.ContactEmail,
+                ContactPhone = b.ContactPhone,
+                CreatedAt = b.CreatedAt,
+                UpdatedAt = b.UpdatedAt
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<(List<BookingDto> Items, int TotalCount)> GetByUserIdAsync(Guid userId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT id, user_id, pnr_code, total_price, status, contact_email, contact_phone, created_at, updated_at
-            FROM bookings.bookings 
-            WHERE user_id = @UserId
-            ORDER BY created_at DESC
-            OFFSET @Offset LIMIT @PageSize";
+        var query = _context.Bookings
+            .AsNoTracking()
+            .Where(b => b.UserId == userId);
+            
+        var totalCount = await query.CountAsync(cancellationToken);
         
-        const string countSql = "SELECT COUNT(*) FROM bookings.bookings WHERE user_id = @UserId";
-        
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { UserId = userId });
-        var result = await connection.QueryAsync<BookingDto>(sql, new { UserId = userId, Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
-        return (result.ToList(), totalCount);
+        var items = await query
+            .OrderByDescending(b => b.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(b => new BookingDto
+            {
+                Id = b.Id,
+                UserId = b.UserId,
+                PnrCode = b.PnrCode,
+                TotalPrice = b.TotalPrice,
+                Status = b.Status.ToString(),
+                ContactEmail = b.ContactEmail,
+                ContactPhone = b.ContactPhone,
+                CreatedAt = b.CreatedAt,
+                UpdatedAt = b.UpdatedAt
+            })
+            .ToListAsync(cancellationToken);
+            
+        return (items, totalCount);
     }
 
     public async Task<(List<BookingDto> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT id, user_id, pnr_code, total_price, status, contact_email, contact_phone, created_at, updated_at
-            FROM bookings.bookings 
-            ORDER BY created_at DESC
-            OFFSET @Offset LIMIT @PageSize";
+        var query = _context.Bookings.AsNoTracking();
         
-        const string countSql = "SELECT COUNT(*) FROM bookings.bookings";
+        var totalCount = await query.CountAsync(cancellationToken);
         
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
-        var result = await connection.QueryAsync<BookingDto>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
-        return (result.ToList(), totalCount);
+        var items = await query
+            .OrderByDescending(b => b.CreatedAt)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(b => new BookingDto
+            {
+                Id = b.Id,
+                UserId = b.UserId,
+                PnrCode = b.PnrCode,
+                TotalPrice = b.TotalPrice,
+                Status = b.Status.ToString(),
+                ContactEmail = b.ContactEmail,
+                ContactPhone = b.ContactPhone,
+                CreatedAt = b.CreatedAt,
+                UpdatedAt = b.UpdatedAt
+            })
+            .ToListAsync(cancellationToken);
+            
+        return (items, totalCount);
     }
 
     public async Task<Guid> CreateAsync(BookingDto bookingDto, CancellationToken cancellationToken = default)

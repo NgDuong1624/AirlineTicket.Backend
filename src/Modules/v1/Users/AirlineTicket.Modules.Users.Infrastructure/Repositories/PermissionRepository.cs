@@ -2,7 +2,6 @@ using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Domain.Entities;
 using AirlineTicket.Modules.Users.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Dapper;
 
 namespace AirlineTicket.Modules.Users.Infrastructure.Repositories;
 
@@ -17,22 +16,39 @@ public class PermissionRepository : IPermissionRepository
 
     public async Task<(IReadOnlyList<Permission> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        const string sql = @"
-            SELECT * FROM users.permissions
-            ORDER BY id
-            OFFSET @Offset LIMIT @PageSize";
-        const string countSql = "SELECT COUNT(*) FROM users.permissions";
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
-        var result = await connection.QueryAsync<Permission>(sql, new { Offset = (pageIndex - 1) * pageSize, PageSize = pageSize });
-        return (result.ToList(), totalCount);
+        var query = _context.Permissions.AsNoTracking();
+        
+        var totalCount = await query.CountAsync(cancellationToken);
+        
+        var items = await query
+            .OrderBy(p => p.Id)
+            .Skip((pageIndex - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new Permission
+            {
+                Id = p.Id,
+                Code = p.Code,
+                Name = p.Name,
+                Description = p.Description
+            })
+            .ToListAsync(cancellationToken);
+            
+        return (items, totalCount);
     }
 
     public async Task<Permission?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var connection = _context.Database.GetDbConnection();
-        return await connection.QueryFirstOrDefaultAsync<Permission>(
-            "SELECT * FROM users.permissions WHERE id = @Id", new { Id = id });
+        return await _context.Permissions
+            .AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => new Permission
+            {
+                Id = p.Id,
+                Code = p.Code,
+                Name = p.Name,
+                Description = p.Description
+            })
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     public async Task<int> CreateAsync(Permission permission, CancellationToken cancellationToken = default)

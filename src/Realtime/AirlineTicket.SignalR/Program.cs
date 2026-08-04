@@ -70,7 +70,7 @@ builder.Services.AddInteractionsInfrastructure(builder.Configuration);
 
 // Configure JWT Authentication
 var jwtSection = builder.Configuration.GetSection("Jwt");
-var jwtSecret = (jwtSection["Secret"] ?? "super_secret_key_which_should_be_long_enough_123!").Trim();
+var jwtSecret = (jwtSection["Secret"] ?? throw new InvalidOperationException("Jwt:Secret is not configured.")).Trim();
 var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 var jwtKeyId = jwtSection["KeyId"];
 if (!string.IsNullOrEmpty(jwtKeyId))
@@ -87,8 +87,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "AirlineTicketApi",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "AirlineTicketClient",
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is not configured."),
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is not configured."),
             IssuerSigningKeys = new List<SecurityKey> { jwtKey }
         };
 

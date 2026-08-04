@@ -13,7 +13,7 @@ public class PromotionDto
     public string PromoCode { get; set; } = string.Empty;
     public string DiscountType { get; set; } = string.Empty;
     public decimal DiscountValue { get; set; }
-    public int MaxUsage { get; set; }
+    public int? MaxUsage { get; set; }
     public int CurrentUsage { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
