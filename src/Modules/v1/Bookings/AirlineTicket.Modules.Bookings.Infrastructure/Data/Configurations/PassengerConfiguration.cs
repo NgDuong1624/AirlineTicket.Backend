@@ -14,5 +14,7 @@ public class PassengerConfiguration : IEntityTypeConfiguration<Passenger>
             .WithMany(b => b.Passengers)
             .HasForeignKey(x => x.BookingId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.BookingId);
     }
 }

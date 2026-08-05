@@ -295,22 +295,28 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_flight_seats_flight_id",
+                name: "ix_flight_seats_flight_id_is_available",
                 schema: "flights",
                 table: "flight_seats",
-                column: "flight_id");
+                columns: new[] { "flight_id", "is_available" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_flights_airplane_id",
+                name: "ix_flights_airplane_id_departure_time",
                 schema: "flights",
                 table: "flights",
-                column: "airplane_id");
+                columns: new[] { "airplane_id", "departure_time" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_flights_route_id",
+                name: "ix_flights_departure_time_arrival_time",
                 schema: "flights",
                 table: "flights",
-                column: "route_id");
+                columns: new[] { "departure_time", "arrival_time" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_flights_route_id_departure_time",
+                schema: "flights",
+                table: "flights",
+                columns: new[] { "route_id", "departure_time" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_routes_airline_id",
@@ -329,6 +335,12 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                 schema: "flights",
                 table: "routes",
                 column: "origin_airport_id");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_routes_origin_airport_id_destination_airport_id",
+                schema: "flights",
+                table: "routes",
+                columns: new[] { "origin_airport_id", "destination_airport_id" });
         }
 
         /// <inheritdoc />

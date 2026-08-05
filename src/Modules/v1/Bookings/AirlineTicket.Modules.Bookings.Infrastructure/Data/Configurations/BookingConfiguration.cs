@@ -12,5 +12,7 @@ public class BookingConfiguration : IEntityTypeConfiguration<Booking>
         
         builder.Property(x => x.TotalPrice)
             .HasPrecision(18, 2);
+
+        builder.HasIndex(x => new { x.CreatedAt, x.Status });
     }
 }
