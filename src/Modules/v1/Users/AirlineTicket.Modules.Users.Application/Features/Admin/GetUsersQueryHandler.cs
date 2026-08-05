@@ -20,7 +20,7 @@ public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<PagedRes
 
     public async Task<Result<PagedResult<UserDto>>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
     {
-        var (users, totalCount) = await _userRepository.GetAllAsync(request.PageIndex, request.PageSize, cancellationToken);
+        var (users, totalCount) = await _userRepository.GetAllAsync(request.Search, request.AirlineId, request.RoleId, request.PageIndex, request.PageSize, cancellationToken);
 
         var userDtos = users.Select(user => new UserDto(
             user.Id,
@@ -28,7 +28,7 @@ public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<PagedRes
             user.FullName,
             user.Phone,
             user.Role.ToString(),
-            (int)user.Role,
+            user.Role,
             user.AirlineId,
             user.AirlineName,
             user.AirlineLogoUrl,

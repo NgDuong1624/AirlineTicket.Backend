@@ -4,7 +4,7 @@ namespace AirlineTicket.Modules.Users.Application.Repositories;
 
 public interface IUserRepository
 {
-    Task<(IReadOnlyList<User> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<User> Items, int TotalCount)> GetAllAsync(string? search, Guid? airlineId, int? roleId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<(IReadOnlyList<User> Items, int TotalCount)> GetByAirlineIdAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);

@@ -1,3 +1,4 @@
+using AirlineTicket.Modules.Flights.Domain.Entities;
 using AirlineTicket.Modules.Users.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +14,7 @@ public class UserDbContext : DbContext
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<Airline> Airlines => Set<Airline>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -20,6 +22,13 @@ public class UserDbContext : DbContext
         
         // Separate schema for Users
         modelBuilder.HasDefaultSchema("users");
+
+        modelBuilder.Entity<Airline>(entity =>
+        {
+            entity.ToTable("airlines", "flights");
+            entity.Ignore(e => e.Airplanes);
+            entity.Ignore(e => e.Routes);
+        });
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(UserDbContext).Assembly);
     }
