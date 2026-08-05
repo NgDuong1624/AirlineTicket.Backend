@@ -27,5 +27,9 @@ public class RouteConfiguration : IEntityTypeConfiguration<Route>
             .WithMany(a => a.Routes)
             .HasForeignKey(x => x.AirlineId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.OriginAirportId);
+        builder.HasIndex(x => x.DestinationAirportId);
+        builder.HasIndex(x => new { x.OriginAirportId, x.DestinationAirportId });
     }
 }

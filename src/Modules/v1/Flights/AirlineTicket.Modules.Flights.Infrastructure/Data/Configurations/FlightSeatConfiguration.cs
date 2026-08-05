@@ -17,5 +17,7 @@ public class FlightSeatConfiguration : IEntityTypeConfiguration<FlightSeat>
             .WithMany(f => f.FlightSeats)
             .HasForeignKey(x => x.FlightId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.FlightId, x.IsAvailable });
     }
 }

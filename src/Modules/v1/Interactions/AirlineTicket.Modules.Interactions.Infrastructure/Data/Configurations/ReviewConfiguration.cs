@@ -18,5 +18,10 @@ public class ReviewConfiguration : IEntityTypeConfiguration<Review>
             
         builder.Property(x => x.UserId)
             .IsRequired();
+
+        builder.HasIndex(x => new { x.UserId, x.Rating });
+        builder.HasIndex(x => new { x.UserId, x.CreatedAt });
+        builder.HasIndex(x => new { x.Rating, x.CreatedAt });
+        builder.HasIndex(x => new { x.UserId, x.Rating, x.CreatedAt });
     }
 }

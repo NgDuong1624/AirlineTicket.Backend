@@ -44,5 +44,10 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
 
         builder.Property(x => x.CreatedAt)
             .IsRequired();
+
+        builder.HasIndex(x => new { x.UserId, x.IsRead });
+        builder.HasIndex(x => new { x.UserId, x.CreatedAt });
+        builder.HasIndex(x => new { x.IsRead, x.CreatedAt });
+        builder.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt });
     }
 }

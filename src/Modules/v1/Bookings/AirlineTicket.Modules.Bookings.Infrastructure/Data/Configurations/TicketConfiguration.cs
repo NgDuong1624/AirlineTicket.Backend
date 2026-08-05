@@ -20,5 +20,7 @@ public class TicketConfiguration : IEntityTypeConfiguration<Ticket>
             .WithMany(x => x.Tickets)
             .HasForeignKey(x => x.BookingId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.BookingId, x.PassengerId });
     }
 }

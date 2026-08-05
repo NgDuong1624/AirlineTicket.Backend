@@ -25,5 +25,7 @@ public class CouponConfiguration : IEntityTypeConfiguration<Coupon>
             
         builder.Property(x => x.MaxDiscountAmount)
             .HasPrecision(18, 2);
+
+        builder.HasIndex(x => new { x.EndDate, x.IsActive });
     }
 }

@@ -22,5 +22,9 @@ public class FlightConfiguration : IEntityTypeConfiguration<Flight>
             .WithMany(a => a.Flights)
             .HasForeignKey(x => x.AirplaneId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.RouteId, x.DepartureTime });
+        builder.HasIndex(x => new { x.AirplaneId, x.DepartureTime });
+        builder.HasIndex(x => new { x.DepartureTime, x.ArrivalTime });
     }
 }

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
 {
     [DbContext(typeof(FlightDbContext))]
-    [Migration("20260730041514_InitialPostgres")]
+    [Migration("20260805064154_InitialPostgres")]
     partial class InitialPostgres
     {
         /// <inheritdoc />
@@ -399,11 +399,14 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_flights");
 
-                    b.HasIndex("AirplaneId")
-                        .HasDatabaseName("ix_flights_airplane_id");
+                    b.HasIndex("AirplaneId", "DepartureTime")
+                        .HasDatabaseName("ix_flights_airplane_id_departure_time");
 
-                    b.HasIndex("RouteId")
-                        .HasDatabaseName("ix_flights_route_id");
+                    b.HasIndex("DepartureTime", "ArrivalTime")
+                        .HasDatabaseName("ix_flights_departure_time_arrival_time");
+
+                    b.HasIndex("RouteId", "DepartureTime")
+                        .HasDatabaseName("ix_flights_route_id_departure_time");
 
                     b.ToTable("flights", "flights");
                 });
@@ -444,8 +447,8 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_flight_seats");
 
-                    b.HasIndex("FlightId")
-                        .HasDatabaseName("ix_flight_seats_flight_id");
+                    b.HasIndex("FlightId", "IsAvailable")
+                        .HasDatabaseName("ix_flight_seats_flight_id_is_available");
 
                     b.ToTable("flight_seats", "flights");
                 });
@@ -493,6 +496,9 @@ namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
 
                     b.HasIndex("OriginAirportId")
                         .HasDatabaseName("ix_routes_origin_airport_id");
+
+                    b.HasIndex("OriginAirportId", "DestinationAirportId")
+                        .HasDatabaseName("ix_routes_origin_airport_id_destination_airport_id");
 
                     b.ToTable("routes", "flights");
                 });

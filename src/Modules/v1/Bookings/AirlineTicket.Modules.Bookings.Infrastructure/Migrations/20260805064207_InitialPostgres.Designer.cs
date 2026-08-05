@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AirlineTicket.Modules.Bookings.Infrastructure.Migrations
 {
     [DbContext(typeof(BookingDbContext))]
-    [Migration("20260730041454_InitialPostgres")]
+    [Migration("20260805064207_InitialPostgres")]
     partial class InitialPostgres
     {
         /// <inheritdoc />
@@ -84,6 +84,9 @@ namespace AirlineTicket.Modules.Bookings.Infrastructure.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_bookings");
+
+                    b.HasIndex("CreatedAt", "Status")
+                        .HasDatabaseName("ix_bookings_created_at_status");
 
                     b.ToTable("bookings", "bookings");
                 });
@@ -184,8 +187,17 @@ namespace AirlineTicket.Modules.Bookings.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_payments");
 
-                    b.HasIndex("BookingId")
-                        .HasDatabaseName("ix_payments_booking_id");
+                    b.HasIndex("BookingId", "CreatedAt")
+                        .HasDatabaseName("ix_payments_booking_id_created_at");
+
+                    b.HasIndex("BookingId", "ProviderStatus")
+                        .HasDatabaseName("ix_payments_booking_id_provider_status");
+
+                    b.HasIndex("ProviderStatus", "CreatedAt")
+                        .HasDatabaseName("ix_payments_provider_status_created_at");
+
+                    b.HasIndex("BookingId", "ProviderStatus", "CreatedAt")
+                        .HasDatabaseName("ix_payments_booking_id_provider_status_created_at");
 
                     b.ToTable("payments", "bookings");
                 });
@@ -233,11 +245,11 @@ namespace AirlineTicket.Modules.Bookings.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_tickets");
 
-                    b.HasIndex("BookingId")
-                        .HasDatabaseName("ix_tickets_booking_id");
-
                     b.HasIndex("PassengerId")
                         .HasDatabaseName("ix_tickets_passenger_id");
+
+                    b.HasIndex("BookingId", "PassengerId")
+                        .HasDatabaseName("ix_tickets_booking_id_passenger_id");
 
                     b.ToTable("tickets", "bookings");
                 });

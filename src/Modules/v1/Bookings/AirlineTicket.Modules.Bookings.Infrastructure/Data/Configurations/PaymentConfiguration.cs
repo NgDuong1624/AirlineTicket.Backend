@@ -17,5 +17,10 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             .WithMany(x => x.Payments)
             .HasForeignKey(x => x.BookingId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => new { x.BookingId, x.ProviderStatus });
+        builder.HasIndex(x => new { x.BookingId, x.CreatedAt });
+        builder.HasIndex(x => new { x.ProviderStatus, x.CreatedAt });
+        builder.HasIndex(x => new { x.BookingId, x.ProviderStatus, x.CreatedAt });
     }
 }

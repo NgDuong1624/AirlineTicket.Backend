@@ -126,22 +126,46 @@ namespace AirlineTicket.Modules.Bookings.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "ix_bookings_created_at_status",
+                schema: "bookings",
+                table: "bookings",
+                columns: new[] { "created_at", "status" });
+
+            migrationBuilder.CreateIndex(
                 name: "ix_passengers_booking_id",
                 schema: "bookings",
                 table: "passengers",
                 column: "booking_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_payments_booking_id",
+                name: "ix_payments_booking_id_created_at",
                 schema: "bookings",
                 table: "payments",
-                column: "booking_id");
+                columns: new[] { "booking_id", "created_at" });
 
             migrationBuilder.CreateIndex(
-                name: "ix_tickets_booking_id",
+                name: "ix_payments_booking_id_provider_status",
+                schema: "bookings",
+                table: "payments",
+                columns: new[] { "booking_id", "provider_status" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_payments_booking_id_provider_status_created_at",
+                schema: "bookings",
+                table: "payments",
+                columns: new[] { "booking_id", "provider_status", "created_at" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_payments_provider_status_created_at",
+                schema: "bookings",
+                table: "payments",
+                columns: new[] { "provider_status", "created_at" });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_tickets_booking_id_passenger_id",
                 schema: "bookings",
                 table: "tickets",
-                column: "booking_id");
+                columns: new[] { "booking_id", "passenger_id" });
 
             migrationBuilder.CreateIndex(
                 name: "ix_tickets_passenger_id",
