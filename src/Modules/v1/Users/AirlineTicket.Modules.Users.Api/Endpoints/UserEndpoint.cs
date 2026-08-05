@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using AirlineTicket.Modules.Users.Application.Features.Commands;
+using AirlineTicket.Modules.Users.Application.Features.Users;
 
 namespace AirlineTicket.Modules.Users.Api.Endpoints;
 
@@ -95,7 +96,7 @@ public class UserEndpoint : IEndpoint
                     return Results.Unauthorized();
                 }
 
-                var query = new AirlineTicket.Modules.Users.Application.Features.Users.GetUserProfileQuery(userId);
+                var query = new GetUserProfileQuery(userId);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess && result.Value != null ? Results.Ok(result.Value) : Results.NotFound();
             })
@@ -180,9 +181,12 @@ public class UserEndpoint : IEndpoint
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10,
+                [FromQuery] string? search = "",
+                [FromQuery] Guid? airlineId = null,
+                [FromQuery] int? roleId = null,
                 CancellationToken ct = default) =>
             {
-                var result = await sender.Send(new GetUsersQuery(pageIndex, pageSize), ct);
+                var result = await sender.Send(new GetUsersQuery(search, airlineId, roleId, pageIndex, pageSize), ct);
                 return result.IsSuccess
                     ? Results.Ok(result.Value)
                     : result.ToErrorResult();

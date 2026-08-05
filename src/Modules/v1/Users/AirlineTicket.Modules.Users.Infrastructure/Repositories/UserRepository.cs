@@ -15,12 +15,33 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<User> Items, int TotalCount)> GetAllAsync(string? search, Guid? airlineId, int? roleId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _context.Users.AsNoTracking();
-        
+
+        if (roleId.HasValue && roleId.Value != -1)
+        {
+            query = query.Where(u => u.Role == roleId.Value);
+        }
+
+        if (airlineId.HasValue)
+        {
+            query = query.Where(u => u.AirlineId == airlineId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var keyword = search.Trim();
+
+            query = query.Where(u =>
+                (u.Email != null && u.Email.Contains(keyword)) ||
+                (u.FullName != null && u.FullName.Contains(keyword)) ||
+                (u.Phone != null && u.Phone.Contains(keyword))
+            );
+        }
+
         var totalCount = await query.CountAsync(cancellationToken);
-        
+
         var items = await query
             .OrderByDescending(u => u.CreatedAt)
             .Skip((pageIndex - 1) * pageSize)
@@ -37,11 +58,11 @@ public class UserRepository : IUserRepository
                 UpdatedAt = u.UpdatedAt,
                 AirlineId = u.AirlineId,
                 Role = u.Role,
-                AirlineName = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
-                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
+                AirlineName = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
+                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
             })
             .ToListAsync(cancellationToken);
-            
+
         return (items, totalCount);
     }
 
@@ -69,8 +90,8 @@ public class UserRepository : IUserRepository
                 UpdatedAt = u.UpdatedAt,
                 AirlineId = u.AirlineId,
                 Role = u.Role,
-                AirlineName = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
-                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
+                AirlineName = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
+                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
             })
             .ToListAsync(cancellationToken);
             
@@ -94,8 +115,8 @@ public class UserRepository : IUserRepository
                 UpdatedAt = u.UpdatedAt,
                 AirlineId = u.AirlineId,
                 Role = u.Role,
-                AirlineName = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
-                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Set<Airline>().Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
+                AirlineName = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
+                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
             })
             .FirstOrDefaultAsync(cancellationToken);
     }
