@@ -38,7 +38,7 @@ public class GetAdminDashboardQueryHandler : IQueryHandler<GetAdminDashboardQuer
         {
             new(statsData != null ? $"${statsData.TotalRevenue:N0}" : "$0", "up"),
             new(statsData != null ? statsData.TotalBookings.ToString("N0") : "0", "up"),
-            new(statsData != null ? $"{statsData.NewUsers} Users" : "0 Users", "neutral"),
+            new(statsData != null ? $"{statsData.NewUsers}" : "0", "neutral"),
             new(statsData != null ? statsData.TotalFlights.ToString("N0") : "0", "down")
         };
 

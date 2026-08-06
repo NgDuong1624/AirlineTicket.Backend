@@ -25,7 +25,7 @@ public class UserDbContext : DbContext
 
         modelBuilder.Entity<Airline>(entity =>
         {
-            entity.ToTable("airlines", "flights");
+            entity.ToTable("airlines", "flights", t => t.ExcludeFromMigrations());
             entity.Ignore(e => e.Airplanes);
             entity.Ignore(e => e.Routes);
         });

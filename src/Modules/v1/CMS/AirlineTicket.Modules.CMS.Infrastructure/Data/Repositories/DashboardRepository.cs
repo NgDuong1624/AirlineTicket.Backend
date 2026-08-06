@@ -12,6 +12,7 @@ using AirlineTicket.Modules.Logs.Domain.Entities;
 using AirlineTicket.Modules.CMS.Application.Contracts;
 using AirlineTicket.Modules.CMS.Application.Features.Dashboard;
 using AirlineTicket.Modules.Users.Domain.Entities;
+using AirlineTicket.Modules.Users.Domain.Enums;
 
 namespace AirlineTicket.Modules.CMS.Infrastructure.Data.Repositories;
 
@@ -35,7 +36,9 @@ public class DashboardRepository : IDashboardRepository
             .CountAsync(cancellationToken);
 
         var newUsers = await _context.Set<User>()
-            .Where(u => u.CreatedAt >= DateTime.UtcNow.AddDays(-30))
+            .Where(
+                u => u.Role == (int)UserRole.Customer &&
+                u.CreatedAt >= DateTime.UtcNow.AddDays(-30))
             .CountAsync(cancellationToken);
 
         var totalFlights = await _context.Set<Flight>()
@@ -54,7 +57,7 @@ public class DashboardRepository : IDashboardRepository
             .Select(a => new AdminDashboardPartnerDto(
                 a.Name,
                 a.IataCode,
-                _context.Set<Flight>().Count(f => f.Route.AirlineId == a.Id),
+                _context.Set<Flight>().Count(f => _context.Set<Route>().Any(r => r.Id == f.RouteId && r.AirlineId == a.Id)),
                 a.IsActive ? "Active" : "Inactive",
                 a.CreatedAt.ToString("yyyy-MM-dd")
             ))
@@ -92,7 +95,7 @@ public class DashboardRepository : IDashboardRepository
             .Where(b => b.Status == BookingStatus.Confirmed && b.CreatedAt.Date == DateTime.UtcNow.Date)
             .Where(b => _context.Set<Ticket>()
                 .Any(t => t.BookingId == b.Id && _context.Set<Flight>()
-                    .Any(f => f.Id == t.FlightId && f.Route.AirlineId == airlineId)))
+                    .Any(f => f.Id == t.FlightId && _context.Set<Route>().Any(r => r.Id == f.RouteId && r.AirlineId == airlineId))))
             .CountAsync(cancellationToken);
 
         var monthlyRevenue = await _context.Set<Booking>()

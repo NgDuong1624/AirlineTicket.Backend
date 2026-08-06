@@ -54,8 +54,8 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 
 | Method | Endpoint | Description | Auth |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/api/v1/interactions` | Trạng thái module tương tác | Anonymous |
-| **POST** | `/api/v1/qa/ask` | Gửi câu hỏi cho AI Travel Assistant | Anonymous |
+| **GET** | `/api/interactions` | Trạng thái module tương tác | Anonymous |
+| **POST** | `/api/qa/ask` | Gửi câu hỏi cho AI Travel Assistant | Anonymous |
 
 ---
 
@@ -308,8 +308,8 @@ Tài liệu này tổng hợp **đầy đủ** danh sách các API endpoint củ
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| **GET** | `/api/v1/interactions` | Trạng thái module Interactions |
-| **GET** | `/api/v1/notifications` | Trạng thái module Notifications |
+| **GET** | `/api/interactions` | Trạng thái module Interactions |
+| **GET** | `/api/notifications` | Trạng thái module Notifications |
 
 ---
 
