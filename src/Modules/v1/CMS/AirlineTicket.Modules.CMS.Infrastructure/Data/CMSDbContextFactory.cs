@@ -7,7 +7,7 @@ public class CMSDbContextFactory : IDesignTimeDbContextFactory<CMSDbContext>
 {
     public CMSDbContext CreateDbContext(string[] args)
     {
-        var connectionString = System.Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection");
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {

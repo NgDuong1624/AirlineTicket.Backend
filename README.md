@@ -127,8 +127,11 @@ Update `src/Api/AirlineTicket.Api/appsettings.json` with your Postgre connection
 ### Run
 
 ```bash
-# Apply database migrations and seed core data
+# Apply database migrations
 ./run_ef.sh "postgres://postgres:Admin@123@localhost:5432/AirlineTicketDb"
+
+#  Apply seed core data
+dotnet run --project src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj --migrate --seed-core
 
 # Start the API
 dotnet run --project src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj
