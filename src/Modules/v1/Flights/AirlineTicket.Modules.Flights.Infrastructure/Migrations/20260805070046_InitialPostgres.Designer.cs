@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AirlineTicket.Modules.Flights.Infrastructure.Migrations
 {
     [DbContext(typeof(FlightDbContext))]
-    [Migration("20260805064154_InitialPostgres")]
+    [Migration("20260805070046_InitialPostgres")]
     partial class InitialPostgres
     {
         /// <inheritdoc />
