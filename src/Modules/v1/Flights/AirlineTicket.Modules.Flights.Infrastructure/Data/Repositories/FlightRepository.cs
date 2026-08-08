@@ -54,7 +54,7 @@ public class FlightRepository : IFlightRepository
         int pageSize = 10,
         CancellationToken cancellationToken = default)
     {
-        var startDate = date.Date;
+        var startDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
         var endDate = startDate.AddDays(1);
 
         var query = _context.Flights
