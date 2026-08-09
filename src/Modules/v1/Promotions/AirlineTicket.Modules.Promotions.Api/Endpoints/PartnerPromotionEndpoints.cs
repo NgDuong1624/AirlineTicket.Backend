@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Promotions.Application.Features.Partner;
 using MediatR;
@@ -20,7 +21,7 @@ public class PartnerPromotionEndpoints : IEndpoint
         // ——————————————————————— Partner Coupons ————————————————————————————————
         var coupons = app.MapGroup("/api/partner/coupons")
             .WithTags("Partner Coupons")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/partner/coupons — Get partner coupons (paginated)
         coupons.MapGet("/", async (
@@ -141,7 +142,7 @@ public class PartnerPromotionEndpoints : IEndpoint
         // ——————————————————————— Partner Campaigns ————————————————————————————————
         var campaigns = app.MapGroup("/api/partner/campaigns")
             .WithTags("Partner Campaigns")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/partner/campaigns — Get partner campaigns (paginated)
         campaigns.MapGet("/", async (

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 
 namespace AirlineTicket.Modules.Flights.Api.Endpoints;
 
@@ -206,7 +207,7 @@ public class FlightEndpoints : IEndpoint
             .Produces(401)
             .Produces(403)
             .Produces(500)
-            .RequireAuthorization("PartnerOrStaff");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
     }
 }
 

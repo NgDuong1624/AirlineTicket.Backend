@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Api.Extensions;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using AirlineTicket.Modules.Bookings.Application.Features.Payments;
 using AirlineTicket.Modules.Bookings.Application.Features.Tickets;
@@ -55,9 +56,12 @@ public class BookingEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10,
+                [FromQuery] string? search = null,
+                [FromQuery] string? status = null,
+                [FromQuery] DateTime? date = null,
                 CancellationToken ct = default) =>
             {
-                var query = new GetAllBookingsQuery(pageIndex, pageSize);
+                var query = new GetAllBookingsQuery(pageIndex, pageSize, search, status, date);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : result.ToErrorResult();
             })
@@ -66,7 +70,7 @@ public class BookingEndpoints : IEndpoint
             .Produces(200)
             .Produces(401)
             .Produces(403)
-            .RequireAuthorization("PartnerOrStaff");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOrStaff);
 
         // GET /api/bookings/{id:guid} — Get booking details
         group.MapGet("/{id:guid}", async (

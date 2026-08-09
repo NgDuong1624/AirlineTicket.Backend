@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Promotions.Application.Features.Admin;
 using AirlineTicket.Modules.Promotions.Application.Features.Public;
@@ -20,7 +21,7 @@ public class PromotionEndpoints : IEndpoint
         // ——————————————————————— Admin Coupons ————————————————————————————————
         var adminCouponsGroup = app.MapGroup("/api/admin/coupons")
             .WithTags("Admin Coupons Management")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // POST /api/admin/coupons — Create a new coupon
         adminCouponsGroup.MapPost("/", async (
@@ -112,7 +113,7 @@ public class PromotionEndpoints : IEndpoint
         // ——————————————————————— Admin Campaigns ————————————————————————————————
         var adminCampaignsGroup = app.MapGroup("/api/admin/campaigns")
             .WithTags("Admin Campaigns Management")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // GET /api/admin/campaigns — Get all campaigns (paginated)
         adminCampaignsGroup.MapGet("/", async (

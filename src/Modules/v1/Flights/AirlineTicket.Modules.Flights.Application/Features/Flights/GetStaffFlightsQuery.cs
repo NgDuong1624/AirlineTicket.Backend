@@ -5,6 +5,7 @@ using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Auth;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Flights;

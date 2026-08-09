@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -16,16 +17,19 @@ public class BookingAdminEndpoints : IEndpoint
     {
         var adminBookings = app.MapGroup("/api/admin/bookings")
             .WithTags("Admin Bookings")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // GET /api/admin/bookings — Get paginated list of bookings
         adminBookings.MapGet("/", async (
                 [FromServices] ISender sender,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10,
+                [FromQuery] string? search = null,
+                [FromQuery] string? status = null,
+                [FromQuery] DateTime? date = null,
                 CancellationToken ct = default) =>
             {
-                var query = new GetAllBookingsQuery(pageIndex, pageSize);
+                var query = new GetAllBookingsQuery(pageIndex, pageSize, search, status, date);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : Results.BadRequest(result.Error);
             })

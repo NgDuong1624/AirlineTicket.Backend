@@ -1,6 +1,7 @@
 using AirlineTicket.BuildingBlocks.Api.Auth.Airlines;
 using AirlineTicket.BuildingBlocks.Api.Auth.Permissions;
 using AirlineTicket.BuildingBlocks.Auth;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 

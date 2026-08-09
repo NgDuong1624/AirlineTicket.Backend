@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -17,7 +18,7 @@ public class StaffBookingEndpoints : IEndpoint
     {
         var group = app.MapGroup("/api/staff/bookings")
             .WithTags("Staff Bookings")
-            .RequireAuthorization("PartnerOrStaff");
+            .RequireAuthorization(AuthConstants.Policies.StaffOnly);
 
         // POST /api/staff/bookings — staff books seats for a phoning customer (contact-only)
         group.MapPost("/", async (
@@ -68,7 +69,7 @@ public class StaffBookingEndpoints : IEndpoint
             .WithName("StaffGetSales")
             .WithSummary("List ticket sales for the staff board")
             .Produces(200)
-            .RequireAuthorization("PartnerOrStaff");
+            .RequireAuthorization(AuthConstants.Policies.StaffOnly);
     }
 }
 

@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Auth;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Logs.Application.Features;
 using MediatR;
@@ -24,7 +25,7 @@ public class LogEndpoints : IEndpoint
     {
         var adminLogs = app.MapGroup("/api/admin/logs")
             .WithTags("Admin Logs")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // GET /api/admin/logs — Get system logs for admin
         adminLogs.MapGet("/", async (
@@ -33,6 +34,7 @@ public class LogEndpoints : IEndpoint
                 [FromQuery] string? level,
                 [FromQuery] string? search,
                 [FromQuery] string? airlineId,
+                [FromQuery] DateTime? date,
                 [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
                 [FromQuery, Range(1, 100)] int pageSize = 10) =>
             {
@@ -41,7 +43,7 @@ public class LogEndpoints : IEndpoint
                 {
                     if (Guid.TryParse(airlineId, out var guid)) parsedAirlineId = guid;
                 }
-                var query = new GetAdminLogsQuery(pageIndex, pageSize, level, search, parsedAirlineId);
+                var query = new GetAdminLogsQuery(pageIndex, pageSize, level, search, parsedAirlineId, null, date);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
@@ -54,7 +56,7 @@ public class LogEndpoints : IEndpoint
 
         var partnerLogs = app.MapGroup("/api/partner/logs")
             .WithTags("Partner Logs")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/partner/logs — Get system logs for partner
         partnerLogs.MapGet("/", async (
@@ -63,6 +65,7 @@ public class LogEndpoints : IEndpoint
                 CancellationToken ct,
                 [FromQuery] string? level,
                 [FromQuery] string? search,
+                [FromQuery] DateTime? date,
                 [FromQuery, Range(1, int.MaxValue)] int pageIndex = 1,
                 [FromQuery, Range(1, 100)] int pageSize = 10) =>
             {
@@ -71,7 +74,7 @@ public class LogEndpoints : IEndpoint
                 {
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
                 }
-                var query = new GetPartnerLogsQuery(airlineId.Value, pageIndex, pageSize, level, search);
+                var query = new GetPartnerLogsQuery(airlineId.Value, pageIndex, pageSize, level, search, date);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })

@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 
 namespace AirlineTicket.Modules.Flights.Api.Endpoints;
 
@@ -24,7 +25,7 @@ public class FlightPartnerEndpoints : IEndpoint
         // ——————————————————————— Partner Routes ————————————————————————————————
         var partnerRoutes = app.MapGroup("/api/partner/routes")
             .WithTags("Partner Routes")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/partner/routes — Get paginated list of routes for partner
         partnerRoutes.MapGet("/", async (
@@ -101,7 +102,7 @@ public class FlightPartnerEndpoints : IEndpoint
         // ——————————————————————— Partner Airplanes ————————————————————————————————
         var partnerAirplanes = app.MapGroup("/api/partner/airplanes")
             .WithTags("Partner Airplanes")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/partner/airplanes — Get paginated list of airplanes for partner
         partnerAirplanes.MapGet("/", async (
@@ -171,7 +172,7 @@ public class FlightPartnerEndpoints : IEndpoint
         // ——————————————————————— Partner Flights (stub — full scheduling CRUD pending) ————————————————————————————————
         var partnerFlights = app.MapGroup("/api/partner/flights")
             .WithTags("Partner Flights")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         partnerFlights.MapGet("/", async (
                 ClaimsPrincipal principal,
@@ -233,7 +234,7 @@ public class FlightPartnerEndpoints : IEndpoint
         // ——————————————————————— Partner Aircraft (stub — alias of airplanes view) ————————————————————————————————
         var partnerAircraft = app.MapGroup("/api/partner/aircraft")
             .WithTags("Partner Aircraft")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         partnerAircraft.MapGet("/", async (
                 ClaimsPrincipal principal,
@@ -282,7 +283,7 @@ public class FlightPartnerEndpoints : IEndpoint
         // ——————————————————————— Partner Settings (airline profile) ————————————————————————————————
         var partnerSettings = app.MapGroup("/api/partner/settings")
             .WithTags("Partner Settings")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         partnerSettings.MapGet("/", async (
                 ClaimsPrincipal principal,

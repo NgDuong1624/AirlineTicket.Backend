@@ -1,4 +1,4 @@
-namespace AirlineTicket.BuildingBlocks.Auth;
+namespace AirlineTicket.BuildingBlocks.Domain.Constants;
 
 /// <summary>
 /// Centralized authorization constants, claim types, and policy prefixes.

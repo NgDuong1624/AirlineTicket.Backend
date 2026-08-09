@@ -34,8 +34,7 @@ public class CancelExpiredBookingsJob : BackgroundService
                     foreach (var booking in expiredBookings)
                     {
                         booking.Status = BookingStatus.Cancelled;
-                        // Note: Seat release logic should be handled via domain events or integration events
-                        // For now, just update status
+                        // TODO: Seat release logic
                     }
 
                     await dbContext.SaveChangesAsync(stoppingToken);

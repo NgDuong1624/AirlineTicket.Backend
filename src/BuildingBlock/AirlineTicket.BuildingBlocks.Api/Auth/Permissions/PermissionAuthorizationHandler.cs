@@ -1,4 +1,5 @@
 using AirlineTicket.BuildingBlocks.Auth;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 
 namespace AirlineTicket.BuildingBlocks.Api.Auth.Permissions;

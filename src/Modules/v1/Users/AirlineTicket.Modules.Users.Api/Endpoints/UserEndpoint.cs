@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using AirlineTicket.Modules.Users.Application.Features.Commands;
 using AirlineTicket.Modules.Users.Application.Features.Users;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 
 namespace AirlineTicket.Modules.Users.Api.Endpoints;
 
@@ -174,7 +175,7 @@ public class UserEndpoint : IEndpoint
         // ——————————————————————— Admin User Management ————————————————————————————————
         var adminGroup = app.MapGroup("/api/admin/users")
             .WithTags("Admin Users")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // GET /api/admin/users — Get all users (paginated)
         adminGroup.MapGet("/", async (
@@ -303,7 +304,7 @@ public class UserEndpoint : IEndpoint
         // ——————————————————————— Admin Permission Management ————————————————————————————————
         var permissionGroup = app.MapGroup("/api/admin/permissions")
             .WithTags("Admin Permissions")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // GET /api/admin/permissions — Get all permissions (paginated)
         adminGroup.MapGet("/permissions", async (

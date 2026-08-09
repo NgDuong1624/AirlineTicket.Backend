@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.CMS.Application.Features.Dashboard;
 using AirlineTicket.Modules.CMS.Application.Features.Settings;
@@ -29,7 +30,7 @@ public class CMSEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
             .WithTags("Admin Dashboard")
-            .RequireAuthorization("AdminOnly")
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly)
             .WithName("AdminGetDashboard")
             .WithSummary("Get admin dashboard statistics")
             .Produces(200)
@@ -50,7 +51,7 @@ public class CMSEndpoints : IEndpoint
                 return result.IsSuccess ? Results.Ok(result) : Results.BadRequest(result.Error);
             })
             .WithTags("Partner Dashboard")
-            .RequireAuthorization("PartnerOnly")
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly)
             .WithName("PartnerGetDashboard")
             .WithSummary("Get partner dashboard statistics")
             .Produces(200)
@@ -61,7 +62,7 @@ public class CMSEndpoints : IEndpoint
         // ——————————————————————— Admin Settings ————————————————————————————————
         var adminSettings = app.MapGroup("/api/admin/settings")
             .WithTags("Admin Settings")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/admin/settings — Get admin settings
         adminSettings.MapGet("/", async (

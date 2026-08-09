@@ -8,7 +8,12 @@ using MediatR;
 
 namespace AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 
-public record GetAllBookingsQuery(int PageIndex = 1, int PageSize = 10) : IQuery<PagedResult<BookingDto>>;
+public record GetAllBookingsQuery(
+    int PageIndex = 1, 
+    int PageSize = 10,
+    string? Search = null,
+    string? Status = null,
+    DateTime? Date = null) : IQuery<PagedResult<BookingDto>>;
 
 public class GetAllBookingsQueryHandler : IQueryHandler<GetAllBookingsQuery, PagedResult<BookingDto>>
 {
@@ -21,7 +26,13 @@ public class GetAllBookingsQueryHandler : IQueryHandler<GetAllBookingsQuery, Pag
 
     public async Task<PagedResult<BookingDto>> Handle(GetAllBookingsQuery request, CancellationToken cancellationToken)
     {
-        var (items, totalCount) = await _bookingRepository.GetAllAsync(request.PageIndex, request.PageSize, cancellationToken);
+        var (items, totalCount) = await _bookingRepository.GetAllAsync(
+            request.PageIndex, 
+            request.PageSize, 
+            request.Search,
+            request.Status,
+            request.Date,
+            cancellationToken);
         return PagedResult<BookingDto>.Success(items.AsReadOnly(), request.PageIndex, request.PageSize, totalCount);
     }
 }

@@ -32,6 +32,7 @@ public class LogRepository : ILogRepository
         string? level = null,
         string? search = null,
         bool? isSystemLog = null,
+        DateTime? date = null,
         CancellationToken cancellationToken = default)
     {
         pageIndex = Math.Max(pageIndex, 1);
@@ -60,6 +61,11 @@ public class LogRepository : ILogRepository
                                   || (x.Source != null && x.Source.Contains(search))
                                   || (x.Exception != null && x.Exception.Contains(search))
                                   || (x.IpAddress != null && x.IpAddress.Contains(search)));
+        }
+
+        if (date.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt.Date == date.Value.Date);
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
@@ -94,6 +100,7 @@ public class LogRepository : ILogRepository
         Guid? airlineId = null,
         string? level = null,
         string? search = null,
+        DateTime? date = null,
         CancellationToken cancellationToken = default)
     {
         pageIndex = Math.Max(pageIndex, 1);
@@ -117,6 +124,11 @@ public class LogRepository : ILogRepository
                                   || (x.Source != null && x.Source.Contains(search))
                                   || (x.Exception != null && x.Exception.Contains(search))
                                   || (x.IpAddress != null && x.IpAddress.Contains(search)));
+        }
+
+        if (date.HasValue)
+        {
+            query = query.Where(x => x.CreatedAt.Date == date.Value.Date);
         }
 
         var totalCount = await query.CountAsync(cancellationToken);

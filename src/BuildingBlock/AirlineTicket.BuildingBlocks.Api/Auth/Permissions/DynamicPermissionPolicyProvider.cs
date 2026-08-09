@@ -1,4 +1,4 @@
-using AirlineTicket.BuildingBlocks.Auth;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 

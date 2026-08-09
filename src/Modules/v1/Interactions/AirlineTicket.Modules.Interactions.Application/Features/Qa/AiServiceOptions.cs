@@ -19,9 +19,9 @@ public sealed class ModelStoreOptions
     public const string SectionName = "ModelStore";
 
     /// <summary>
-    /// Base URL of the OpenAI-compatible endpoint. Example: https://api.9router.com/v1
+    /// Base URL of the OpenAI-compatible endpoint. Example: https://api.chatgpt.com/v1
     /// </summary>
-    public string BaseUrl { get; set; } = "https://api.9router.com/v1";
+    public string BaseUrl { get; set; } = "https://api.ai_endpoint.com/v1";
 
     /// <summary>
     /// API key to access the Model Store AI service.

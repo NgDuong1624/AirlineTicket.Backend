@@ -36,7 +36,7 @@ public class BookingRefundProcessor : BackgroundService
                     {
                         foreach (var payment in booking.Payments.Where(p => p.IsSuccessful && p.ProviderStatus != "Refunded"))
                         {
-                            // Mock refund logic
+                            // TODO: refund logic
                             payment.ProviderStatus = "Refunded";
                         }
                     }

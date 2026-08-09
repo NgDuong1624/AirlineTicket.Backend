@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Api.Extensions;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.Modules.Bookings.Application.Features.Revenue.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -16,7 +17,7 @@ public class PartnerRevenueDashboardEndpoints : IEndpoint
     {
         var group = app.MapGroup("/api/partner/dashboard")
             .WithTags("Partner Dashboard")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/partner/dashboard/sales-summary — Get sales summary for partner
         group.MapGet("/sales-summary", async (

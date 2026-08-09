@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Auth;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
 using AirlineTicket.Modules.Users.Domain.Entities;
@@ -21,7 +22,7 @@ public class PartnerStaffEndpoints : IEndpoint
     {
         var staff = app.MapGroup("/api/partner/staff")
             .WithTags("Partner Staff")
-            .RequireAuthorization("PartnerOnly");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/partner/staff — Get partner staff members
         staff.MapGet("/", async (

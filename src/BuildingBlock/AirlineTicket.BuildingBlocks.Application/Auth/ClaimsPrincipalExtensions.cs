@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 
 namespace AirlineTicket.BuildingBlocks.Auth;
 

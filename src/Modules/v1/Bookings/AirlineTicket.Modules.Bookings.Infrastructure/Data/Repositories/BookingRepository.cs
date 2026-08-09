@@ -96,10 +96,26 @@ public class BookingRepository : IBookingRepository
         return (items, totalCount);
     }
 
-    public async Task<(List<BookingDto> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<(List<BookingDto> Items, int TotalCount)> GetAllAsync(
+        int pageIndex, 
+        int pageSize, 
+        string? search,
+        string? status, 
+        DateTime? date, 
+        CancellationToken cancellationToken = default)
     {
         var query = _context.Bookings.AsNoTracking();
-        
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(b => b.PnrCode.Contains(search)
+                || b.Passengers.Any(p => (p.FirstName + " " + p.LastName).Contains(search)));
+
+        if (!string.IsNullOrWhiteSpace(status))
+            query = query.Where(b => b.Status.ToString() == status);
+
+        if (date.HasValue)
+            query = query.Where(b => b.CreatedAt.Date == date.Value.Date);
+
         var totalCount = await query.CountAsync(cancellationToken);
         
         var items = await query
@@ -265,7 +281,7 @@ public class BookingRepository : IBookingRepository
     private static BookingDto MapToDto(Booking b) => new()
     {
         Id = b.Id,
-        FlightId = Guid.Empty, // flight is referenced per-ticket, not on the booking row
+        FlightId = Guid.Empty,
         UserId = b.UserId == Guid.Empty ? null : b.UserId,
         PnrCode = b.PnrCode,
         TotalPrice = b.TotalPrice,

@@ -1,4 +1,5 @@
 using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
@@ -52,7 +53,7 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
 
             if (payload == null || string.IsNullOrEmpty(payload.Email))
             {
-                return Result.Failure<TokenResponse>(new Error("UNAUTHORIZED", "Invalid Google token or email missing."));
+                return Result.Failure<TokenResponse>(new Error(EndpointErrorCodes.UNAUTHORIZED, "Invalid Google token or email missing."));
             }
 
             // Find user by GoogleId first, then by Email
@@ -118,11 +119,11 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
         }
         catch (InvalidJwtException ex)
         {
-            return Result.Failure<TokenResponse>(new Error("UNAUTHORIZED", $"Google token validation failed: {ex.Message}"));
+            return Result.Failure<TokenResponse>(new Error(EndpointErrorCodes.UNAUTHORIZED, $"Google token validation failed: {ex.Message}"));
         }
         catch (Exception ex)
         {
-            return Result.Failure<TokenResponse>(new Error("INTERNAL_SERVER_ERROR", $"Google authentication failed: {ex.Message}"));
+            return Result.Failure<TokenResponse>(new Error(EndpointErrorCodes.INTERNAL_SERVER_ERROR, $"Google authentication failed: {ex.Message}"));
         }
     }
 }

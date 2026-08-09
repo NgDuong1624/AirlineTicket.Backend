@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using System.Collections.Generic;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 
 namespace AirlineTicket.Modules.Flights.Api.Endpoints;
 
@@ -22,7 +23,7 @@ public class FlightAdminEndpoints : IEndpoint
         // ——————————————————————— Admin Airports ————————————————————————————————
         var adminAirports = app.MapGroup("/api/admin/airports")
             .WithTags("Admin Airports")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // GET /api/admin/airports — Get paginated list of airports
         adminAirports.MapGet("/", async (
@@ -113,7 +114,7 @@ public class FlightAdminEndpoints : IEndpoint
         // ——————————————————————— Admin Airlines ————————————————————————————————
         var adminAirlines = app.MapGroup("/api/admin/airlines")
             .WithTags("Admin Airlines")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         // GET /api/admin/airlines — Get paginated list of airlines
         adminAirlines.MapGet("/", async (
@@ -174,7 +175,7 @@ public class FlightAdminEndpoints : IEndpoint
         // ——————————————————————— Admin Flights ————————————————————————————————
         var adminFlights = app.MapGroup("/api/admin/flights")
             .WithTags("Admin Flights")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         adminFlights.MapGet("/", async (
                 [FromServices] ISender sender,
@@ -228,7 +229,7 @@ public class FlightAdminEndpoints : IEndpoint
         // ——————————————————————— Admin Aircraft Models ————————————————————————————————
         var adminAircraftModels = app.MapGroup("/api/admin/aircraft-models")
             .WithTags("Admin Aircraft Models")
-            .RequireAuthorization("AdminOnly");
+            .RequireAuthorization(AuthConstants.Policies.AdminOnly);
 
         adminAircraftModels.MapGet("/", async (
                 [FromQuery] int? pageIndex,

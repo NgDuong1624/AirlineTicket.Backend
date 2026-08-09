@@ -141,7 +141,7 @@ public class BookingHandlersTests
             new BookingDto { Id = Guid.NewGuid(), Status = "Cancelled" }
         };
 
-        _bookingRepoMock.Setup(x => x.GetAllAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _bookingRepoMock.Setup(x => x.GetAllAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((bookings, 3));
 
         var result = await handler.Handle(new GetAllBookingsQuery(), CancellationToken.None);
@@ -156,7 +156,7 @@ public class BookingHandlersTests
     {
         var handler = new GetAllBookingsQueryHandler(_bookingRepoMock.Object);
 
-        _bookingRepoMock.Setup(x => x.GetAllAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        _bookingRepoMock.Setup(x => x.GetAllAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<BookingDto>(), 0));
 
         var result = await handler.Handle(new GetAllBookingsQuery(), CancellationToken.None);

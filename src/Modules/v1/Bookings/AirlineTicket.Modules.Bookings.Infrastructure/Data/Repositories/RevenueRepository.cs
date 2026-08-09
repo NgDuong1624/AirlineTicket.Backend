@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.Modules.Flights.Domain.Entities;
+using AirlineTicket.Modules.Bookings.Domain.Enums;
 
 namespace AirlineTicket.Modules.Bookings.Infrastructure.Data.Repositories;
 
@@ -22,9 +24,9 @@ public class RevenueRepository : IRevenueRepository
     {
         var query = from b in _context.Bookings
                     join t in _context.Tickets on b.Id equals t.BookingId
-                    join f in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Flight>() on t.FlightId equals f.Id
-                    join r in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Route>() on f.RouteId equals r.Id
-                    where r.AirlineId == airlineId && b.CreatedAt >= fromDate && b.CreatedAt <= toDate && b.Status == AirlineTicket.Modules.Bookings.Domain.Enums.BookingStatus.Confirmed
+                    join f in _context.Set<Flight>() on t.FlightId equals f.Id
+                    join r in _context.Set<Route>() on f.RouteId equals r.Id
+                    where r.AirlineId == airlineId && b.CreatedAt >= fromDate && b.CreatedAt <= toDate && b.Status == BookingStatus.Confirmed
                     select b;
 
         var result = await query
@@ -42,14 +44,14 @@ public class RevenueRepository : IRevenueRepository
 
     public async Task<List<DailyOccupancy>> GetOccupancyRatesAsync(Guid airlineId, DateTime fromDate, DateTime toDate, CancellationToken cancellationToken = default)
     {
-        var query = from f in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Flight>()
-                    join r in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Route>() on f.RouteId equals r.Id
+        var query = from f in _context.Set<Flight>()
+                    join r in _context.Set<Route>() on f.RouteId equals r.Id
                     where r.AirlineId == airlineId && f.DepartureTime >= fromDate && f.DepartureTime < toDate
                     select new
                     {
                         f.DepartureTime,
                         f.FlightNumber,
-                        FlightSeatsCount = _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.FlightSeat>().Count(fs => fs.FlightId == f.Id),
+                        FlightSeatsCount = _context.Set<FlightSeat>().Count(fs => fs.FlightId == f.Id),
                         TicketsCount = _context.Tickets.Count(t => t.FlightId == f.Id)
                     };
 
@@ -69,10 +71,10 @@ public class RevenueRepository : IRevenueRepository
     {
         var query = from b in _context.Bookings
                     join t in _context.Tickets on b.Id equals t.BookingId
-                    join f in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Flight>() on t.FlightId equals f.Id
-                    join r in _context.Set<AirlineTicket.Modules.Flights.Domain.Entities.Route>() on f.RouteId equals r.Id
+                    join f in _context.Set<Flight>() on t.FlightId equals f.Id
+                    join r in _context.Set<Route>() on f.RouteId equals r.Id
                     where r.AirlineId == airlineId
-                          && b.Status == AirlineTicket.Modules.Bookings.Domain.Enums.BookingStatus.Confirmed
+                          && b.Status == BookingStatus.Confirmed
                           && b.CreatedAt >= fromDate
                           && b.CreatedAt <= toDate
                     group b by b.CreatedAt.Date into g

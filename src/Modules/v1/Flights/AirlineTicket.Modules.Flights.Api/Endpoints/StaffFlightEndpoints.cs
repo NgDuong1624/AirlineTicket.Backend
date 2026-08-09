@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -16,7 +17,7 @@ public class StaffFlightEndpoints : IEndpoint
     {
         var group = app.MapGroup("/api/staff/flights")
             .WithTags("Staff Flights")
-            .RequireAuthorization("PartnerOrStaff");
+            .RequireAuthorization(AuthConstants.Policies.PartnerOrStaff);
 
         // GET /api/staff/flights — flight list with route/schedule/seat summary
         group.MapGet("/", async (

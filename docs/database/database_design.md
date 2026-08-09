@@ -1,517 +1,522 @@
-# Thiết kế Cơ sở Dữ liệu Hệ thống Bán vé Máy bay
+# Airline Ticket Booking System Database Design
 
-Tài liệu này chi tiết hóa cấu trúc Cơ sở Dữ liệu của hệ thống, được thiết kế theo hướng kiến trúc Modular Monolith để sẵn sàng phân tách khi mở rộng hệ thống.
+This document details the database structure of the system, designed with a Modular Monolith architecture to be ready for separation when scaling.
 
 ---
 
-## 1. Sơ đồ Quan hệ Thực thể (ERD)
+## 1. Entity Relationship Diagram (ERD)
 
 ```mermaid
 erDiagram
-    %% IDENTITY SCHEMA
-    dbo_Users ||--|| dbo_Roles : "has"
-    dbo_Roles ||--o{ dbo_RolePermissions : "has"
-    dbo_Permissions ||--o{ dbo_RolePermissions : "defines"
-    dbo_Users ||--o{ dbo_UserPermissionScopes : "has"
-    dbo_Permissions ||--o{ dbo_UserPermissionScopes : "scoped_by"
-    dbo_Airlines ||--o{ dbo_UserPermissionScopes : "restricts"
+    %% USERS SCHEMA
+    users_Users ||--|| users_Roles : "has"
+    users_Roles ||--o{ users_RolePermissions : "has"
+    users_Permissions ||--o{ users_RolePermissions : "defines"
+    users_Users ||--o{ users_UserPermissionScopes : "has"
+    users_Permissions ||--o{ users_UserPermissionScopes : "scoped_by"
+    flights_Airlines ||--o{ users_UserPermissionScopes : "restricts"
     
     %% FLIGHTS SCHEMA
-    dbo_Airlines ||--o{ dbo_Airplanes : "owns"
-    dbo_AircraftModels ||--o{ dbo_Airplanes : "defines"
-    dbo_AircraftModels ||--o{ dbo_AircraftModelSeatTemplates : "has"
-    dbo_Airplanes ||--o{ dbo_AirplaneSeats : "has"
-    dbo_Airlines ||--o{ dbo_Routes : "operates"
-    dbo_Airports ||--o{ dbo_Routes : "origin"
-    dbo_Airports ||--o{ dbo_Routes : "destination"
-    dbo_Routes ||--o{ dbo_Flights : "has"
-    dbo_Airplanes ||--o{ dbo_Flights : "assigned_to"
-    dbo_Flights ||--o{ dbo_FlightSeats : "has"
+    flights_Airlines ||--o{ flights_Airplanes : "owns"
+    flights_AircraftModels ||--o{ flights_Airplanes : "defines"
+    flights_AircraftModels ||--o{ flights_AircraftModelSeatTemplates : "has"
+    flights_Airplanes ||--o{ flights_AirplaneSeats : "has"
+    flights_Airlines ||--o{ flights_Routes : "operates"
+    flights_Airports ||--o{ flights_Routes : "origin"
+    flights_Airports ||--o{ flights_Routes : "destination"
+    flights_Routes ||--o{ flights_Flights : "has"
+    flights_Airplanes ||--o{ flights_Flights : "assigned_to"
+    flights_Flights ||--o{ flights_FlightSeats : "has"
 
     %% BOOKINGS SCHEMA
-    dbo_Users ||--o{ dbo_Bookings : "makes"
-    dbo_Bookings ||--o{ dbo_Passengers : "contains"
-    dbo_Bookings ||--o{ dbo_Tickets : "contains"
-    dbo_Bookings ||--o{ dbo_Payments : "settles"
-    dbo_Passengers ||--o{ dbo_Tickets : "assigned_to"
-    dbo_Flights ||--o{ dbo_Tickets : "booked_on"
-    dbo_FlightSeats ||--o| dbo_Tickets : "allocated_to"
+    users_Users ||--o{ bookings_Bookings : "makes"
+    bookings_Bookings ||--o{ bookings_Passengers : "contains"
+    bookings_Bookings ||--o{ bookings_Tickets : "contains"
+    bookings_Bookings ||--o{ bookings_Payments : "settles"
+    bookings_Passengers ||--o{ bookings_Tickets : "assigned_to"
+    flights_Flights ||--o{ bookings_Tickets : "booked_on"
+    flights_FlightSeats ||--o| bookings_Tickets : "allocated_to"
 
     %% INTERACTIONS SCHEMA
-    dbo_Users ||--o{ dbo_Reviews : "writes"
-    dbo_Airlines ||--o{ dbo_Reviews : "reviewed"
-    dbo_Flights ||--o{ dbo_Reviews : "reviewed"
-    dbo_Users ||--o{ dbo_ChatMessages : "sends"
+    users_Users ||--o{ interactions_Reviews : "writes"
+    flights_Airlines ||--o{ interactions_Reviews : "reviewed"
+    flights_Flights ||--o{ interactions_Reviews : "reviewed"
+    users_Users ||--o{ interactions_ChatMessages : "sends"
 
     %% CMS SCHEMA
-    dbo_Categories ||--o{ dbo_Articles : "belongs_to"
-    dbo_Users ||--o{ dbo_Articles : "writes"
+    cms_Categories ||--o{ cms_Articles : "belongs_to"
+    users_Users ||--o{ cms_Articles : "writes"
 
     %% NOTIFICATIONS SCHEMA
-    dbo_NotificationTemplates : "standalone"
-    dbo_Users ||--o{ dbo_Notifications : "receives"
+    users_Users ||--o{ notifications_Notifications : "receives"
 ```
 
 ---
 
-## 2. Chi tiết các Phân hệ & Cấu trúc Bảng
+## 2. Module Details & Table Structures
 
-### 2.1. Phân hệ Định danh (`dbo`)
-Quản lý người dùng, phân quyền truy cập hệ thống.
+### 2.1. Identity Module (`users`)
+Manages users and system access control.
 
-#### Bảng `users.users`
-Lưu trữ thông tin người dùng (Khách hàng, Đối tác, Quản trị viên).
+#### Table `users.users`
+Stores user information (Customer, Partner, Admin).
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất người dùng |
-| `Email` | NVARCHAR(255) | UNIQUE, NOT NULL | Địa chỉ Email đăng nhập |
-| `EmailConfirmed` | BIT | DEFAULT 0, NOT NULL | Trạng thái xác thực email |
-| `PasswordHash` | NVARCHAR(MAX) | NOT NULL | Mật khẩu đã được băm bảo mật |
-| `FullName` | NVARCHAR(255) | NOT NULL | Họ và tên đầy đủ |
-| `PhoneNumber` | NVARCHAR(20) | NULL | Số điện thoại liên lạc |
-| `Role` | INT | FOREIGN KEY -> Roles(Id), NOT NULL | Vai trò người dùng (0: Admin, 1: Staff, 2: Customer) |
-| `AvatarUrl` | NVARCHAR(500) | NULL | Đường dẫn ảnh đại diện |
-| `LanguagePreference` | NVARCHAR(10) | DEFAULT 'vi' | Ngôn ngữ ưu tiên (vi, en,...) |
-| `LastLoginAt` | DATETIME2 | NULL | Thời gian đăng nhập cuối cùng |
-| `IsActive` | BIT | DEFAULT 1, NOT NULL | Trạng thái hoạt động tài khoản |
-| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm (Soft Delete) |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ khởi tạo |
-| `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ cập nhật mới nhất |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique user identifier |
+| `Email` | NVARCHAR(255) | UNIQUE, NOT NULL | Login email address |
+| `EmailConfirmed` | BIT | DEFAULT 0, NOT NULL | Email verification status |
+| `PasswordHash` | NVARCHAR(MAX) | NOT NULL | Securely hashed password |
+| `FullName` | NVARCHAR(255) | NOT NULL | Full name |
+| `PhoneNumber` | NVARCHAR(20) | NULL | Contact phone number |
+| `Role` | INT | FOREIGN KEY -> Roles(Id), NOT NULL | User role (0: Admin, 1: Staff, 2: Customer) |
+| `AvatarUrl` | NVARCHAR(500) | NULL | Avatar image URL |
+| `LanguagePreference` | NVARCHAR(10) | DEFAULT 'vi' | Preferred language (vi, en,...) |
+| `LastLoginAt` | DATETIME2 | NULL | Last login timestamp |
+| `IsActive` | BIT | DEFAULT 1, NOT NULL | Account active status |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Soft delete flag |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Creation timestamp |
+| `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Last update timestamp |
 
-#### Bảng `users.roles`
-Danh sách vai trò hệ thống.
+#### Table `users.roles`
+List of system roles.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | INT | PRIMARY KEY | Định danh duy nhất vai trò |
-| `Name` | NVARCHAR(50) | UNIQUE, NOT NULL | Tên vai trò (Admin, Partner, Customer) |
-| `Description` | NVARCHAR(255) | NULL | Mô tả chi tiết vai trò |
+| `Id` | INT | PRIMARY KEY | Unique role identifier |
+| `Name` | NVARCHAR(50) | UNIQUE, NOT NULL | Role name (Admin, Partner, Customer) |
+| `Description` | NVARCHAR(255) | NULL | Detailed role description |
 
-#### Bảng `users.permissions`
-Danh mục các chức năng/quyền hạn trong hệ thống.
+#### Table `users.permissions`
+Catalog of system functions/permissions.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | INT | PRIMARY KEY, IDENTITY | Định danh quyền |
-| `Code` | NVARCHAR(50) | UNIQUE, NOT NULL | Mã quyền (Ví dụ: 'SELL_TICKET') |
-| `Name` | NVARCHAR(100) | NOT NULL | Tên quyền hiển thị |
-| `Description` | NVARCHAR(255) | NULL | Mô tả chi tiết quyền |
+| `Id` | INT | PRIMARY KEY, IDENTITY | Permission identifier |
+| `Code` | NVARCHAR(50) | UNIQUE, NOT NULL | Permission code (e.g., 'SELL_TICKET') |
+| `Name` | NVARCHAR(100) | NOT NULL | Display name |
+| `Description` | NVARCHAR(255) | NULL | Detailed description |
 
-#### Bảng `users.role_permissions`
-Cấu hình quyền mặc định thuộc về từng Role.
+#### Table `users.role_permissions`
+Default permissions assigned to each Role.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `RoleId` | INT | FOREIGN KEY -> Roles(Id) | Liên kết vai trò |
-| `PermissionId` | INT | FOREIGN KEY -> Permissions(Id) | Liên kết quyền |
+| `RoleId` | INT | FOREIGN KEY -> Roles(Id) | Role link |
+| `PermissionId` | INT | FOREIGN KEY -> Permissions(Id) | Permission link |
 
-#### Bảng `users.user_permission_scopes`
-Phân quyền chi tiết theo Trạm bay hoặc Hạn mức/Giới hạn số lượng.
+#### Table `users.user_permission_scopes`
+Detailed permissions scoped by Airport or Quota/Limit.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh scope |
-| `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Users(Id) | Áp dụng cho tài khoản cụ thể |
-| `PermissionId` | INT | FOREIGN KEY -> Permissions(Id) | Đi kèm với hành động/quyền nào |
-| `AirlineId` | UNIQUEIDENTIFIER | NULL, FOREIGN KEY | Giới hạn theo hãng bay |
-| `AirportCode` | VARCHAR(10) | NULL | Giới hạn theo trạm/sân bay (VD: 'SGN') |
-| `MaxLimitValue` | INT | NULL | Số lượng tối đa được phép thực hiện |
-| `ScopeDescription` | NVARCHAR(255) | NULL | Mô tả phạm vi |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian khởi tạo |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Scope identifier |
+| `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Users(Id) | Applies to specific account |
+| `PermissionId` | INT | FOREIGN KEY -> Permissions(Id) | Associated action/permission |
+| `AirlineId` | UNIQUEIDENTIFIER | NULL, FOREIGN KEY | Scoped by airline |
+| `AirportCode` | VARCHAR(10) | NULL | Scoped by airport (e.g., 'SGN') |
+| `MaxLimitValue` | INT | NULL | Maximum allowed executions |
+| `ScopeDescription` | NVARCHAR(255) | NULL | Scope description |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Creation timestamp |
 
 ---
 
-### 2.2. Phân hệ Chuyến bay (`dbo`)
-Quản lý lịch trình, hãng bay, sân bay, máy bay và ghế ngồi chuyến bay.
+### 2.2. Flights Module (`flights`)
+Manages schedules, airlines, airports, airplanes, and flight seats.
 
-#### Bảng `flights.airlines`
-Quản lý các đối tác Hãng hàng không tích hợp hệ thống.
+#### Table `flights.airlines`
+Manages Airline partners integrated into the system.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất hãng bay |
-| `IataCode` | NVARCHAR(10) | UNIQUE, NOT NULL | Mã IATA của hãng bay (VD: VN, VJ) |
-| `Name` | NVARCHAR(255) | NOT NULL | Tên đầy đủ của hãng bay |
-| `LogoUrl` | NVARCHAR(500) | NULL | Đường dẫn ảnh biểu trưng |
-| `BaseCountry` | NVARCHAR(100) | NULL | Quốc gia trụ sở chính |
-| `ApiEndpoint` | NVARCHAR(500) | NULL | Điểm cuối API kết nối của hãng (B2B) |
-| `ApiKey` | NVARCHAR(255) | NULL | Khóa API bảo mật xác thực đối tác |
-| `IsActive` | BIT | DEFAULT 1, NOT NULL | Trạng thái tích hợp hoạt động |
-| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo lập đối tác |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique airline identifier |
+| `IataCode` | NVARCHAR(10) | UNIQUE, NOT NULL | IATA code (e.g., VN, VJ) |
+| `Name` | NVARCHAR(255) | NOT NULL | Full airline name |
+| `LogoUrl` | NVARCHAR(500) | NULL | Logo image URL |
+| `BaseCountry` | NVARCHAR(100) | NULL | Headquarters country |
+| `ApiEndpoint` | NVARCHAR(500) | NULL | Partner API endpoint (B2B) |
+| `ApiKey` | NVARCHAR(255) | NULL | API key for partner authentication |
+| `IsActive` | BIT | DEFAULT 1, NOT NULL | Integration active status |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Soft delete flag |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Partner creation timestamp |
 
-#### Bảng `flights.airports`
-Danh sách thông tin sân bay trên thế giới.
+#### Table `flights.airports`
+List of worldwide airports.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất sân bay |
-| `IataCode` | NVARCHAR(10) | UNIQUE, NOT NULL | Mã IATA của sân bay (VD: SGN, HAN) |
-| `NameEn` | NVARCHAR(255) | NOT NULL | Tên tiếng Anh của sân bay |
-| `NameVi` | NVARCHAR(255) | NOT NULL | Tên tiếng Việt của sân bay |
-| `CityEn` | NVARCHAR(100) | NOT NULL | Thành phố tiếng Anh |
-| `CityVi` | NVARCHAR(100) | NOT NULL | Thành phố tiếng Việt |
-| `CountryCode` | NVARCHAR(10) | NOT NULL | Mã quốc gia theo chuẩn ISO Alpha-2 |
-| `Timezone` | NVARCHAR(50) | NOT NULL | Múi giờ sân bay áp dụng |
-| `Latitude` | DECIMAL(9, 6) | NULL | Vĩ độ địa lý |
-| `Longitude` | DECIMAL(9, 6) | NULL | Kinh độ địa lý |
-| `IsActive` | BIT | DEFAULT 1, NOT NULL | Trạng thái hoạt động sân bay |
-| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique airport identifier |
+| `IataCode` | NVARCHAR(10) | UNIQUE, NOT NULL | IATA code (e.g., SGN, HAN) |
+| `NameEn` | NVARCHAR(255) | NOT NULL | English name |
+| `NameVi` | NVARCHAR(255) | NOT NULL | Vietnamese name |
+| `CityEn` | NVARCHAR(100) | NOT NULL | English city name |
+| `CityVi` | NVARCHAR(100) | NOT NULL | Vietnamese city name |
+| `CountryCode` | NVARCHAR(10) | NOT NULL | ISO Alpha-2 country code |
+| `Timezone` | NVARCHAR(50) | NOT NULL | Applicable timezone |
+| `Latitude` | DECIMAL(9, 6) | NULL | Geographical latitude |
+| `Longitude` | DECIMAL(9, 6) | NULL | Geographical longitude |
+| `IsActive` | BIT | DEFAULT 1, NOT NULL | Airport active status |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Soft delete flag |
 
-#### Bảng `flights.aircraft_models`
-Danh mục các dòng/mẫu máy bay trong hệ thống (dùng làm cấu hình mẫu).
+#### Table `flights.aircraft_models`
+Catalog of aircraft models (used as templates).
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất mẫu máy bay |
-| `Name` | NVARCHAR(100) | NOT NULL | Tên mẫu máy bay (VD: Boeing 787-9 Dreamliner) |
-| `Manufacturer` | NVARCHAR(100) | NOT NULL | Nhà sản xuất (VD: Boeing, Airbus) |
-| `TotalSeats` | INT | NOT NULL | Tổng số ghế theo cấu hình mẫu |
-| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique model identifier |
+| `Name` | NVARCHAR(100) | NOT NULL | Model name (e.g., Boeing 787-9 Dreamliner) |
+| `Manufacturer` | NVARCHAR(100) | NOT NULL | Manufacturer (e.g., Boeing, Airbus) |
+| `TotalSeats` | INT | NOT NULL | Total seats per template |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Soft delete flag |
 
-#### Bảng `flights.aircraft_model_seat_templates`
-Cấu hình sơ đồ ghế mẫu cho từng dòng máy bay.
+#### Table `flights.aircraft_model_seat_templates`
+Seat map templates for each aircraft model.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất ghế mẫu |
-| `AircraftModelId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.aircraft_models(id) | Thuộc mẫu máy bay nào |
-| `SeatNumber` | NVARCHAR(10) | NOT NULL | Số ghế (VD: 1A, 12B) |
-| `SeatRow` | NVARCHAR(10) | NOT NULL | Hàng ghế (VD: 1, 12) |
-| `SeatColumn` | NVARCHAR(10) | NOT NULL | Cột ghế (VD: A, B) |
-| `SeatClass` | INT | NOT NULL | Hạng ghế (0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass) |
-| `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Ghế có khoảng để chân rộng rãi không |
-| `PriceMultiplier` | DECIMAL(18, 2) | DEFAULT 1.0, NOT NULL | Hệ số nhân giá vé cho hạng ghế này |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique seat template identifier |
+| `AircraftModelId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.aircraft_models(id) | Belongs to which model |
+| `SeatNumber` | NVARCHAR(10) | NOT NULL | Seat number (e.g., 1A, 12B) |
+| `SeatRow` | NVARCHAR(10) | NOT NULL | Seat row (e.g., 1, 12) |
+| `SeatColumn` | NVARCHAR(10) | NOT NULL | Seat column (e.g., A, B) |
+| `SeatClass` | INT | NOT NULL | Seat class (0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass) |
+| `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Has extra legroom |
+| `PriceMultiplier` | DECIMAL(18, 2) | DEFAULT 1.0, NOT NULL | Price multiplier for this class |
 
-#### Bảng `flights.airplanes`
-Hạ tầng đội bay của các hãng hàng không.
+#### Table `flights.airplanes`
+Airline fleet infrastructure.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất tàu bay |
-| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airlines(id) | Thuộc sở hữu hãng bay nào |
-| `AircraftModelId` | UNIQUEIDENTIFIER | NULL, FOREIGN KEY -> flights.aircraft_models(id) | Liên kết cấu hình mẫu máy bay |
-| `Model` | NVARCHAR(100) | NOT NULL | Dòng máy bay (VD: Boeing 787, Airbus A350) |
-| `RegistrationNumber` | NVARCHAR(50) | UNIQUE, NOT NULL | Số đăng ký kiểm soát máy bay |
-| `TotalCapacity` | INT | NOT NULL | Tổng tải lượng số ghế |
-| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique airplane identifier |
+| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airlines(id) | Owned by which airline |
+| `AircraftModelId` | UNIQUEIDENTIFIER | NULL, FOREIGN KEY -> flights.aircraft_models(id) | Link to model template |
+| `Model` | NVARCHAR(100) | NOT NULL | Airplane model (e.g., Boeing 787, Airbus A350) |
+| `RegistrationNumber` | NVARCHAR(50) | UNIQUE, NOT NULL | Aircraft registration number |
+| `TotalCapacity` | INT | NOT NULL | Total seat capacity |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Soft delete flag |
 
-#### Bảng `flights.airplane_seats`
-Sơ đồ ghế thực tế của từng tàu bay cụ thể (được sinh ra từ cấu hình mẫu).
+#### Table `flights.airplane_seats`
+Actual seat map of a specific airplane (generated from template).
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất ghế tàu bay |
-| `AirplaneId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airplanes(id) | Thuộc tàu bay nào |
-| `SeatNumber` | NVARCHAR(10) | NOT NULL | Số ghế (VD: 1A, 12B) |
-| `SeatRow` | NVARCHAR(10) | NOT NULL | Hàng ghế (VD: 1, 12) |
-| `SeatColumn` | NVARCHAR(10) | NOT NULL | Cột ghế (VD: A, B) |
-| `SeatClass` | INT | NOT NULL | Hạng ghế (0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass) |
-| `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Ghế có khoảng để chân rộng rãi không |
-| `PriceMultiplier` | DECIMAL(18, 2) | DEFAULT 1.0, NOT NULL | Hệ số nhân giá vé cho hạng ghế này |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique airplane seat identifier |
+| `AirplaneId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airplanes(id) | Belongs to which airplane |
+| `SeatNumber` | NVARCHAR(10) | NOT NULL | Seat number (e.g., 1A, 12B) |
+| `SeatRow` | NVARCHAR(10) | NOT NULL | Seat row (e.g., 1, 12) |
+| `SeatColumn` | NVARCHAR(10) | NOT NULL | Seat column (e.g., A, B) |
+| `SeatClass` | INT | NOT NULL | Seat class (0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass) |
+| `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Has extra legroom |
+| `PriceMultiplier` | DECIMAL(18, 2) | DEFAULT 1.0, NOT NULL | Price multiplier for this class |
 
-#### Bảng `flights.routes`
-Các tuyến đường bay kết nối giữa các sân bay.
+#### Table `flights.routes`
+Flight routes connecting airports.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh tuyến bay |
-| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airlines(id) | Hãng vận hành tuyến bay |
-| `OriginAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airports(id) | Sân bay điểm khởi hành |
-| `DestinationAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airports(id) | Sân bay điểm đến |
-| `DistanceKm` | DECIMAL(10, 2) | NULL | Khoảng cách tuyến bay (km) |
-| `EstimatedDurationMinutes` | INT | NULL | Thời gian bay dự kiến (phút) |
-| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Route identifier |
+| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airlines(id) | Operating airline |
+| `OriginAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airports(id) | Origin airport |
+| `DestinationAirportId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airports(id) | Destination airport |
+| `DistanceKm` | DECIMAL(10, 2) | NULL | Route distance (km) |
+| `EstimatedDurationMinutes` | INT | NULL | Estimated flight duration (minutes) |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Soft delete flag |
 
-#### Bảng `flights.flights`
-Thông tin chi tiết chuyến bay thực tế theo thời gian.
+#### Table `flights.flights`
+Detailed actual flight information over time.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất chuyến bay |
-| `RouteId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.routes(id) | Tuyến đường bay chi tiết |
-| `AirplaneId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Airplanes(Id) | Tàu bay được phân công |
-| `FlightNumber` | NVARCHAR(20) | NOT NULL | Số hiệu chuyến bay (VD: VN213) |
-| `DepartureTime` | DATETIME2 | NOT NULL | Thời gian cất cánh dự kiến |
-| `ArrivalTime` | DATETIME2 | NOT NULL | Thời gian hạ cánh dự kiến |
-| `BasePrice` | DECIMAL(18, 2) | NOT NULL | Giá vé cơ sở |
-| `Currency` | NVARCHAR(3) | DEFAULT 'USD' | Tiền tệ áp dụng |
-| `Status` | INT | DEFAULT 0, NOT NULL | Trạng thái (0: Scheduled, 1: Delayed, 2: Boarding, 3: InAir, 4: Landed, 5: Cancelled) |
-| `ExternalId` | NVARCHAR(100) | NULL | ID đồng bộ hệ thống ngoài của đối tác |
-| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ khởi tạo |
-| `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Ngày giờ cập nhật |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique flight identifier |
+| `RouteId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.routes(id) | Detailed route |
+| `AirplaneId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airplanes(Id) | Assigned airplane |
+| `FlightNumber` | NVARCHAR(20) | NOT NULL | Flight number (e.g., VN213) |
+| `DepartureTime` | DATETIME2 | NOT NULL | Scheduled departure time |
+| `ArrivalTime` | DATETIME2 | NOT NULL | Scheduled arrival time |
+| `BasePrice` | DECIMAL(18, 2) | NOT NULL | Base ticket price |
+| `Currency` | NVARCHAR(3) | DEFAULT 'USD' | Applicable currency |
+| `Status` | INT | DEFAULT 0, NOT NULL | Status (0: Scheduled, 1: Delayed, 2: Boarding, 3: InAir, 4: Landed, 5: Cancelled) |
+| `ExternalId` | NVARCHAR(100) | NULL | External partner sync ID |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Soft delete flag |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Creation timestamp |
+| `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Update timestamp |
 
-#### Bảng `dbo.FlightSeats`
-Quản lý trạng thái và sơ đồ ghế cụ thể của từng chuyến bay.
+#### Table `flights.flight_seats`
+Manages status and specific seat map of each flight.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất ghế chuyến bay |
-| `FlightId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Flights(Id) | Thuộc chuyến bay nào |
-| `SeatNumber` | NVARCHAR(10) | NOT NULL | Số ghế vật lý (VD: 12A, 1A) |
-| `SeatClass` | INT | NOT NULL | Hạng ghế (0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass) |
-| `PriceOverride` | DECIMAL(18, 2) | NULL | Giá bán riêng cho ghế (nếu có) |
-| `IsAvailable` | BIT | DEFAULT 1, NOT NULL | Trạng thái còn trống hay không |
-| `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Ghế có khoảng để chân rộng rãi không |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique flight seat identifier |
+| `FlightId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.flights(Id) | Belongs to which flight |
+| `SeatNumber` | NVARCHAR(10) | NOT NULL | Physical seat number (e.g., 12A, 1A) |
+| `SeatClass` | INT | NOT NULL | Seat class (0: Economy, 1: PremiumEconomy, 2: Business, 3: FirstClass) |
+| `PriceOverride` | DECIMAL(18, 2) | NULL | Specific seat price override (if any) |
+| `IsAvailable` | BIT | DEFAULT 1, NOT NULL | Availability status |
+| `IsExtraLegroom` | BIT | DEFAULT 0, NOT NULL | Has extra legroom |
 
 ---
 
-### 2.3. Phân hệ Đặt chỗ & Vé (`dbo`)
-Quản lý đơn đặt chỗ, thanh toán, thông tin hành khách và vé máy bay điện tử.
+### 2.3. Bookings & Tickets Module (`bookings`)
+Manages bookings, payments, passenger information, and e-tickets.
 
-#### Bảng `dbo.Bookings`
-Thông tin đơn đặt chỗ (Booking/PNR) của khách hàng.
+#### Table `bookings.bookings`
+Customer booking (PNR) information.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh duy nhất đơn đặt chỗ |
-| `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Users(Id) | Người thực hiện đặt vé |
-| `PnrCode` | NVARCHAR(10) | UNIQUE, NOT NULL | Mã đặt chỗ PNR quốc tế (VD: XF89QD) |
-| `TotalPrice` | DECIMAL(18, 2) | NOT NULL | Tổng tiền đơn hàng |
-| `Currency` | NVARCHAR(3) | DEFAULT 'USD' | Tiền tệ thanh toán |
-| `Status` | INT | DEFAULT 0, NOT NULL | Trạng thái (0: Pending, 1: Paid, 2: Confirmed, 3: Cancelled, 4: Refunded) |
-| `ContactEmail` | NVARCHAR(255) | NOT NULL | Email liên hệ nhận vé điện tử |
-| `ContactPhone` | NVARCHAR(20) | NOT NULL | Số điện thoại liên hệ |
-| `SpecialRequests` | NVARCHAR(MAX) | NULL | Yêu cầu đặc biệt (suất ăn, xe lăn...) |
-| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Cờ xóa mềm |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo đơn |
-| `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian cập nhật trạng thái đơn |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Unique booking identifier |
+| `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> users.users(Id) | User who made the booking |
+| `PnrCode` | NVARCHAR(10) | UNIQUE, NOT NULL | International PNR code (e.g., XF89QD) |
+| `TotalPrice` | DECIMAL(18, 2) | NOT NULL | Total order amount |
+| `Currency` | NVARCHAR(3) | DEFAULT 'USD' | Payment currency |
+| `Status` | INT | DEFAULT 0, NOT NULL | Status (0: Pending, 1: Paid, 2: Confirmed, 3: Cancelled, 4: Refunded) |
+| `ContactEmail` | NVARCHAR(255) | NOT NULL | Contact email for e-ticket |
+| `ContactPhone` | NVARCHAR(20) | NOT NULL | Contact phone number |
+| `SpecialRequests` | NVARCHAR(MAX) | NULL | Special requests (meals, wheelchair...) |
+| `IsDeleted` | BIT | DEFAULT 0, NOT NULL | Soft delete flag |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Order creation time |
+| `UpdatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Order status update time |
 
-#### Bảng `dbo.Passengers`
-Thông tin giấy tờ tùy thân của từng hành khách bay.
+#### Table `bookings.passengers`
+Identity document information for each passenger.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh hành khách |
-| `BookingId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Bookings(Id) | Thuộc mã đơn đặt chỗ nào |
-| `FirstName` | NVARCHAR(100) | NOT NULL | Tên đệm và tên của hành khách |
-| `LastName` | NVARCHAR(100) | NOT NULL | Họ của hành khách |
-| `Gender` | INT | NULL | Giới tính (0: Nam, 1: Nữ, 2: Khác) |
-| `DateOfBirth` | DATE | NOT NULL | Ngày tháng năm sinh |
-| `Nationality` | NVARCHAR(100) | NULL | Quốc tịch |
-| `PassportNumber` | NVARCHAR(50) | NOT NULL | Số hộ chiếu/CCCD |
-| `PassportExpiryDate` | DATE | NOT NULL | Ngày hết hạn hộ chiếu |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Passenger identifier |
+| `BookingId` | UNIQUEIDENTIFIER | FOREIGN KEY -> bookings.bookings(Id) | Belongs to which booking |
+| `FirstName` | NVARCHAR(100) | NOT NULL | First and middle name |
+| `LastName` | NVARCHAR(100) | NOT NULL | Last name |
+| `Gender` | INT | NULL | Gender (0: Male, 1: Female, 2: Other) |
+| `DateOfBirth` | DATE | NOT NULL | Date of birth |
+| `Nationality` | NVARCHAR(100) | NULL | Nationality |
+| `PassportNumber` | NVARCHAR(50) | NOT NULL | Passport/ID number |
+| `PassportExpiryDate` | DATE | NOT NULL | Passport expiry date |
 
-#### Bảng `dbo.Tickets`
-Thông tin vé máy bay điện tử (E-ticket) phát hành cho hành khách.
+#### Table `bookings.tickets`
+E-ticket information issued to passengers.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh vé |
-| `BookingId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Bookings(Id) | Liên kết với đơn đặt vé |
-| `PassengerId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Passengers(Id) | Chủ nhân của vé |
-| `FlightId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.Flights(Id) | Áp dụng cho chuyến bay nào |
-| `SeatId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.FlightSeats(Id) | Vị trí ghế ngồi |
-| `TicketNumber` | NVARCHAR(50) | UNIQUE, NOT NULL | Số vé điện tử (Unique E-ticket Number) |
-| `Gate` | NVARCHAR(20) | NULL | Cửa ra tàu bay |
-| `BoardingTime` | DATETIME2 | NULL | Thời điểm lên tàu bay |
-| `Status` | INT | DEFAULT 0, NOT NULL | Trạng thái (0: Valid, 1: CheckedIn, 2: Used, 3: Cancelled) |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Ticket identifier |
+| `BookingId` | UNIQUEIDENTIFIER | FOREIGN KEY -> bookings.bookings(Id) | Link to booking |
+| `PassengerId` | UNIQUEIDENTIFIER | FOREIGN KEY -> bookings.passengers(Id) | Ticket owner |
+| `FlightId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.flights(Id) | Applicable flight |
+| `SeatId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.flight_seats(Id) | Seat location |
+| `TicketNumber` | NVARCHAR(50) | UNIQUE, NOT NULL | Unique E-ticket Number |
+| `Gate` | NVARCHAR(20) | NULL | Boarding gate |
+| `BoardingTime` | DATETIME2 | NULL | Boarding time |
+| `Status` | INT | DEFAULT 0, NOT NULL | Status (0: Valid, 1: CheckedIn, 2: Used, 3: Cancelled) |
 
-#### Bảng `dbo.Payments`
-Lịch sử giao dịch thanh toán vé.
+#### Table `bookings.payments`
+Ticket payment transaction history.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh giao dịch |
-| `BookingId` | UNIQUEIDENTIFIER | FOREIGN KEY -> dbo.Bookings(Id) | Thanh toán cho đơn hàng nào |
-| `TransactionId` | NVARCHAR(100) | UNIQUE, NOT NULL | Mã giao dịch từ cổng thanh toán bên thứ ba |
-| `Amount` | DECIMAL(18, 2) | NOT NULL | Số tiền thanh toán thực tế |
-| `PaymentMethod` | NVARCHAR(50) | NOT NULL | Cổng thanh toán (Stripe, Paypal, VNPay...) |
-| `ProviderStatus` | NVARCHAR(50) | NULL | Trạng thái trả về từ cổng thanh toán |
-| `IsSuccessful` | BIT | DEFAULT 0, NOT NULL | Trạng thái thành công hay thất bại |
-| `RawResponse` | NVARCHAR(MAX) | NULL | Phản hồi chi tiết (JSON) từ đối tác thanh toán |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian thực hiện giao dịch |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Transaction identifier |
+| `BookingId` | UNIQUEIDENTIFIER | FOREIGN KEY -> bookings.bookings(Id) | Payment for which order |
+| `TransactionId` | NVARCHAR(100) | UNIQUE, NOT NULL | Transaction ID from third-party gateway |
+| `Amount` | DECIMAL(18, 2) | NOT NULL | Actual payment amount |
+| `PaymentMethod` | NVARCHAR(50) | NOT NULL | Payment gateway (Stripe, Paypal, VNPay...) |
+| `ProviderStatus` | NVARCHAR(50) | NULL | Status returned from gateway |
+| `IsSuccessful` | BIT | DEFAULT 0, NOT NULL | Success or failure status |
+| `RawResponse` | NVARCHAR(MAX) | NULL | Detailed response (JSON) from payment partner |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Transaction execution time |
 
 ---
 
-### 2.4. Phân hệ Khuyến mãi (`dbo`)
-Quản lý các chiến dịch marketing, coupon giảm giá sản phẩm vé máy bay.
+### 2.4. Promotions Module (`promotions`)
+Manages marketing campaigns and flight ticket discount coupons.
 
-#### Bảng `dbo.Coupons`
-Thông tin mã giảm giá khuyến mãi áp dụng trực tiếp cho giỏ hàng đặt chỗ.
+#### Table `promotions.coupons`
+Discount code information applied directly to the booking cart.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh mã giảm giá |
-| `Code` | NVARCHAR(50) | UNIQUE, NOT NULL | Ký tự mã giảm giá (VD: SUMMER2026) |
-| `Description` | NVARCHAR(500) | NULL | Nội dung mô tả chương trình |
-| `DiscountType` | INT | NOT NULL | Kiểu chiết khấu (0: Phần trăm, 1: Số tiền cố định) |
-| `DiscountValue` | DECIMAL(18, 2) | NOT NULL | Giá trị được chiết khấu |
-| `MinOrderValue` | DECIMAL(18, 2) | NULL | Giá trị đơn đặt vé tối thiểu được áp dụng |
-| `MaxDiscountAmount` | DECIMAL(18, 2) | NULL | Giá trị giảm giá tối đa cho kiểu chiết khấu % |
-| `StartDate` | DATETIME2 | NOT NULL | Thời gian hiệu lực bắt đầu |
-| `EndDate` | DATETIME2 | NOT NULL | Thời gian hết hiệu lực |
-| `UsageLimit` | INT | NULL | Số lượng lượt sử dụng tối đa của mã |
-| `UsageCount` | INT | DEFAULT 0 | Số lượt đã sử dụng thực tế |
-| `IsActive` | BIT | DEFAULT 1 | Trạng thái hoạt động của coupon |
-| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Coupon identifier |
+| `Code` | NVARCHAR(50) | UNIQUE, NOT NULL | Discount code string (e.g., SUMMER2026) |
+| `Description` | NVARCHAR(500) | NULL | Program description |
+| `DiscountType` | INT | NOT NULL | Discount type (0: Percentage, 1: Fixed Amount) |
+| `DiscountValue` | DECIMAL(18, 2) | NOT NULL | Discounted value |
+| `MinOrderValue` | DECIMAL(18, 2) | NULL | Minimum booking value to apply |
+| `MaxDiscountAmount` | DECIMAL(18, 2) | NULL | Maximum discount amount for % type |
+| `StartDate` | DATETIME2 | NOT NULL | Validity start time |
+| `EndDate` | DATETIME2 | NOT NULL | Validity end time |
+| `UsageLimit` | INT | NULL | Maximum usage limit of the code |
+| `UsageCount` | INT | DEFAULT 0 | Actual usage count |
+| `IsActive` | BIT | DEFAULT 1 | Coupon active status |
+| `IsDeleted` | BIT | DEFAULT 0 | Soft delete flag |
 
-#### Bảng `dbo.Campaigns`
-Lưu trữ thông tin quảng cáo banner chiến dịch.
+#### Table `promotions.campaigns`
+Stores campaign banner advertising information.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh chiến dịch |
-| `Title` | NVARCHAR(255) | NOT NULL | Tiêu đề chiến dịch quảng cáo |
-| `BannerUrl` | NVARCHAR(500) | NULL | Ảnh quảng cáo chiến dịch |
-| `Content` | NVARCHAR(MAX) | NULL | Nội dung giới thiệu chiến dịch |
-| `StartDate` | DATETIME2 | NOT NULL | Thời gian bắt đầu chiến dịch |
-| `EndDate` | DATETIME2 | NOT NULL | Thời gian kết thúc chiến dịch |
-| `IsFeatured` | BIT | DEFAULT 0 | Đánh dấu nổi bật tại trang chủ |
-| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Campaign identifier |
+| `Title` | NVARCHAR(255) | NOT NULL | Advertising campaign title |
+| `BannerUrl` | NVARCHAR(500) | NULL | Campaign ad image |
+| `Content` | NVARCHAR(MAX) | NULL | Campaign introduction content |
+| `StartDate` | DATETIME2 | NOT NULL | Campaign start time |
+| `EndDate` | DATETIME2 | NOT NULL | Campaign end time |
+| `IsFeatured` | BIT | DEFAULT 0 | Mark as featured on homepage |
+| `IsDeleted` | BIT | DEFAULT 0 | Soft delete flag |
 
 ---
 
-### 2.5. Phân hệ Đánh giá & Phản hồi (`dbo`)
-Lưu nhận xét thực tế từ phía khách hàng sau trải nghiệm dịch vụ.
+### 2.5. Reviews & Feedback Module (`interactions`)
+Stores actual reviews from customers after experiencing the service.
 
-#### Bảng `dbo.Reviews`
-Đánh giá chất lượng dịch vụ của hãng bay hoặc chuyến bay cụ thể.
+#### Table `interactions.reviews`
+Service quality reviews for airlines or specific flights.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh đánh giá |
-| `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Users(Id) | Người đánh giá |
-| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Airlines(Id) | Hãng hàng không được đánh giá |
-| `FlightId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Flights(Id) | Chuyến bay cụ thể được đánh giá |
-| `Rating` | INT | CHECK (1-5), NOT NULL | Xếp hạng số sao (từ 1 đến 5) |
-| `Comment` | NVARCHAR(MAX) | NULL | Nhận xét chi tiết của hành khách |
-| `IsVerifiedPurchase` | BIT | DEFAULT 0 | Trạng thái người dùng đã thực hiện bay thực tế |
-| `IsHidden` | BIT | DEFAULT 0 | Quản trị viên ẩn bài đánh giá (spam, thô tục) |
-| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian đánh giá |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Review identifier |
+| `UserId` | UNIQUEIDENTIFIER | FOREIGN KEY -> users.users(Id) | Reviewer |
+| `AirlineId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.airlines(Id) | Reviewed airline |
+| `FlightId` | UNIQUEIDENTIFIER | FOREIGN KEY -> flights.flights(Id) | Specific reviewed flight |
+| `Rating` | INT | CHECK (1-5), NOT NULL | Star rating (from 1 to 5) |
+| `Comment` | NVARCHAR(MAX) | NULL | Detailed passenger comment |
+| `IsVerifiedPurchase` | BIT | DEFAULT 0 | Status if user actually flew |
+| `IsHidden` | BIT | DEFAULT 0 | Admin hid the review (spam, vulgar) |
+| `IsDeleted` | BIT | DEFAULT 0 | Soft delete flag |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Review time |
 
-#### Bảng `dbo.ChatMessages`
-Lưu trữ tin nhắn trò chuyện giữa khách hàng và nhân viên hỗ trợ.
+#### Table `interactions.chat_messages`
+Stores chat messages between customers and support staff.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh tin nhắn |
-| `AirlineId` | UNIQUEIDENTIFIER | NOT NULL | ID hãng bay liên quan |
-| `SenderRole` | NVARCHAR(50) | NOT NULL | Vai trò người gửi (Customer, Staff) |
-| `SenderName` | NVARCHAR(255) | NOT NULL | Tên người gửi |
-| `CustomerConnectionId` | NVARCHAR(255) | NULL | Connection ID của khách hàng (SignalR) |
-| `StaffConnectionId` | NVARCHAR(255) | NULL | Connection ID của nhân viên (SignalR) |
-| `Content` | NVARCHAR(MAX) | NOT NULL | Nội dung tin nhắn |
-| `SentAt` | DATETIME2 | NOT NULL | Thời gian gửi tin nhắn |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Message identifier |
+| `AirlineId` | UNIQUEIDENTIFIER | NOT NULL | Related airline ID |
+| `SenderRole` | NVARCHAR(50) | NOT NULL | Sender role (Customer, Staff) |
+| `SenderName` | NVARCHAR(255) | NOT NULL | Sender name |
+| `CustomerConnectionId` | NVARCHAR(255) | NULL | Customer Connection ID (SignalR) |
+| `StaffConnectionId` | NVARCHAR(255) | NULL | Staff Connection ID (SignalR) |
+| `Content` | NVARCHAR(MAX) | NOT NULL | Message content |
+| `SentAt` | DATETIME2 | NOT NULL | Message sent time |
 
 ---
 
-### 2.6. Phân hệ CMS Nội dung (`dbo`)
-Phân phối bài viết du lịch hàng không, cẩm nang và blog địa điểm.
+### 2.6. Content CMS Module (`cms`)
+Distributes aviation travel articles, guides, and destination blogs.
 
-#### Bảng `dbo.Categories`
-Các danh mục nội dung bài viết.
+#### Table `cms.categories`
+Article content categories.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh danh mục |
-| `Name` | NVARCHAR(100) | NOT NULL | Tên danh mục (VD: Mẹo du lịch, Điểm đến) |
-| `Slug` | NVARCHAR(100) | UNIQUE, NOT NULL | Đường dẫn thân thiện SEO của danh mục |
-| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Category identifier |
+| `Name` | NVARCHAR(100) | NOT NULL | Category name (e.g., Travel Tips, Destinations) |
+| `Slug` | NVARCHAR(100) | UNIQUE, NOT NULL | SEO-friendly category URL |
+| `IsDeleted` | BIT | DEFAULT 0 | Soft delete flag |
 
-#### Bảng `dbo.Articles`
-Lưu trữ thông tin chi tiết các bài báo của trang quản trị nội dung.
+#### Table `cms.articles`
+Stores detailed information of articles in the content management page.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh bài viết |
-| `CategoryId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Categories(Id) | Danh mục bài viết trực thuộc |
-| `AuthorId` | UNIQUEIDENTIFIER | FOREIGN KEY -> Users(Id) | Tác giả viết bài |
-| `Title` | NVARCHAR(255) | NOT NULL | Tiêu đề bài viết |
-| `Slug` | NVARCHAR(255) | UNIQUE, NOT NULL | Đường dẫn thân thiện SEO của bài viết |
-| `Summary` | NVARCHAR(500) | NULL | Mô tả ngắn tóm tắt bài viết |
-| `Content` | NVARCHAR(MAX) | NOT NULL | Nội dung bài viết chi tiết dạng HTML/Markdown |
-| `ThumbnailUrl` | NVARCHAR(500) | NULL | Ảnh thu nhỏ hiển thị bài viết |
-| `PublishedAt` | DATETIME2 | NULL | Thời gian xuất bản bài viết lên trang chủ |
-| `Status` | INT | DEFAULT 0, NOT NULL | Trạng thái bài viết (0: Nháp, 1: Đã duyệt, 2: Lưu trữ) |
-| `ViewCount` | INT | DEFAULT 0 | Tổng lượt xem bài viết |
-| `IsDeleted` | BIT | DEFAULT 0 | Cờ xóa mềm |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời điểm tạo bài viết |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Article identifier |
+| `CategoryId` | UNIQUEIDENTIFIER | FOREIGN KEY -> cms.categories(Id) | Parent category |
+| `AuthorId` | UNIQUEIDENTIFIER | FOREIGN KEY -> users.users(Id) | Article author |
+| `Title` | NVARCHAR(255) | NOT NULL | Article title |
+| `Slug` | NVARCHAR(255) | UNIQUE, NOT NULL | SEO-friendly article URL |
+| `Summary` | NVARCHAR(500) | NULL | Short article summary |
+| `Content` | NVARCHAR(MAX) | NOT NULL | Detailed article content in HTML/Markdown |
+| `ThumbnailUrl` | NVARCHAR(500) | NULL | Article thumbnail image |
+| `PublishedAt` | DATETIME2 | NULL | Publish time to homepage |
+| `Status` | INT | DEFAULT 0, NOT NULL | Article status (0: Draft, 1: Approved, 2: Archived) |
+| `ViewCount` | INT | DEFAULT 0 | Total article views |
+| `IsDeleted` | BIT | DEFAULT 0 | Soft delete flag |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Article creation time |
 
 ---
 
-### 2.7. Phân hệ Nhật ký Hệ thống (`dbo`)
-Ghi log hoạt động hệ thống.
+### 2.7. System Logs Module (`logs`)
+Records system activity logs.
 
-#### Bảng `dbo.SystemLogs`
-Lưu trữ log hệ thống và lỗi runtime.
+#### Table `logs.system_logs`
+Stores system logs and runtime errors.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh log |
-| `Level` | NVARCHAR(50) | NOT NULL | Cấp độ log (Info, Warning, Error, Critical) |
-| `Message` | NVARCHAR(MAX) | NOT NULL | Nội dung log |
-| `Source` | NVARCHAR(255) | NULL | Nguồn ghi log (Application, Module...) |
-| `Exception` | NVARCHAR(MAX) | NULL | Chi tiết ngoại lệ |
-| `UserId` | UNIQUEIDENTIFIER | NULL | ID người dùng thực hiện (nếu có) |
-| `AirlineId` | UNIQUEIDENTIFIER | NULL | ID hãng bay liên quan (nếu có) |
-| `IpAddress` | NVARCHAR(50) | NULL | Địa chỉ IP |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian ghi log |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Log identifier |
+| `Level` | NVARCHAR(50) | NOT NULL | Log level (Info, Warning, Error, Critical) |
+| `Message` | NVARCHAR(MAX) | NOT NULL | Log content |
+| `Source` | NVARCHAR(255) | NULL | Log source (Application, Module...) |
+| `Exception` | NVARCHAR(MAX) | NULL | Exception details |
+| `UserId` | UNIQUEIDENTIFIER | NULL | Executing user ID (if any) |
+| `AirlineId` | UNIQUEIDENTIFIER | NULL | Related airline ID (if any) |
+| `IpAddress` | NVARCHAR(50) | NULL | IP address |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Log recording time |
 
 ---
 
-### 2.8. Phân hệ Thông báo (`dbo`)
-Quản lý mẫu thông báo và hàng đợi gửi thông báo (Email, SMS, Push, SignalR).
+### 2.8. Notifications Module (`notifications`)
+Manages notification templates and delivery queues (Email, SMS, Push, SignalR).
 
-#### Bảng `dbo.NotificationTemplates`
-Lưu trữ các mẫu thông báo (template) có sẵn cho từng loại sự kiện.
+#### Table `notifications.notification_templates`
+Stores available notification templates for each event type.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh template |
-| `Code` | NVARCHAR(100) | UNIQUE, NOT NULL | Mã template (VD: 'BOOKING_CONFIRMED', 'FLIGHT_DELAYED') |
-| `Subject` | NVARCHAR(255) | NOT NULL | Tiêu đề thông báo |
-| `BodyTemplate` | NVARCHAR(MAX) | NOT NULL | Nội dung template (hỗ trợ placeholder) |
-| `Language` | NVARCHAR(10) | DEFAULT 'vi' | Ngôn ngữ template |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Template identifier |
+| `Code` | NVARCHAR(100) | UNIQUE, NOT NULL | Template code (e.g., 'BOOKING_CONFIRMED', 'FLIGHT_DELAYED') |
+| `Subject` | NVARCHAR(255) | NOT NULL | Notification subject |
+| `BodyTemplate` | NVARCHAR(MAX) | NOT NULL | Template content (supports placeholders) |
+| `Language` | NVARCHAR(10) | DEFAULT 'vi' | Template language |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Creation time |
 
-#### Bảng `dbo.Notifications`
-Lưu trữ thông báo đã gửi hoặc chờ gửi đến người dùng.
+#### Table `notifications.notifications`
+Stores sent or pending notifications to users.
 
-| Tên Cột | Kiểu Dữ Liệu | Ràng buộc | Mô tả |
+| Column Name | Data Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Định danh thông báo |
-| `UserId` | UNIQUEIDENTIFIER | NULL, FK -> Users(Id) | Người nhận (nếu có tài khoản) |
-| `Recipient` | NVARCHAR(255) | NOT NULL | Email hoặc số điện thoại |
-| `Subject` | NVARCHAR(255) | NULL | Tiêu đề |
-| `Content` | NVARCHAR(MAX) | NOT NULL | Nội dung thông báo |
-| `Type` | INT | NOT NULL | Loại: 0: Email, 1: SMS, 2: Push, 3: SignalR |
-| `Status` | INT | DEFAULT 0 | Trạng thái: 0: Pending, 1: Sent, 2: Failed |
-| `RetryCount` | INT | DEFAULT 0 | Số lần thử gửi lại |
-| `ErrorMessage` | NVARCHAR(MAX) | NULL | Thông báo lỗi (nếu gửi thất bại) |
-| `SentAt` | DATETIME2 | NULL | Thời điểm gửi thành công |
-| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Thời gian tạo |
+| `Id` | UNIQUEIDENTIFIER | PRIMARY KEY | Notification identifier |
+| `UserId` | UNIQUEIDENTIFIER | NULL, FK -> users.users(Id) | Recipient (if has account) |
+| `Recipient` | NVARCHAR(255) | NOT NULL | Email or phone number |
+| `Subject` | NVARCHAR(255) | NULL | Subject |
+| `Content` | NVARCHAR(MAX) | NOT NULL | Notification content |
+| `Type` | INT | NOT NULL | Type: 0: Email, 1: SMS, 2: Push, 3: SignalR |
+| `Status` | INT | DEFAULT 0 | Status: 0: Pending, 1: Sent, 2: Failed |
+| `RetryCount` | INT | DEFAULT 0 | Retry attempts |
+| `ErrorMessage` | NVARCHAR(MAX) | NULL | Error message (if failed) |
+| `SentAt` | DATETIME2 | NULL | Successful send time |
+| `CreatedAt` | DATETIME2 | DEFAULT GETUTCDATE() | Creation time |
 
 ---
 
-## 3. Indexes hiệu năng
+## 3. Performance Indexes
 
-Các chỉ mục được tạo nhằm tối ưu tốc độ truy vấn cho các bảng có khối lượng giao dịch lớn.
+Indexes are created to optimize query speed for tables with high transaction volumes.
 
-| Tên Index | Bảng | Cột | Mục đích |
+| Index Name | Table | Column | Purpose |
 | :--- | :--- | :--- | :--- |
-| `IX_Flights_Departure` | flights.Flights | DepartureTime | Tra cứu chuyến bay theo giờ khởi hành |
-| `IX_Flights_Route` | flights.Flights | RouteId | Lọc chuyến bay theo tuyến đường |
-| `IX_Bookings_Pnr` | dbo.Bookings | PnrCode | Tra cứu đơn đặt chỗ theo mã PNR |
-| `IX_Bookings_User` | dbo.Bookings | UserId | Liệt kê đơn đặt chỗ theo người dùng |
-| `IX_Tickets_Number` | dbo.Tickets | TicketNumber | Tra cứu vé theo số vé điện tử |
-| `IX_Notifications_User` | dbo.Notifications | UserId | Lấy danh sách thông báo của người dùng |
+| `IX_Flights_Departure` | flights.flights | DepartureTime | Lookup flights by departure time |
+| `IX_Flights_Route` | flights.flights | RouteId | Filter flights by route |
+| `IX_Bookings_Pnr` | bookings.bookings | PnrCode | Lookup booking by PNR code |
+| `IX_Bookings_User` | bookings.bookings | UserId | List bookings by user |
+| `IX_Tickets_Number` | bookings.tickets | TicketNumber | Lookup ticket by e-ticket number |
+| `IX_Notifications_User` | notifications.notifications | UserId | Get user's notification list |
 
-## 4. Soft Delete (Xóa mềm)
+## 4. Soft Delete
 
-Hệ thống áp dụng Soft Delete pattern thông qua SQL Server INSTEAD OF DELETE triggers. Khi thực hiện lệnh DELETE, trigger sẽ tự động chuyển thành UPDATE `IsDeleted = 1` thay vì xóa vật lý.
+The system applies the Soft Delete pattern via SQL Server INSTEAD OF DELETE triggers. When executing a DELETE command, the trigger automatically converts it to an UPDATE `IsDeleted = 1` instead of physical deletion.
 
-Các bảng được áp dụng:
+Applied tables:
 
-| Schema | Bảng |
+| Schema | Tables |
 | :--- | :--- |
-| dbo | Users, Bookings, Coupons, Campaigns, Reviews, ChatMessages, Categories, Articles, SystemLogs, NotificationTemplates, Notifications |
-| flights | Airlines, Airports, Airplanes, Routes, Flights
+| users | users, roles, permissions, role_permissions, user_permission_scopes |
+| flights | airlines, airports, aircraft_models, aircraft_model_seat_templates, airplanes, airplane_seats, routes, flights, flight_seats |
+| bookings | bookings, passengers, tickets, payments |
+| promotions | coupons, campaigns |
+| interactions | reviews, chat_messages |
+| cms | categories, articles |
+| logs | system_logs |
+| notifications | notification_templates, notifications |
 
-Lợi ích của Soft Delete:
-- Giữ lại dữ liệu lịch sử cho mục đích kiểm toán (audit) và báo cáo.
-- Tránh lỗi vi phạm khóa ngoại (FK violation) khi dữ liệu con đang được tham chiếu.
-- Dễ dàng khôi phục (restore) dữ liệu khi cần thiết.
+Benefits of Soft Delete:
+- Retains historical data for audit and reporting purposes.
+- Avoids foreign key (FK) violation errors when child data is being referenced.
+- Easy to restore data when necessary.

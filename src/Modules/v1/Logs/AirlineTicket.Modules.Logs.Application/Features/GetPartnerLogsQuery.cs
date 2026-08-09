@@ -20,7 +20,8 @@ public record GetPartnerLogsQuery(
     int PageIndex = 1, 
     int PageSize = 10,
     string? Level = null,
-    string? Search = null) : IQuery<PagedResult<LogDto>>;
+    string? Search = null,
+    DateTime? Date = null) : IQuery<PagedResult<LogDto>>;
 
 /// <summary>
 /// Handles the <see cref="GetPartnerLogsQuery"/> to retrieve partner logs.
@@ -52,6 +53,7 @@ public class GetPartnerLogsQueryHandler : IQueryHandler<GetPartnerLogsQuery, Pag
             request.AirlineId, 
             request.Level, 
             request.Search, 
+            request.Date,
             cancellationToken);
     }
 }

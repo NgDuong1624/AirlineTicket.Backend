@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Auth;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Auth;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Notifications.Application.Features.Commands;
 using AirlineTicket.Modules.Notifications.Application.Features.Queries;
@@ -146,26 +147,6 @@ public class NotificationEndpoints : IEndpoint
             .Produces(404);
 
         // ==========================================
-        // ADMIN NOTIFICATION ENDPOINTS
-        // ==========================================
-
-        // GET /api/admin/notifications — Get all notifications (Admin)
-        adminGroup.MapGet("/", async Task<IResult> (
-                [FromQuery] int pageNumber,
-                [FromQuery] int pageSize,
-                [FromQuery] string? locale,
-                [FromServices] ISender sender,
-                CancellationToken ct) =>
-            {
-                var query = new GetAllNotificationsQuery(pageNumber == 0 ? 1 : pageNumber, pageSize == 0 ? 10 : pageSize, locale ?? "en");
-                var result = await sender.Send(query, ct);
-                return Results.Ok(result);
-            })
-            .WithName("GetAllNotifications")
-            .WithSummary("Get all notifications (Admin)")
-            .Produces(200);
-
-        // ==========================================
         // TEMPLATE CRUD ENDPOINTS (i18n)
         // ==========================================
         var templateGroup = adminGroup.MapGroup("/templates");
@@ -198,12 +179,6 @@ public class NotificationEndpoints : IEndpoint
             .Produces(200)
             .Produces(404);
 
-        // POST /api/admin/notifications/templates — Create template (DISABLED: Managed via core database seeds)
-        templateGroup.MapPost("/", () => Results.Problem("Method not allowed. Templates are managed via core database seeds.", statusCode: 405))
-            .WithName("CreateTemplate")
-            .WithSummary("Create a new notification template (Disabled)")
-            .Produces(405);
-
         // PUT /api/admin/notifications/templates/{id} — Update template
         templateGroup.MapPut("/{id:guid}", async (
                 Guid id,
@@ -217,7 +192,7 @@ public class NotificationEndpoints : IEndpoint
                     return Results.BadRequest($"Invalid language. Allowed locales: {string.Join(", ", allowedLocales)}");
                 }
 
-                var command = new UpdateTemplateCommand(id, request.Code, request.Subject, request.BodyTemplate, request.Language);
+                var command = new UpdateTemplateCommand(id, request.Subject, request.BodyTemplate, request.Language);
                 var result = await sender.Send(command, ct);
                 return result ? Results.NoContent() : Results.NotFound();
             })
@@ -226,14 +201,7 @@ public class NotificationEndpoints : IEndpoint
             .Produces(204)
             .Produces(400)
             .Produces(404);
-
-        // DELETE /api/admin/notifications/templates/{id} — Delete template (DISABLED: Managed via core database seeds)
-        templateGroup.MapDelete("/{id:guid}", () => Results.Problem("Method not allowed. Templates are managed via core database seeds.", statusCode: 405))
-            .WithName("DeleteTemplate")
-            .WithSummary("Delete a notification template (Disabled)")
-            .Produces(405);
     }
 }
 
-public record CreateTemplateRequest(string Code, string Subject, string BodyTemplate, string Language);
-public record UpdateTemplateRequest(string Code, string Subject, string BodyTemplate, string Language);
+public record UpdateTemplateRequest(string Subject, string BodyTemplate, string Language);

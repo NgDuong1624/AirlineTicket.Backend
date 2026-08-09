@@ -21,7 +21,8 @@ public record GetAdminLogsQuery(
     string? Level = null,
     string? Search = null,
     Guid? AirlineId = null,
-    bool? IsSystemLog = null) : IQuery<PagedResult<LogDto>>;
+    bool? IsSystemLog = null,
+    DateTime? Date = null) : IQuery<PagedResult<LogDto>>;
 
 /// <summary>
 /// Handles the <see cref="GetAdminLogsQuery"/> to retrieve administrative logs.
@@ -54,6 +55,7 @@ public class GetAdminLogsQueryHandler : IQueryHandler<GetAdminLogsQuery, PagedRe
             request.Level, 
             request.Search, 
             request.IsSystemLog, 
+            request.Date,
             cancellationToken);
     }
 }

@@ -19,10 +19,8 @@ public interface INotificationRepository
 
 public interface ITemplateRepository
 {
-    Task AddAsync(NotificationTemplate template);
     Task<NotificationTemplate?> GetByIdAsync(Guid id);
     Task<List<NotificationTemplate>> GetAllAsync();
     Task UpdateAsync(NotificationTemplate template);
-    Task DeleteAsync(NotificationTemplate template);
     Task SaveChangesAsync();
 }

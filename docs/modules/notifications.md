@@ -37,15 +37,17 @@ Represents an individual in-app alert.
 ### 1. Domain Layer (`Modules/v1/Notifications`)
 - `Notification` entity.
 - `NotificationSeverity` enum.
+- `NotificationTemplate` entity.
 - `INotificationRepository`.
+- `ITemplateRepository`.
 
 ### 2. Infrastructure Layer (`Modules/v1/Notifications`)
 - `NotificationRepository` (EF Core).
 - Entity Framework mapping for `Notification`.
 
 ### 3. Application Layer (`Modules/v1/Notifications`)
-- **Commands**: `CreateNotificationCommand`, `MarkNotificationAsReadCommand`, `MarkAllNotificationsAsReadCommand`, `DeleteNotificationCommand`.
-- **Queries**: `GetUnreadNotificationCountQuery`, `GetNotificationsQuery` (Paginated).
+- **Commands**: `CreateNotificationCommand`, `MarkNotificationAsReadCommand`, `MarkAllNotificationsAsReadCommand`, `DeleteNotificationCommand`, `UpdateTemplateCommand`.
+- **Queries**: `GetUnreadNotificationCountQuery`, `GetNotificationsQuery` (Paginated), `GetTemplatesQuery`, `GetTemplateByIdQuery`.
 - **Event Handlers**: Listen to domain events to trigger `CreateNotificationCommand`.
 
 ### 4. Real-time Layer (`AirlineTicket.SignalR`)
@@ -67,6 +69,9 @@ Represents an individual in-app alert.
 | **PUT** | `/api/v1/notifications/{id}/read` | Authenticated | Marks a specific notification as read. |
 | **PUT** | `/api/v1/notifications/read-all` | Authenticated | Marks all notifications as read for the current user. |
 | **DELETE** | `/api/v1/notifications/{id}` | Authenticated | Soft deletes a notification. |
+| **GET** | `/api/admin/notifications/templates` | AdminOnly | Retrieves all notification templates. |
+| **GET** | `/api/admin/notifications/templates/{id}` | AdminOnly | Retrieves a notification template by ID. |
+| **PUT** | `/api/admin/notifications/templates/{id}` | AdminOnly | Updates an existing notification template. |
 
 ---
 

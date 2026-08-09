@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
@@ -29,7 +30,12 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<
 
         if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.PasswordHash))
         {
-            return Result.Failure<LoginResponse>(new Error("UNAUTHORIZED", "Invalid email or password."));
+            return Result.Failure<LoginResponse>(new Error(EndpointErrorCodes.UNAUTHORIZED, "Invalid email or password."));
+        }
+
+        if (!user.IsActive)
+        {
+            return Result.Failure<LoginResponse>(new Error(EndpointErrorCodes.UNAUTHORIZED, "Invalid email or password."));
         }
 
         var tokens = _jwtService.GenerateToken(user);

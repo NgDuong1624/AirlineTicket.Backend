@@ -17,11 +17,6 @@ public class TemplateRepository : ITemplateRepository
         _context = context;
     }
 
-    public async Task AddAsync(NotificationTemplate template)
-    {
-        await _context.NotificationTemplates.AddAsync(template);
-    }
-
     public async Task<NotificationTemplate?> GetByIdAsync(Guid id)
     {
         return await _context.NotificationTemplates.FindAsync(id);
@@ -35,12 +30,6 @@ public class TemplateRepository : ITemplateRepository
     public async Task UpdateAsync(NotificationTemplate template)
     {
         _context.NotificationTemplates.Update(template);
-        await Task.CompletedTask;
-    }
-
-    public async Task DeleteAsync(NotificationTemplate template)
-    {
-        _context.NotificationTemplates.Remove(template);
         await Task.CompletedTask;
     }
 

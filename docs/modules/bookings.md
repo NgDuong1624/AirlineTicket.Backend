@@ -85,7 +85,7 @@ Represents the payment transaction details.
 |--------|------|------|-------------|
 | **POST** | `/api/bookings` | None | Create a new booking (reserves seats and saves details). |
 | **GET** | `/api/bookings/{id}` | None | Get booking details by ID. |
-| **GET** | `/api/bookings/search?pnr={pnr}&email={email}` | None | Search for a booking using PNR code and contact email. |
+| **GET** | `/api/bookings/search?pnr={pnr}` | None | Search for a booking using PNR code. |
 | **POST** | `/api/bookings/{id}/pay` | None | Process payment for a pending booking. |
 | **GET** | `/api/tickets/{id}` | None | Retrieve e-ticket details. |
 | **GET** | `/api/bookings/my-bookings` | User | Retrieve booking history for the logged-in user. |
