@@ -8,18 +8,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace AirlineTicket.Modules.Flights.Application.UnitTests;
+namespace AirlineTicket.Modules.Flights.Application.UnitTests.SearchFlights;
 
-public class FlightHandlersTests
+public class SearchFlightsQueryHandlerTests
 {
     private readonly Mock<IFlightRepository> _flightRepoMock;
 
-    public FlightHandlersTests()
+    public SearchFlightsQueryHandlerTests()
     {
         _flightRepoMock = new Mock<IFlightRepository>();
     }
 
-    // ======================= SearchFlightsQueryHandler Tests =======================
     [Fact]
     public async Task SearchFlightsQueryHandler_ShouldReturnMatchingFlights()
     {
@@ -134,89 +133,6 @@ public class FlightHandlersTests
             "USD",
             1,
             10,
-            It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    // ======================= GetTrendingFlightsQueryHandler Tests =======================
-    [Fact]
-    public async Task GetTrendingFlightsQueryHandler_ShouldReturnTrendingFlights()
-    {
-        var handler = new GetTrendingFlightsQueryHandler(_flightRepoMock.Object);
-        var trending = new List<FlightDto>
-        {
-            new FlightDto { Id = Guid.NewGuid(), FlightNumber = "VN100", BasePrice = 200m },
-            new FlightDto { Id = Guid.NewGuid(), FlightNumber = "VJ200", BasePrice = 220m }
-        };
-
-        _flightRepoMock.Setup(x => x.GetTrendingAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(trending);
-
-        var result = await handler.Handle(new GetTrendingFlightsQuery(), CancellationToken.None);
-
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().NotBeNull();
-        result.Value.Items.Should().HaveCount(2);
-        result.Value.Items.Should().Contain(f => f.FlightNumber == "VN100");
-    }
-
-    // ======================= GetFlightByIdQueryHandler Tests =======================
-    [Fact]
-    public async Task GetFlightByIdQueryHandler_ShouldReturnFlight_WhenExists()
-    {
-        var handler = new GetFlightByIdQueryHandler(_flightRepoMock.Object);
-        var flightId = Guid.NewGuid();
-        var flight = new FlightDto
-        {
-            Id = flightId,
-            FlightNumber = "VN123",
-            BasePrice = 500m
-        };
-
-        _flightRepoMock.Setup(x => x.GetByIdAsync(flightId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(flight);
-
-        var result = await handler.Handle(new GetFlightByIdQuery(flightId), CancellationToken.None);
-
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().NotBeNull();
-        result.Value.Id.Should().Be(flightId);
-        result.Value.FlightNumber.Should().Be("VN123");
-    }
-
-    [Fact]
-    public async Task GetFlightByIdQueryHandler_ShouldReturnNull_WhenNotExists()
-    {
-        var handler = new GetFlightByIdQueryHandler(_flightRepoMock.Object);
-        var flightId = Guid.NewGuid();
-
-        _flightRepoMock.Setup(x => x.GetByIdAsync(flightId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((FlightDto?)null);
-
-        var result = await handler.Handle(new GetFlightByIdQuery(flightId), CancellationToken.None);
-
-        result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("Flight.NotFound");
-    }
-
-    // ======================= CreateFlightCommandHandler Tests =======================
-    [Fact]
-    public async Task CreateFlightCommandHandler_ShouldReturnNewFlightId()
-    {
-        var handler = new CreateFlightCommandHandler(_flightRepoMock.Object);
-        var routeId = Guid.NewGuid();
-        var airplaneId = Guid.NewGuid();
-        var command = new CreateFlightCommand(routeId, airplaneId, "VJ123", 1000m, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
-
-        var expectedId = Guid.NewGuid();
-        _flightRepoMock.Setup(x => x.CreateAsync(It.IsAny<FlightDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedId);
-
-        var result = await handler.Handle(command, CancellationToken.None);
-
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(expectedId);
-        _flightRepoMock.Verify(x => x.CreateAsync(
-            It.Is<FlightDto>(f => f.FlightNumber == "VJ123" && f.BasePrice == 1000m),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }

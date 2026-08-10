@@ -83,8 +83,20 @@
   <Folder Name="/tests/UnitTest/Bookings/">
     <Project Path="tests/UnitTest/Modules/v1/Bookings/AirlineTicket.Modules.Bookings.Application.UnitTests/AirlineTicket.Modules.Bookings.Application.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tests/UnitTest/CMS/">
+    <Project Path="tests/UnitTest/Modules/v1/CMS/AirlineTicket.Modules.CMS.Application.UnitTests/AirlineTicket.Modules.CMS.Application.UnitTests.csproj" />
+  </Folder>
   <Folder Name="/tests/UnitTest/Flights/">
     <Project Path="tests/UnitTest/Modules/v1/Flights/AirlineTicket.Modules.Flights.Application.UnitTests/AirlineTicket.Modules.Flights.Application.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTest/Interactions/">
+    <Project Path="tests/UnitTest/Modules/v1/Interactions/AirlineTicket.Modules.Interactions.Application.UnitTests/AirlineTicket.Modules.Interactions.Application.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTest/Logs/">
+    <Project Path="tests/UnitTest/Modules/v1/Logs/AirlineTicket.Modules.Logs.Application.UnitTests/AirlineTicket.Modules.Logs.Application.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTest/Notifications/">
+    <Project Path="tests/UnitTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Application.UnitTests/AirlineTicket.Modules.Notifications.Application.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/UnitTest/Promotions/">
     <Project Path="tests/UnitTest/Modules/v1/Promotions/AirlineTicket.Modules.Promotions.Application.UnitTests/AirlineTicket.Modules.Promotions.Application.UnitTests.csproj" />

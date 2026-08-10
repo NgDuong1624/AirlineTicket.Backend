@@ -1,7 +1,5 @@
 using AirlineTicket.Modules.Promotions.Application.Contracts;
-using AirlineTicket.Modules.Promotions.Application.Features.Admin;
 using AirlineTicket.Modules.Promotions.Application.Features.Public;
-using AirlineTicket.BuildingBlocks.Caching;
 using FluentAssertions;
 using Moq;
 using System;
@@ -9,13 +7,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace AirlineTicket.Modules.Promotions.Application.UnitTests;
+namespace AirlineTicket.Modules.Promotions.Application.UnitTests.ApplyPromotion;
 
-public class PromotionHandlersTests
+public class ApplyPromotionCommandHandlerTests
 {
     private readonly Mock<IPromotionRepository> _promoRepoMock;
 
-    public PromotionHandlersTests()
+    public ApplyPromotionCommandHandlerTests()
     {
         _promoRepoMock = new Mock<IPromotionRepository>();
     }
@@ -45,23 +43,5 @@ public class PromotionHandlersTests
         result.IsSuccess.Should().BeTrue();
         result.Value.DiscountAmount.Should().Be(100m);
         result.Value.FinalAmount.Should().Be(900m);
-    }
-
-    [Fact]
-    public async Task CreatePromotionCommandHandler_ShouldCreatePromotion()
-    {
-        var handler = new CreatePromotionCommandHandler(_promoRepoMock.Object, Mock.Of<ICacheService>());
-        var command = new CreatePromotionCommand("Summer Sale", "SUMMER", "Percentage", 10, 100, DateTime.UtcNow, DateTime.UtcNow.AddMonths(1));
-
-        var expectedId = Guid.NewGuid();
-        _promoRepoMock.Setup(x => x.CreateAsync(It.IsAny<PromotionDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(expectedId);
-
-        var result = await handler.Handle(command, CancellationToken.None);
-
-        result.Should().NotBeNull();
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(expectedId);
-        _promoRepoMock.Verify(x => x.CreateAsync(It.IsAny<PromotionDto>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }
