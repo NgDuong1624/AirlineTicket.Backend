@@ -1,9 +1,21 @@
 #!/bin/bash
 
+# Ensure relative paths resolve regardless of the caller's working directory
+cd "$(dirname "$0")"
+
 echo "Starting EF Core Migrations for AirlineTicket Modules..."
 
-# Export connection string for design-time DbContext factories
 CONN="$1"
+if [ -z "$CONN" ]; then
+  echo "Connection string required"
+  echo "Usage: $0 <connection_string>"
+  exit 1
+fi
+
+# Create database if it does not exist
+./database/scripts/create_db.sh "$CONN" || exit 1
+
+# Export connection string for design-time DbContext factories
 if [[ "$CONN" == postgres://* ]]; then
   # Convert postgres://user:pass@host:port/db to Host=host;Port=port;Database=db;Username=user;Password=pass
   # Handles passwords containing '@'
@@ -16,12 +28,28 @@ if [[ "$CONN" == postgres://* ]]; then
   DB="${HOSTPORTDB#*/}"
   HOST="${HOSTPORT%%:*}"
   PORT="${HOSTPORT##*:}"
-  export ConnectionStrings__DefaultConnection="Host=$HOST;Port=$PORT;Database=$DB;Username=$USER;Password=$PASS;"
+  export ConnectionStrings__DefaultConnection="Host=$HOST;Port=$PORT;Database=$DB;Username=$USER;Password=$PASS;SearchPath=public;"
   PSQL_CONN="host=$HOST port=$PORT dbname=$DB user=$USER password=$PASS"
 else
   export ConnectionStrings__DefaultConnection="$CONN"
   PSQL_CONN="$CONN"
 fi
+
+# ==============================================================================
+# BỔ SUNG: Tự động tạo các Schemas trong PostgreSQL để tránh lỗi "3F000"
+# ==============================================================================
+echo "Ensuring required PostgreSQL schemas exist..."
+PGPASSWORD="$PASS" psql -h "$HOST" -p "$PORT" -U "$USER" -d "$DB" -c "
+CREATE SCHEMA IF NOT EXISTS public;
+CREATE SCHEMA IF NOT EXISTS users;
+CREATE SCHEMA IF NOT EXISTS flights;
+CREATE SCHEMA IF NOT EXISTS bookings;
+CREATE SCHEMA IF NOT EXISTS promotions;
+CREATE SCHEMA IF NOT EXISTS interactions;
+CREATE SCHEMA IF NOT EXISTS cms;
+CREATE SCHEMA IF NOT EXISTS notifications;
+CREATE SCHEMA IF NOT EXISTS logs;
+" || { echo "Failed to create schemas"; exit 1; }
 
 # Update Flights Database
 echo "Updating Flights database..."
