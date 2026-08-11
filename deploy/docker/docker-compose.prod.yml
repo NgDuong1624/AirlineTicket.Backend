@@ -61,5 +61,10 @@ services:
       - AiService__ModelStore__ReasoningEffort=${AI_SERVICE_REASONING_EFFORT}
       - LuckyPenny__MediatR__LicenseKey=${LUCKY_PENNY_MEDIATR_LICENSE_KEY}
       - Google__ClientId=${GOOGLE_CLIENT_ID}
-    command: ["bash", "-c", "cd signalr && exec dotnet AirlineTicket.SignalR.dll"]
+      - Jwt__Secret=${JWT_SECRET}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - Jwt__KeyId=${JWT_KEY_ID}
+    command:
+      ["bash", "-c", "cd signalr && exec dotnet AirlineTicket.SignalR.dll"]
     restart: unless-stopped
