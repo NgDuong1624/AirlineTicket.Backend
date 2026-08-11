@@ -49,29 +49,44 @@ database/
             └── 01_test_airports.sql
 ```
 
-## Execution
+## Execution & How to Seed
 
-You can run individual seed scripts depending on your environment:
+You can run individual seed scripts depending on your environment. The connection string can be provided in PostgreSQL URI format (`postgres://user:pass@host:port/dbname`) or standard key-value format (`Host=...;Database=...;...`).
+
+### 0. Create Database (If not exists)
+
+```bash
+./scripts/create_db.sh "postgres://user:pass@localhost:5432/airline_ticket"
+```
 
 ### 1. Core Data (Required for all environments)
+
+This seeds essential reference data like system admin, roles, permissions, airlines, airports, etc.
+
 ```bash
 ./scripts/run_seed_core.sh "postgres://user:pass@localhost:5432/airline_ticket"
 ```
 
 ### 2. Development Data (Sample data for local dev/demo)
-*Note: Requires Core data to be seeded first.*
+
+_Note: Requires Core data to be seeded first._
+
 ```bash
 ./scripts/run_seed_dev.sh "postgres://user:pass@localhost:5432/airline_ticket"
 ```
 
 ### 3. Test Data (Minimal data for integration/unit tests)
-*Note: Requires Core data to be seeded first.*
+
+_Note: Requires Core data to be seeded first._
+
 ```bash
 ./scripts/run_seed_test.sh "postgres://user:pass@localhost:5432/airline_ticket"
 ```
 
 ### 4. Run All (Core + Development)
-To apply both Core and Development seeds in one command:
+
+To apply both Core and Development seeds in one command, ideal for setting up a fresh local environment:
+
 ```bash
 ./run_seeds.sh "postgres://user:pass@localhost:5432/airline_ticket"
 ```

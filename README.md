@@ -8,61 +8,67 @@ A modular monolith backend system for airline ticket booking, built on **.NET 10
 
 The system follows a **Modular Monolith** architecture with 8 independent business modules, each adhering to Clean Architecture with 4 layers:
 
-| Layer | Responsibility |
-|-------|---------------|
-| **Domain** | Core entities, enums, domain events. Zero external dependencies. |
-| **Application** | Business logic (use cases), CQRS handlers (MediatR), validators (FluentValidation), DTOs. |
+| Layer              | Responsibility                                                                                       |
+| ------------------ | ---------------------------------------------------------------------------------------------------- |
+| **Domain**         | Core entities, enums, domain events. Zero external dependencies.                                     |
+| **Application**    | Business logic (use cases), CQRS handlers (MediatR), validators (FluentValidation), DTOs.            |
 | **Infrastructure** | Database access (EF Core DbContext), Fluent API config, repositories, external service integrations. |
-| **Api** | Minimal API endpoints (implements `IEndpoint` interface). |
+| **Api**            | Minimal API endpoints (implements `IEndpoint` interface).                                            |
 
 ### Modules
 
-| Module | Schema | Description |
-|--------|--------|-------------|
-| **Users** | `identity` | Authentication (JWT), user management, RBAC, dynamic permission scopes |
-| **Flights** | `flights` | Airlines, airports, airplanes, routes, flights, seat maps |
-| **Bookings** | `bookings` | Booking lifecycle, passengers, payments, e-tickets |
-| **Promotions** | `promotions` | Coupons (percentage/fixed), campaigns (admin & partner scoped) |
-| **Interactions** | `interactions` | AI Travel Assistant, reviews |
-| **CMS** | `cms` | Admin/Partner dashboards, system settings, articles |
-| **Logs** | `logs` | System logs, partner activity logs (paginated) |
-| **Notifications** | `notifications` | Email, SMS, Push notification templates and delivery |
+| Module            | Schema          | Description                                                            |
+| ----------------- | --------------- | ---------------------------------------------------------------------- |
+| **Users**         | `identity`      | Authentication (JWT), user management, RBAC, dynamic permission scopes |
+| **Flights**       | `flights`       | Airlines, airports, airplanes, routes, flights, seat maps              |
+| **Bookings**      | `bookings`      | Booking lifecycle, passengers, payments, e-tickets                     |
+| **Promotions**    | `promotions`    | Coupons (percentage/fixed), campaigns (admin & partner scoped)         |
+| **Interactions**  | `interactions`  | AI Travel Assistant, reviews                                           |
+| **CMS**           | `cms`           | Admin/Partner dashboards, system settings, articles                    |
+| **Logs**          | `logs`          | System logs, partner activity logs (paginated)                         |
+| **Notifications** | `notifications` | Email, SMS, Push notification templates and delivery                   |
 
 ### BuildingBlocks (Shared Infrastructure)
 
-| Component | Purpose |
-|-----------|---------|
-| **CQRS** | `ICommand`/`IQuery` + `ICommandHandler`/`IQueryHandler` via MediatR |
-| **LoggingBehavior** | Auto-logs MediatR request/response |
-| **CachingBehavior** | Auto-caches query results based on query attributes |
-| **ValidationBehavior** | Auto-validates input via FluentValidation before handler execution |
-| **CorrelationMiddleware** | Generates/propagates `X-Correlation-ID` for request tracing |
-| **RequestResponseLoggingMiddleware** | Logs HTTP request/response details |
-| **JWT Auth** | Bearer token authentication, supports SignalR query string tokens |
-| **DynamicPermissionPolicyProvider** | Dynamic authorization based on permission codes |
-| **AirlineResourceHandler** | Ensures Partner/Staff can only access their own airline's resources |
-| **ICacheService** | Abstraction over Redis Cloud with in-memory fallback |
+| Component                            | Purpose                                                             |
+| ------------------------------------ | ------------------------------------------------------------------- |
+| **CQRS**                             | `ICommand`/`IQuery` + `ICommandHandler`/`IQueryHandler` via MediatR |
+| **LoggingBehavior**                  | Auto-logs MediatR request/response                                  |
+| **CachingBehavior**                  | Auto-caches query results based on query attributes                 |
+| **ValidationBehavior**               | Auto-validates input via FluentValidation before handler execution  |
+| **CorrelationMiddleware**            | Generates/propagates `X-Correlation-ID` for request tracing         |
+| **RequestResponseLoggingMiddleware** | Logs HTTP request/response details                                  |
+| **JWT Auth**                         | Bearer token authentication, supports SignalR query string tokens   |
+| **DynamicPermissionPolicyProvider**  | Dynamic authorization based on permission codes                     |
+| **AirlineResourceHandler**           | Ensures Partner/Staff can only access their own airline's resources |
+| **ICacheService**                    | Abstraction over Redis Cloud with in-memory fallback                |
 
 ## Real-time (SignalR)
 
 ### SeatHub (`/hubs/seats`)
+
 - Groups clients by `flight-{flightId}` rooms
 - Broadcasts `SeatUpdated(flightId, seatNumber, isAvailable)` on seat status changes
 - **Anti-double-booking:** Atomic `ExecuteUpdateAsync` with `WHERE IsAvailable = 1` — no row/table locks
 
 ### SupportChatHub (`/hubs/support`)
+
 - Customer ↔ Staff live chat scoped by airline
 - Auto-assigns customers to least-busy staff of the same airline
 - Re-assigns customers when staff disconnects
 - In-memory session storage via `ConcurrentDictionary`
 
 ### NotificationHub (`/hubs/notifications`)
+
 - Real-time notification delivery to authenticated users
 - Requires JWT authentication (supports token in query string for WebSockets)
 
 ## Database
 
-**PostgreSQL** with 8 schemas as bounded contexts:
+**PostgreSQL** with 8 schemas as bounded contexts.
+
+For comprehensive details about the database schemas, seed data structure, and step-by-step setup guides, refer to the [Database README](database/README.md).
+
 - `users` (for identity)
 - `flights` (for flights module)
 - `bookings` (for bookings module)
@@ -73,6 +79,7 @@ The system follows a **Modular Monolith** architecture with 8 independent busine
 - `notifications` (for notifications module)
 
 ### Seed Data
+
 The database includes a modular seeding system to populate initial data. Seed files are organized into `core`, `development`, and `test` categories.
 
 - **`core/`**: Essential reference data (roles, permissions, airlines, airports, aircraft models, notification templates, system admin user). This data is critical for the system's basic operation.
@@ -80,6 +87,7 @@ The database includes a modular seeding system to populate initial data. Seed fi
 - **`test/`**: Minimal data sets specifically designed for integration and unit testing.
 
 ### Key Design Decisions
+
 - **Soft Delete** — `IsDeleted` column + PostgreSQL triggers (if applicable) or application-level handling
 - **Performance Indexes** — On `DepartureTime`, `RouteId`, `PnrCode`, `TicketNumber`, `UserId`
 - **UUID Primary Keys** — `UUID` for all entity IDs
@@ -106,6 +114,7 @@ Full interactive API documentation available at `/scalar/v1` when running.
 ## Setup
 
 ### Prerequisites
+
 - .NET 10 SDK
 - Postgres 16+
 - Redis (optional — falls back to in-memory cache)
@@ -127,6 +136,9 @@ Update `src/Api/AirlineTicket.Api/appsettings.json` with your Postgre connection
 ### Run
 
 ```bash
+# Create database if it does not exist
+./database/scripts/create_db.sh "postgres://postgres:Admin@123@localhost:5432/AirlineTicketDb"
+
 # Apply database migrations
 ./run_ef.sh "postgres://postgres:Admin@123@localhost:5432/AirlineTicketDb"
 
@@ -147,6 +159,7 @@ You have two options for running the application with Docker:
 
 **Option A: Connect to an external database**
 Requires database environment variables (`DB_HOST`, `DB_PASSWORD`, etc.) to be set in your `.env` file.
+
 ```bash
 # Local
 docker compose --env-file deploy/docker/.env.local -f deploy/docker/docker-compose.local.yml up -d --build
@@ -160,6 +173,7 @@ docker compose --env-file deploy/docker/.env.prod -f deploy/docker/docker-compos
 
 **Option B: Create a local PostgreSQL database container**
 Combines the base compose file with the `docker-compose.db.yml` override to spin up a PostgreSQL container alongside the API.
+
 ```bash
 # Local (API + Postgres)
 docker compose --env-file deploy/docker/.env.local -f deploy/docker/docker-compose.local.yml -f deploy/docker/docker-compose.db.yml up -d --build
@@ -173,23 +187,23 @@ docker compose --env-file deploy/docker/.env.prod -f deploy/docker/docker-compos
 
 ### Environment Variables (Docker)
 
-| Variable | Description |
-|----------|-------------|
-| `DB_HOST` | Database host (use `host.docker.internal` for external DB on host) |
-| `DB_PORT` | Database port (default: 5432) |
-| `DB_NAME` | Database name (default: AirlineTicketDb) |
-| `DB_USER` | Database user (default: postgres) |
-| `DB_PASSWORD` | Database password |
-| `DB_POOLING` | Enable connection pooling (default: true) |
-| `DB_MIN_POOL_SIZE` | Minimum connection pool size (default: 10) |
-| `DB_MAX_POOL_SIZE` | Maximum connection pool size (default: 100) |
-| `REDIS_CONNECTION_STRING` | Redis connection string |
-| `CORS_ORIGINS` | Allowed CORS origins (frontend URL) |
-| `AI_SERVICE_API_KEY` | AI API key |
-| `AI_SERVICE_BASE_URL` | AI API base URL |
-| `AI_SERVICE_MODEL` | AI model name |
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID |
-| `LUCKY_PENNY_MEDIATR_LICENSE_KEY` | MediatR license key |
+| Variable                          | Description                                                        |
+| --------------------------------- | ------------------------------------------------------------------ |
+| `DB_HOST`                         | Database host (use `host.docker.internal` for external DB on host) |
+| `DB_PORT`                         | Database port (default: 5432)                                      |
+| `DB_NAME`                         | Database name (default: AirlineTicketDb)                           |
+| `DB_USER`                         | Database user (default: postgres)                                  |
+| `DB_PASSWORD`                     | Database password                                                  |
+| `DB_POOLING`                      | Enable connection pooling (default: true)                          |
+| `DB_MIN_POOL_SIZE`                | Minimum connection pool size (default: 10)                         |
+| `DB_MAX_POOL_SIZE`                | Maximum connection pool size (default: 100)                        |
+| `REDIS_CONNECTION_STRING`         | Redis connection string                                            |
+| `CORS_ORIGINS`                    | Allowed CORS origins (frontend URL)                                |
+| `AI_SERVICE_API_KEY`              | AI API key                                                         |
+| `AI_SERVICE_BASE_URL`             | AI API base URL                                                    |
+| `AI_SERVICE_MODEL`                | AI model name                                                      |
+| `GOOGLE_CLIENT_ID`                | Google OAuth Client ID                                             |
+| `LUCKY_PENNY_MEDIATR_LICENSE_KEY` | MediatR license key                                                |
 
 ## Testing
 
@@ -245,3 +259,4 @@ AirlineTicket.Backend/
 │   ├── api/api-list.md                  # Complete API endpoint reference
 │   └── database/database_design.md      # Full database schema documentation
 └── tests/                               # Unit & Integration tests
+```
