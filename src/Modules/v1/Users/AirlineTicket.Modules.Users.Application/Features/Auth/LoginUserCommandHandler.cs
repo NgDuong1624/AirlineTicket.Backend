@@ -6,6 +6,7 @@ using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
+using AirlineTicket.Modules.Users.Application.Features.Admin;
 using MediatR;
 using Microsoft.Extensions.Configuration;
 
@@ -42,6 +43,20 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<
         user.LastLoginAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user, cancellationToken);
 
-        return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken));
+        var userDto = new UserDto(
+            user.Id,
+            user.Email,
+            user.FullName,
+            user.Phone,
+            user.Role.ToString(),
+            (int)user.Role,
+            user.AirlineId,
+            user.AirlineName,
+            user.AirlineLogoUrl,
+            user.IsActive,
+            user.CreatedAt.ToString("yyyy-MM-dd")
+        );
+
+        return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken, userDto));
     }
 }

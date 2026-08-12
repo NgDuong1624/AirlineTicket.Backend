@@ -5,6 +5,7 @@ using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
+using AirlineTicket.Modules.Users.Application.Features.Admin;
 using MediatR;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
@@ -31,6 +32,20 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, R
         var tokens = _jwtService.GenerateToken(user);
         await _userRepository.UpdateAsync(user, cancellationToken);
 
-        return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken));
+        var userDto = new UserDto(
+            user.Id,
+            user.Email,
+            user.FullName,
+            user.Phone,
+            user.Role.ToString(),
+            (int)user.Role,
+            user.AirlineId,
+            user.AirlineName,
+            user.AirlineLogoUrl,
+            user.IsActive,
+            user.CreatedAt.ToString("yyyy-MM-dd")
+        );
+
+        return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken, userDto));
     }
 }

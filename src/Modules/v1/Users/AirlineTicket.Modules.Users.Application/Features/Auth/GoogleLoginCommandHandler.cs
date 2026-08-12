@@ -11,10 +11,12 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.Modules.Users.Application.Features.Auth;
+using AirlineTicket.Modules.Users.Application.Features.Admin;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Result<TokenResponse>>
+public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Result<LoginResponse>>
 {
     private readonly IUserRepository _userRepository;
     private readonly IJwtService _jwtService;
@@ -30,7 +32,7 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
         _configuration = configuration;
     }
 
-    public async Task<Result<TokenResponse>> Handle(GoogleLoginCommand request, CancellationToken cancellationToken)
+    public async Task<Result<LoginResponse>> Handle(GoogleLoginCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -53,7 +55,7 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
 
             if (payload == null || string.IsNullOrEmpty(payload.Email))
             {
-                return Result.Failure<TokenResponse>(new Error(EndpointErrorCodes.UNAUTHORIZED, "Invalid Google token or email missing."));
+                return Result.Failure<LoginResponse>(new Error(EndpointErrorCodes.UNAUTHORIZED, "Invalid Google token or email missing."));
             }
 
             // Find user by GoogleId first, then by Email
@@ -115,15 +117,29 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
             // Persist rotated refresh token
             await _userRepository.UpdateAsync(user, cancellationToken);
 
-            return Result.Success(tokens);
+            var userDto = new UserDto(
+                user.Id,
+                user.Email,
+                user.FullName,
+                user.Phone,
+                user.Role.ToString(),
+                (int)user.Role,
+                user.AirlineId,
+                user.AirlineName,
+                user.AirlineLogoUrl,
+                user.IsActive,
+                user.CreatedAt.ToString("yyyy-MM-dd")
+            );
+
+            return Result.Success(new LoginResponse(tokens.AccessToken, tokens.RefreshToken, userDto));
         }
         catch (InvalidJwtException ex)
         {
-            return Result.Failure<TokenResponse>(new Error(EndpointErrorCodes.UNAUTHORIZED, $"Google token validation failed: {ex.Message}"));
+            return Result.Failure<LoginResponse>(new Error(EndpointErrorCodes.UNAUTHORIZED, $"Google token validation failed: {ex.Message}"));
         }
         catch (Exception ex)
         {
-            return Result.Failure<TokenResponse>(new Error(EndpointErrorCodes.INTERNAL_SERVER_ERROR, $"Google authentication failed: {ex.Message}"));
+            return Result.Failure<LoginResponse>(new Error(EndpointErrorCodes.INTERNAL_SERVER_ERROR, $"Google authentication failed: {ex.Message}"));
         }
     }
 }

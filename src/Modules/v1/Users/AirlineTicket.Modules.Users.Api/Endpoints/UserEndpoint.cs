@@ -37,7 +37,7 @@ public class UserEndpoint : IEndpoint
                 {
                     return result.ToErrorResult(statusCode: 401);
                 }
-                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
+                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken, user = result.Value.User });
             })
             .WithName("Login")
             .WithSummary("User login")
@@ -57,7 +57,7 @@ public class UserEndpoint : IEndpoint
                 {
                     return result.ToErrorResult(statusCode: 401);
                 }
-                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
+                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken, user = result.Value.User });
             })
             .WithName("GoogleLogin")
             .WithSummary("Google login")
@@ -144,7 +144,7 @@ public class UserEndpoint : IEndpoint
                 {
                     return result.ToErrorResult(statusCode: 401);
                 }
-                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken });
+                return Results.Ok(new { accessToken = result.Value.AccessToken, refreshToken = result.Value.RefreshToken, user = result.Value.User });
             })
             .WithName("Refresh")
             .WithSummary("Refresh access token")

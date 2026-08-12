@@ -4,7 +4,7 @@ using FluentValidation;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public record GoogleLoginCommand(string IdToken) : ICommand<Result<TokenResponse>>;
+public record GoogleLoginCommand(string IdToken) : ICommand<Result<LoginResponse>>;
 
 public class GoogleLoginCommandValidator : AbstractValidator<GoogleLoginCommand>
 {
