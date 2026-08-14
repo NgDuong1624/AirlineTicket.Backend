@@ -81,35 +81,35 @@ Represents the payment transaction details.
 ### Endpoints
 
 #### Public / Customer Endpoints
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **POST** | `/api/bookings` | None | Create a new booking (reserves seats and saves details). |
-| **GET** | `/api/bookings/{id}` | None | Get booking details by ID. |
-| **GET** | `/api/bookings/search?pnr={pnr}` | None | Search for a booking using PNR code. |
-| **POST** | `/api/bookings/{id}/pay` | None | Process payment for a pending booking. |
-| **GET** | `/api/tickets/{id}` | None | Retrieve e-ticket details. |
-| **GET** | `/api/bookings/my-bookings` | User | Retrieve booking history for the logged-in user. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **POST** | `/api/bookings` | None | Create a new booking (reserves seats and saves details). | `CreateBookingPayload { flightId: string, contactEmail: string, contactPhone?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }> }` | `Booking { id: string, userId: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, SpecialRequests?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }>, tickets: Array<{ id: string, ticketNumber: string, seatNumber: string, status: number }> }` |
+| **GET** | `/api/bookings/{id}` | None | Get booking details by ID. | None | `Booking { id: string, userId: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, SpecialRequests?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }>, tickets: Array<{ id: string, ticketNumber: string, seatNumber: string, status: number }> }` |
+| **GET** | `/api/bookings/search?pnr={pnr}` | None | Search for a booking using PNR code. | None (Query param `pnrCode: string`) | `Booking { id: string, userId: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, SpecialRequests?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }>, tickets: Array<{ id: string, ticketNumber: string, seatNumber: string, status: number }> }` |
+| **POST** | `/api/bookings/{id}/pay` | None | Process payment for a pending booking. | `{ paymentMethod: string, amount: number }` | `{ status: string, transactionId: string }` |
+| **GET** | `/api/tickets/{id}` | None | Retrieve e-ticket details. | None | `Ticket { id: string, bookingId: string, passengerId: string, flightId: string, seatId: string, ticketNumber: string, gate?: string, boardingTime?: string, status: number }` |
+| **GET** | `/api/bookings/my-bookings` | User | Retrieve booking history for the logged-in user. | None | `{ bookings: Booking[] }` |
 
 #### Staff Endpoints
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **POST** | `/api/staff/bookings` | PartnerOrStaff | Create a booking on behalf of a customer. |
-| **GET** | `/api/staff/sales` | PartnerOrStaff | List ticket sales for the staff's airline. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **POST** | `/api/staff/bookings` | PartnerOrStaff | Create a booking on behalf of a customer. | `StaffCreateBookingRequest { flightId: string, contactName: string, contactEmail: string, contactPhone?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }> }` | `StaffBookingResult { bookingId: string, pnrCode: string, totalPrice: number, seatNumbers: string[] }` |
+| **GET** | `/api/staff/sales` | PartnerOrStaff | List ticket sales for the staff's airline. | None (Query params `pageIndex: number, pageSize: number, search?: string, status?: string`) | `PagedResult<StaffSale> { items: StaffSale[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` where `StaffSale` is `{ id: string, bookingId: string, passengerName: string, flightNumber: string, route: string, departureAt?: string, seatClass: string, amount: number, status: string, bookedAt: string }` |
 
 #### Partner Endpoints
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **GET** | `/api/partner/bookings` | PartnerOnly | List bookings for the partner's airline. |
-| **PUT** | `/api/partner/bookings/{id}` | PartnerOnly | Update booking status. |
-| **GET** | `/api/partner/dashboard/sales-summary` | PartnerOnly | Get sales summary statistics. |
-| **GET** | `/api/partner/dashboard/occupancy-rates` | PartnerOnly | Get flight occupancy rates. |
-| **GET** | `/api/partner/dashboard/revenue-trends` | PartnerOnly | Get revenue trends over time. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/partner/bookings` | PartnerOnly | List bookings for the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<SystemBooking> { items: SystemBooking[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` where `SystemBooking` is `{ id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
+| **PUT** | `/api/partner/bookings/{id}` | PartnerOnly | Update booking status. | `BookingAdminPayload { flightId: string, passengerName: string, seatNumber: string, status: string }` | `SystemBooking { id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
+| **GET** | `/api/partner/dashboard/sales-summary` | PartnerOnly | Get sales summary statistics. | None (Query params `fromDate: string, toDate: string`) | `unknown (Sales summary data)` |
+| **GET** | `/api/partner/dashboard/occupancy-rates` | PartnerOnly | Get flight occupancy rates. | None (Query params `fromDate: string, toDate: string`) | `unknown (Occupancy rates data)` |
+| **GET** | `/api/partner/dashboard/revenue-trends` | PartnerOnly | Get revenue trends over time. | None (Query params `fromDate: string, toDate: string`) | `unknown (Revenue trends data)` |
 
 #### Admin Endpoints
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **GET** | `/api/admin/bookings` | AdminOnly | List all bookings in the system. |
-| **GET** | `/api/admin/bookings/{id}` | AdminOnly | Get details of any booking. |
-| **PUT** | `/api/admin/bookings/{id}` | AdminOnly | Update booking details. |
-| **PUT** | `/api/admin/bookings/{id}/status` | AdminOnly | Update booking status. |
-| **DELETE** | `/api/admin/bookings/{id}` | AdminOnly | Cancel a booking. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/admin/bookings` | AdminOnly | List all bookings in the system. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<SystemBooking> { items: SystemBooking[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **GET** | `/api/admin/bookings/{id}` | AdminOnly | Get details of any booking. | None | `SystemBooking { id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
+| **PUT** | `/api/admin/bookings/{id}` | AdminOnly | Update booking details. | `BookingAdminPayload { flightId: string, passengerName: string, seatNumber: string, status: string }` | `SystemBooking { id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
+| **PUT** | `/api/admin/bookings/{id}/status` | AdminOnly | Update booking status. | `{ status: string }` | `SystemBooking { id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
+| **DELETE** | `/api/admin/bookings/{id}` | AdminOnly | Cancel a booking. | None | `void` |

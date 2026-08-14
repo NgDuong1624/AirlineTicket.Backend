@@ -68,32 +68,32 @@ Intermediate table mapping roles to permissions.
 ### Endpoints
 
 #### Authentication Endpoints (`/api/auth`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **POST** | `/login` | None | Authenticate with email and password. Returns access and refresh tokens. |
-| **POST** | `/google` | None | Authenticate with Google ID token. Returns access and refresh tokens. |
-| **POST** | `/register` | None | Register a new customer account. |
-| **GET** | `/me` | Authenticated | Get the profile of the currently logged-in user. |
-| **POST** | `/refresh` | None | Refresh an expired access token using a valid refresh token. |
-| **POST** | `/logout` | Authenticated | Revoke the current session and invalidate the refresh token. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **POST** | `/login` | None | Authenticate with email and password. Returns access and refresh tokens. | `{ email: string, password?: string }` | `{ user: UserResponse { id: string, email: string, fullName: string, roleId: number, phone?: string, avatarUrl?: string, languagePreference?: string, lastLoginAt?: string, role?: string, status?: string, isActive?: boolean, airlineId?: string, airlineName?: string, createdAt: string, updatedAt: string }, accessToken: string }` |
+| **POST** | `/google` | None | Authenticate with Google ID token. Returns access and refresh tokens. | `{ idToken: string }` | `{ user: UserResponse, accessToken: string }` |
+| **POST** | `/register` | None | Register a new customer account. | `Record<string, unknown>` | `{ user: UserResponse, accessToken: string }` |
+| **GET** | `/me` | Authenticated | Get the profile of the currently logged-in user. | None | `User { id: string, email: string, emailConfirmed: boolean, fullName: string, phone?: string, avatarUrl?: string, languagePreference?: string, lastLoginAt?: string, role?: string, roleId: number, status?: string, isActive?: boolean, airlineId?: string, airlineName?: string, createdAt: string, updatedAt: string }` |
+| **POST** | `/refresh` | None | Refresh an expired access token using a valid refresh token. | `{ refreshToken: string }` | `{ accessToken: string }` |
+| **POST** | `/logout` | Authenticated | Revoke the current session and invalidate the refresh token. | None | `void` |
 
 #### Admin User Management (`/api/admin/users`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **GET** | `/` | AdminOnly | Get a paginated list of all users. |
-| **POST** | `/` | AdminOnly | Create a new user account (any role). |
-| **PUT** | `/{id}` | AdminOnly | Update user details. |
-| **GET** | `/{id}` | AdminOnly | Get details of a specific user. |
-| **DELETE** | `/{id}` | AdminOnly | Soft-delete a user account. |
-| **PATCH** | `/{id}/status` | AdminOnly | Toggle user active status (`IsActive`). |
-| **GET** | `/permissions` | AdminOnly | Get a paginated list of all permissions. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|-------------|------------|-------------|
+| **GET** | `/` | AdminOnly | Get a paginated list of all users. | None (Query params `search?: string, airlineId?: string, roleId?: number, pageIndex: number, pageSize: number`) | `PagedResult<User> { items: User[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/` | AdminOnly | Create a new user account (any role). | `Partial<User>` | `User` |
+| **PUT** | `/{id}` | AdminOnly | Update user details. | `Partial<User>` | `User` |
+| **GET** | `/{id}` | AdminOnly | Get details of a specific user. | None | `User` |
+| **DELETE** | `/{id}` | AdminOnly | Soft-delete a user account. | None | `void` |
+| **PATCH** | `/{id}/status` | AdminOnly | Toggle user active status (`IsActive`). | `{ isActive: number }` | `void` |
+| **GET** | `/permissions` | AdminOnly | Get a paginated list of all permissions. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Permission> { items: Permission[] { id: string, code: string, name: string, description?: string, isActive?: boolean }, totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
 
 #### Partner Staff Management (`/api/partner/staff`)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **GET** | `/` | PartnerOnly | List staff members for the partner's airline. |
-| **POST** | `/` | PartnerOnly | Create a new staff member for the partner's airline. |
-| **PUT** | `/{id}` | PartnerOnly | Update staff member details. |
-| **DELETE** | `/{id}` | PartnerOnly | Soft-delete a staff member. |
-| **PATCH** | `/{id}/status` | PartnerOnly | Toggle staff member active status. |
-| **GET** | `/my-airline` | PartnerOrStaff | List all staff members belonging to the authenticated user's airline. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|-------------|------------|-------------|
+| **GET** | `/` | PartnerOnly | List staff members for the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Staff> { items: Staff[] { id: string, fullName: string, role?: string, roleId?: number, email: string, phone: string, isActive?: boolean, airlineId?: string, createdAt?: string }, totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/` | PartnerOnly | Create a new staff member for the partner's airline. | `Partial<Staff>` | `Staff` |
+| **PUT** | `/{id}` | PartnerOnly | Update staff member details. | `Partial<Staff>` | `Staff` |
+| **DELETE** | `/{id}` | PartnerOnly | Soft-delete a staff member. | None | `void` |
+| **PATCH** | `/{id}/status` | PartnerOnly | Toggle staff member active status. | `{ isActive: number }` | `void` |
+| **GET** | `/my-airline` | PartnerOrStaff | List all staff members belonging to the authenticated user's airline. | None | `{ items: Staff[] }` |

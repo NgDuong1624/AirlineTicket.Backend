@@ -29,6 +29,7 @@ public class PartnerStaffEndpoints : IEndpoint
                 ClaimsPrincipal principal,
                 [FromServices] IUserRepository repo,
                 CancellationToken ct,
+                [FromQuery] int? pageNumber,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10) =>
             {
@@ -36,7 +37,8 @@ public class PartnerStaffEndpoints : IEndpoint
                 if (airlineId is null)
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 
-                var (users, totalCount) = await repo.GetByAirlineIdAsync(airlineId.Value, pageIndex, pageSize, ct);
+                var page = pageNumber ?? pageIndex;
+                var (users, totalCount) = await repo.GetByAirlineIdAsync(airlineId.Value, page, pageSize, ct);
                 var items = users
                     .Where(u => u.Role == (int)UserRoleEnum.Staff)
                     .Select(ToDto)
@@ -170,6 +172,7 @@ public class PartnerStaffEndpoints : IEndpoint
                 ClaimsPrincipal principal,
                 [FromServices] IUserRepository repo,
                 CancellationToken ct,
+                [FromQuery] int? pageNumber,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10) =>
             {
@@ -177,7 +180,8 @@ public class PartnerStaffEndpoints : IEndpoint
                 if (airlineId is null)
                     return Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
 
-                var (users, totalCount) = await repo.GetByAirlineIdAsync(airlineId.Value, pageIndex, pageSize, ct);
+                var page = pageNumber ?? pageIndex;
+                var (users, totalCount) = await repo.GetByAirlineIdAsync(airlineId.Value, page, pageSize, ct);
                 var items = users.Select(ToDto).ToList();
                 return Results.Ok(new { airlineId, items, totalCount });
             })

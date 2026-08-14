@@ -180,6 +180,7 @@ public class UserEndpoint : IEndpoint
         // GET /api/admin/users — Get all users (paginated)
         adminGroup.MapGet("/", async (
                 [FromServices] ISender sender,
+                [FromQuery] int? pageNumber,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10,
                 [FromQuery] string? search = "",
@@ -187,7 +188,8 @@ public class UserEndpoint : IEndpoint
                 [FromQuery] int? roleId = null,
                 CancellationToken ct = default) =>
             {
-                var result = await sender.Send(new GetUsersQuery(search, airlineId, roleId, pageIndex, pageSize), ct);
+                var page = pageNumber ?? pageIndex;
+                var result = await sender.Send(new GetUsersQuery(search, airlineId, roleId, page, pageSize), ct);
                 return result.IsSuccess
                     ? Results.Ok(result.Value)
                     : result.ToErrorResult();
@@ -309,11 +311,13 @@ public class UserEndpoint : IEndpoint
         // GET /api/admin/permissions — Get all permissions (paginated)
         adminGroup.MapGet("/permissions", async (
                 [FromServices] ISender sender,
+                [FromQuery] int? pageNumber,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10,
                 CancellationToken ct = default) =>
             {
-                var result = await sender.Send(new GetPermissionsQuery(pageIndex, pageSize), ct);
+                var page = pageNumber ?? pageIndex;
+                var result = await sender.Send(new GetPermissionsQuery(page, pageSize), ct);
                 return result.IsSuccess
                     ? Results.Ok(result.Value)
                     : result.ToErrorResult();

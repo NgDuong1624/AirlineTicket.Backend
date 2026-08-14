@@ -24,10 +24,12 @@ public class StaffFlightEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct,
                 [FromQuery] string? search,
+                [FromQuery] int? pageNumber,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10) =>
             {
-                var result = await sender.Send(new GetStaffFlightsQuery(search, pageIndex, pageSize), ct);
+                var page = pageNumber ?? pageIndex;
+                var result = await sender.Send(new GetStaffFlightsQuery(search, page, pageSize), ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("StaffGetFlights")

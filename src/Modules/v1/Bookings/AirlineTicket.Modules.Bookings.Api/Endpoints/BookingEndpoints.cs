@@ -54,14 +54,14 @@ public class BookingEndpoints : IEndpoint
         // GET /api/bookings — Get all bookings
         group.MapGet("/", async (
                 [FromServices] ISender sender,
-                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageNumber = 1,
                 [FromQuery] int pageSize = 10,
                 [FromQuery] string? search = null,
                 [FromQuery] string? status = null,
                 [FromQuery] DateTime? date = null,
                 CancellationToken ct = default) =>
             {
-                var query = new GetAllBookingsQuery(pageIndex, pageSize, search, status, date);
+                var query = new GetAllBookingsQuery(pageNumber, pageSize, search, status, date);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : result.ToErrorResult();
             })
@@ -93,7 +93,7 @@ public class BookingEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 ClaimsPrincipal user,
                 CancellationToken ct,
-                [FromQuery] int pageIndex = 1,
+                [FromQuery] int pageNumber = 1,
                 [FromQuery] int pageSize = 10) =>
             {
                 var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -102,7 +102,7 @@ public class BookingEndpoints : IEndpoint
                     return Results.Json(new { Code = "UNAUTHORIZED", Message = "Invalid user token." }, statusCode: 401);
                 }
 
-                var query = new GetMyBookingsQuery(userId, pageIndex, pageSize);
+                var query = new GetMyBookingsQuery(userId, pageNumber, pageSize);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })

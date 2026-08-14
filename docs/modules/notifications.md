@@ -62,16 +62,16 @@ Represents an individual in-app alert.
 
 ### Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **GET** | `/api/v1/notifications` | Authenticated | Retrieves paginated notifications for the current user. |
-| **GET** | `/api/v1/notifications/unread-count` | Authenticated | Retrieves the unread notification count. |
-| **PUT** | `/api/v1/notifications/{id}/read` | Authenticated | Marks a specific notification as read. |
-| **PUT** | `/api/v1/notifications/read-all` | Authenticated | Marks all notifications as read for the current user. |
-| **DELETE** | `/api/v1/notifications/{id}` | Authenticated | Soft deletes a notification. |
-| **GET** | `/api/admin/notifications/templates` | AdminOnly | Retrieves all notification templates. |
-| **GET** | `/api/admin/notifications/templates/{id}` | AdminOnly | Retrieves a notification template by ID. |
-| **PUT** | `/api/admin/notifications/templates/{id}` | AdminOnly | Updates an existing notification template. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/notifications` | Authenticated | Retrieves paginated notifications for the current user. | None (Query params `pageNumber: number, pageSize: number, locale?: string`) | `Notification[] { id: string, userId?: string, type: string, severity: number, title: string, content?: string, actionUrl?: string, referenceId?: string, referenceType?: string, isRead: boolean, isDeleted: boolean, createdAt: string }` |
+| **GET** | `/api/notifications/unread-count` | Authenticated | Retrieves the unread notification count. | None | `number` |
+| **PUT** | `/api/notifications/{id}/read` | Authenticated | Marks a specific notification as read. | None | `void` |
+| **PUT** | `/api/notifications/read-all` | Authenticated | Marks all notifications as read for the current user. | None | `void` |
+| **DELETE** | `/api/notifications/{id}` | Authenticated | Soft deletes a notification. | None | `void` |
+| **GET** | `/api/admin/notifications/templates` | AdminOnly | Retrieves all notification templates. | None | `unknown[]` |
+| **GET** | `/api/admin/notifications/templates/{id}` | AdminOnly | Retrieves a notification template by ID. | None | `unknown` |
+| **PUT** | `/api/admin/notifications/templates/{id}` | AdminOnly | Updates an existing notification template. | `unknown` | `unknown` |
 
 ---
 

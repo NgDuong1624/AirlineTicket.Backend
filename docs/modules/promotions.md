@@ -57,11 +57,32 @@ Represents a discount coupon.
 
 ### Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **POST** | `/api/admin/coupons` | AdminOnly | Create a new global coupon. |
-| **GET** | `/api/admin/coupons` | AdminOnly | Get a paginated list of all global coupons. |
-| **PUT** | `/api/admin/coupons/{id:guid}` | AdminOnly | Update an existing global coupon. |
-| **DELETE** | `/api/admin/coupons/{id:guid}` | AdminOnly | Soft-delete a global coupon. |
+#### Public / Customer Endpoints
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/promotions` | None | Get all available promotion coupons. | None | `{ coupons: Coupon[] { id: string, code: string, description?: string, discountType: number, discountValue: number, minOrderValue?: number, maxDiscountAmount?: number, startDate: string, endDate: string, usageLimit?: number, usageCount: number, isActive: boolean } }` |
+| **GET** | `/api/promotions/campaigns` | None | Get all active promotional campaigns. | None | `{ campaigns: Campaign[] { id: string, title: string, bannerUrl?: string, content?: string, startDate: string, endDate: string, isFeatured: boolean, airlineId?: string \| null } }` |
 
-*(Note: Partner-specific endpoints are available under `/api/partner/...` following similar CRUD operations but scoped to the partner's airline.)*
+#### Partner Endpoints (`PartnerOnly` Role)
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/partner/coupons` | PartnerOnly | Get a paginated list of airline-scoped coupons. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Coupon> { items: Coupon[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/api/partner/coupons` | PartnerOnly | Create a new airline-scoped coupon. | `Partial<Coupon> { code: string, description?: string, discountType: number, discountValue: number, minOrderValue?: number, maxDiscountAmount?: number, startDate: string, endDate: string, usageLimit?: number, isActive: boolean }` | `Coupon` |
+| **PUT** | `/api/partner/coupons/{id}` | PartnerOnly | Update an existing airline-scoped coupon. | `Partial<Coupon>` | `Coupon` |
+| **DELETE** | `/api/partner/coupons/{id}` | PartnerOnly | Soft-delete an airline-scoped coupon. | None | `void` |
+| **GET** | `/api/partner/campaigns` | PartnerOnly | Get a paginated list of airline-scoped campaigns. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Campaign> { items: Campaign[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/api/partner/campaigns` | PartnerOnly | Create a new airline-scoped campaign. | `Partial<Campaign> { title: string, bannerUrl?: string, content?: string, startDate: string, endDate: string, isFeatured: boolean }` | `Campaign` |
+| **PUT** | `/api/partner/campaigns/{id}` | PartnerOnly | Update an existing airline-scoped campaign. | `Partial<Campaign>` | `Campaign` |
+| **DELETE** | `/api/partner/campaigns/{id}` | PartnerOnly | Soft-delete an airline-scoped campaign. | None | `void` |
+
+#### Admin Endpoints (`AdminOnly` Role)
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/admin/coupons` | AdminOnly | Get a paginated list of all global coupons. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Coupon> { items: Coupon[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/api/admin/coupons` | AdminOnly | Create a new global coupon. | `Partial<Coupon> { code: string, description?: string, discountType: number, discountValue: number, minOrderValue?: number, maxDiscountAmount?: number, startDate: string, endDate: string, usageLimit?: number, isActive: boolean }` | `Coupon` |
+| **PUT** | `/api/admin/coupons/{id}` | AdminOnly | Update an existing global coupon. | `Partial<Coupon>` | `Coupon` |
+| **DELETE** | `/api/admin/coupons/{id}` | AdminOnly | Soft-delete a global coupon. | None | `void` |
+| **GET** | `/api/admin/campaigns` | AdminOnly | Get a paginated list of all global campaigns. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Campaign> { items: Campaign[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/api/admin/campaigns` | AdminOnly | Create a new global campaign. | `Partial<Campaign> { title: string, bannerUrl?: string, content?: string, startDate: string, endDate: string, isFeatured: boolean }` | `Campaign` |
+| **PUT** | `/api/admin/campaigns/{id}` | AdminOnly | Update an existing global campaign. | `Partial<Campaign>` | `Campaign` |
+| **DELETE** | `/api/admin/campaigns/{id}` | AdminOnly | Soft-delete a global campaign. | None | `void` |

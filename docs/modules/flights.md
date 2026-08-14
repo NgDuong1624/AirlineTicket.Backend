@@ -152,67 +152,67 @@ Represents a specific seat on a scheduled `Flight`. This is the bookable unit.
 ### Endpoints
 
 #### Public Endpoints (No Authentication Required)
-| Method | Path | Description |
-|--------|------|-------------|
-| **GET** | `/api/airports` | Search and list airports. |
-| **GET** | `/api/airlines` | List all registered airlines. |
-| **GET** | `/api/routes` | List all flight routes. |
-| **POST** | `/api/flights` | Search for one-way flights based on origin, destination, date, etc. |
-| **POST** | `/api/flights/round-trip` | Search for round-trip flights. |
-| **GET** | `/api/flights/{id:guid}` | Get detailed information for a specific flight. |
-| **GET** | `/api/flights/trending` | Get a list of trending (e.g., cheapest) flights. |
-| **GET** | `/api/flights/{id:guid}/seats` | Get the seat map and availability for a specific flight. |
+| Method | Path | Description | Input Type | Output Type |
+|--------|------|-------------|------------|-------------|
+| **GET** | `/api/airports` | Search and list airports. | None (Query param `search?: string`) | `Airport[] { id: string, iataCode: string, nameEn: string, nameVi: string, cityEn: string, cityVi: string, countryCode: string, timezone: string, latitude?: number, longitude?: number, isActive: boolean }` |
+| **GET** | `/api/airlines` | List all registered airlines. | None | `{ items: Airline[] { id: string, name: string, iataCode?: string, logoUrl?: string, baseCountry?: string } }` |
+| **GET** | `/api/routes` | List all flight routes. | None | `Route[] { id: string, originAirportId: string, destinationAirportId: string, originAirport: Airport, destinationAirport: Airport, distanceKm?: number, estimatedDurationMinutes?: number }` |
+| **POST** | `/api/flights` | Search for one-way flights based on origin, destination, date, etc. | `SearchFlightsBody { from: string, to: string, departDate: string, returnDate?: string, passengers: number, cabinClass: string, airlines?: string[], priceRange?: number, stops?: string, sortBy?: string, currency?: string }` | `{ flights: FlightResponse[] { id: string, routeId: string, airplaneId: string, flightNumber: string, departureTime: string, arrivalTime: string, basePrice: number, currency: string, status: number, originCode?: string, destinationCode?: string, airlineName?: string, externalId?: string } }` |
+| **POST** | `/api/flights/round-trip` | Search for round-trip flights. | `SearchFlightsBody` | `{ outbound: FlightResponse[], inbound: FlightResponse[] }` |
+| **GET** | `/api/flights/{id:guid}` | Get detailed information for a specific flight. | None | `FlightResponse` |
+| **GET** | `/api/flights/trending` | Get a list of trending (e.g., cheapest) flights. | None | `FlightResponse[]` |
+| **GET** | `/api/flights/{id:guid}/seats` | Get the seat map and availability for a specific flight. | None | `FlightSeat[] { id: string, flightId: string, seatNumber: string, seatClass: number, priceOverride?: number, isAvailable: boolean, isExtraLegroom: boolean }` |
 
 #### Staff Endpoints (`PartnerOrStaff` Role)
-| Method | Path | Description |
-|--------|------|-------------|
-| **POST** | `/api/flights/admin` | Create a new flight. |
-| **GET** | `/api/staff/flights` | List flights with seat availability for staff. |
-| **GET** | `/api/staff/flights/{id:guid}/seats` | Get seat map for a specific flight (staff view). |
+| Method | Path | Description | Input Type | Output Type |
+|--------|------|-------------|------------|-------------|
+| **POST** | `/api/flights/admin` | Create a new flight. | `FlightAdminPayload { routeId: string, airplaneId: string, flightNumber: string, departureTime: string, arrivalTime?: string, basePrice: number, currency: string, status: number }` | `SystemFlight { id: string, routeId: string, airplaneId: string, flightNumber: string, departureTime: string, arrivalTime: string, basePrice: number, currency: string, status: number }` |
+| **GET** | `/api/staff/flights` | List flights with seat availability for staff. | None (Query param `search?: string`) | `StaffFlightListItem[] { id: string, flightNumber: string, originCode: string, destinationCode: string, departureTime: string, arrivalTime: string, basePrice: number, currency: string, status: string, totalSeats: number, availableSeats: number }` |
+| **GET** | `/api/staff/flights/{id:guid}/seats` | Get seat map for a specific flight (staff view). | None | `FlightSeat[]` |
 
 #### Partner Endpoints (`PartnerOnly` Role)
-| Method | Path | Description |
-|--------|------|-------------|
-| **GET** | `/api/partner/routes` | List routes managed by the partner's airline. |
-| **POST** | `/api/partner/routes` | Create a new route for the partner's airline. |
-| **PUT** | `/api/partner/routes/{id:guid}` | Update an existing route. |
-| **DELETE** | `/api/partner/routes/{id:guid}` | Delete a route. |
-| **GET** | `/api/partner/airplanes` | List airplanes owned by the partner's airline. |
-| **GET** | `/api/partner/airplanes/models` | List available aircraft models for creating airplanes. |
-| **POST** | `/api/partner/airplanes` | Create a new airplane. |
-| **PUT** | `/api/partner/airplanes/{id:guid}` | Update an airplane. |
-| **DELETE** | `/api/partner/airplanes/{id:guid}` | Delete an airplane. |
-| **GET** | `/api/partner/flights` | List flights operated by the partner's airline. |
-| **POST** | `/api/partner/flights` | Create a new flight for the partner's airline. |
-| **PUT** | `/api/partner/flights/{id:guid}` | Update an existing flight. |
-| **DELETE** | `/api/partner/flights/{id:guid}` | Delete a flight. |
-| **GET** | `/api/partner/aircraft` | Alias for listing partner's airplanes. |
-| **POST** | `/api/partner/aircraft` | Create an aircraft (airplane). |
-| **PUT** | `/api/partner/aircraft/{id:guid}` | Update an aircraft. |
-| **DELETE** | `/api/partner/aircraft/{id:guid}` | Delete an aircraft. |
-| **GET** | `/api/partner/settings` | Get the partner airline's profile information. |
-| **PUT** | `/api/partner/settings` | Update the partner airline's profile information. |
+| Method | Path | Description | Input Type | Output Type |
+|--------|------|-------------|------------|-------------|
+| **GET** | `/api/partner/routes` | List routes managed by the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Route> { items: Route[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/api/partner/routes` | Create a new route for the partner's airline. | `Partial<Route> { originAirportId: string, destinationAirportId: string, distanceKm?: number, estimatedDurationMinutes?: number }` | `Route` |
+| **PUT** | `/api/partner/routes/{id:guid}` | Update an existing route. | `Partial<Route>` | `Route` |
+| **DELETE** | `/api/partner/routes/{id:guid}` | Delete a route. | None | `void` |
+| **GET** | `/api/partner/airplanes` | List airplanes owned by the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Airplane> { items: Airplane[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **GET** | `/api/partner/airplanes/models` | List available aircraft models for creating airplanes. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<AircraftModel> { items: AircraftModel[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/api/partner/airplanes` | Create a new airplane. | `Partial<Airplane> { model: string, registrationNumber: string, totalCapacity: number }` | `Airplane` |
+| **PUT** | `/api/partner/airplanes/{id:guid}` | Update an airplane. | `Partial<Airplane>` | `Airplane` |
+| **DELETE** | `/api/partner/airplanes/{id:guid}` | Delete an airplane. | None | `void` |
+| **GET** | `/api/partner/flights` | List flights operated by the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<SystemFlight>` |
+| **POST** | `/api/partner/flights` | Create a new flight for the partner's airline. | `FlightAdminPayload` | `SystemFlight` |
+| **PUT** | `/api/partner/flights/{id:guid}` | Update an existing flight. | `Partial<FlightAdminPayload>` | `SystemFlight` |
+| **DELETE** | `/api/partner/flights/{id:guid}` | Delete a flight. | None | `void` |
+| **GET** | `/api/partner/aircraft` | Alias for listing partner's airplanes. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Airplane>` |
+| **POST** | `/api/partner/aircraft` | Create an aircraft (airplane). | `Partial<Airplane>` | `Airplane` |
+| **PUT** | `/api/partner/aircraft/{id:guid}` | Update an aircraft. | `Partial<Airplane>` | `Airplane` |
+| **DELETE** | `/api/partner/aircraft/{id:guid}` | Delete an aircraft. | None | `void` |
+| **GET** | `/api/partner/settings` | Get the partner airline's profile information. | None | `PartnerSettings { companyName?: string, contactEmail?: string, address?: string, airlineName?: string, supportEmail?: string, supportPhone?: string }` |
+| **PUT** | `/api/partner/settings` | Update the partner airline's profile information. | `PartnerSettings` | `PartnerSettings` |
 
 #### Admin Endpoints (`AdminOnly` Role)
-| Method | Path | Description |
-|--------|------|-------------|
-| **GET** | `/api/admin/airports` | Paginated list of all airports with search capabilities. |
-| **POST** | `/api/admin/airports` | Create a new airport. |
-| **PUT** | `/api/admin/airports/{id:guid}` | Update an airport. |
-| **DELETE** | `/api/admin/airports/{id:guid}` | Soft-delete an airport. |
-| **GET** | `/api/admin/airlines` | Paginated list of all airlines. |
-| **POST** | `/api/admin/airlines` | Create a new airline. |
-| **PUT** | `/api/admin/airlines/{id:guid}` | Update an airline. |
-| **DELETE** | `/api/admin/airlines/{id:guid}` | Soft-delete an airline. |
-| **GET** | `/api/admin/flights` | Paginated list of all flights. |
-| **POST** | `/api/admin/flights` | Create a new flight (with seat seeding). |
-| **PUT** | `/api/admin/flights/{id:guid}` | Update a flight. |
-| **DELETE** | `/api/admin/flights/{id:guid}` | Soft-delete a flight. |
-| **GET** | `/api/admin/aircraft-models` | List all aircraft models. |
-| **GET** | `/api/admin/aircraft-models/{id:guid}` | Get details of a specific aircraft model. |
-| **POST** | `/api/admin/aircraft-models` | Create a new aircraft model (with seat templates). |
-| **PUT** | `/api/admin/aircraft-models/{id:guid}` | Update an aircraft model (replaces seat templates). |
-| **DELETE** | `/api/admin/aircraft-models/{id:guid}` | Soft-delete an aircraft model. |
+| Method | Path | Description | Input Type | Output Type |
+|--------|------|-------------|------------|-------------|
+| **GET** | `/api/admin/airports` | Paginated list of all airports with search capabilities. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Airport>` |
+| **POST** | `/api/admin/airports` | Create a new airport. | `Partial<Airport> { iataCode: string, nameEn: string, nameVi: string, cityEn: string, cityVi: string, countryCode: string, timezone: string, latitude?: number, longitude?: number, isActive: boolean }` | `Airport` |
+| **PUT** | `/api/admin/airports/{id:guid}` | Update an airport. | `Partial<Airport>` | `Airport` |
+| **DELETE** | `/api/admin/airports/{id:guid}` | Soft-delete an airport. | None | `void` |
+| **GET** | `/api/admin/airlines` | Paginated list of all airlines. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Airline>` |
+| **POST** | `/api/admin/airlines` | Create a new airline. | `Partial<Airline> { iataCode: string, name: string, logoUrl?: string, baseCountry?: string, apiEndpoint?: string, apiKey?: string, address?: string, supportEmail?: string, supportPhone?: string, isActive: boolean }` | `Airline` |
+| **PUT** | `/api/admin/airlines/{id:guid}` | Update an airline. | `Partial<Airline>` | `Airline` |
+| **DELETE** | `/api/admin/airlines/{id:guid}` | Soft-delete an airline. | None | `void` |
+| **GET** | `/api/admin/flights` | Paginated list of all flights. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<FlightLog> { items: FlightLog[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **POST** | `/api/admin/flights` | Create a new flight (with seat seeding). | `FlightAdminPayload` | `SystemFlight` |
+| **PUT** | `/api/admin/flights/{id:guid}` | Update a flight. | `Partial<FlightAdminPayload>` | `SystemFlight` |
+| **DELETE** | `/api/admin/flights/{id:guid}` | Soft-delete a flight. | None | `void` |
+| **GET** | `/api/admin/aircraft-models` | List all aircraft models. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<AircraftModel> { items: AircraftModel[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **GET** | `/api/admin/aircraft-models/{id:guid}` | Get details of a specific aircraft model. | None | `AircraftModel { id: string, name: string, manufacturer: string, totalSeats: number }` |
+| **POST** | `/api/admin/aircraft-models` | Create a new aircraft model (with seat templates). | `Partial<AircraftModel> { name: string, manufacturer: string, totalSeats: number }` | `AircraftModel` |
+| **PUT** | `/api/admin/aircraft-models/{id:guid}` | Update an aircraft model (replaces seat templates). | `Partial<AircraftModel>` | `AircraftModel` |
+| **DELETE** | `/api/admin/aircraft-models/{id:guid}` | Soft-delete an aircraft model. | None | `void` |
 
 ---
 

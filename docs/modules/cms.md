@@ -50,16 +50,16 @@ Represents a grouping for articles.
 ### Endpoints
 
 #### Admin Endpoints
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **GET** | `/api/admin/dashboard` | AdminOnly | Retrieves system-wide statistics, recent partners, and critical logs. |
-| **GET** | `/api/admin/settings` | AdminOnly | Retrieves global system settings (e.g., Service Fee, Currency). |
-| **PUT** | `/api/admin/settings` | AdminOnly | Updates global system settings. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/admin/dashboard` | AdminOnly | Retrieves system-wide statistics, recent partners, and critical logs. | None | `unknown (Admin Dashboard metrics)` |
+| **GET** | `/api/admin/settings` | AdminOnly | Retrieves global system settings (e.g., Service Fee, Currency). | None | `AdminSettings { siteName: string, maintenanceMode: boolean, maxBookingPerUser: string, holdLimit: string, commissionFee: string }` |
+| **PUT** | `/api/admin/settings` | AdminOnly | Updates global system settings. | `AdminSettings { siteName: string, maintenanceMode: boolean, maxBookingPerUser: string, holdLimit: string, commissionFee: string }` | `AdminSettings` |
 
 #### Partner Endpoints
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **GET** | `/api/partner/dashboard` | PartnerOnly | Retrieves airline-specific statistics, recent flights, and recent bookings. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/partner/dashboard` | PartnerOnly | Retrieves airline-specific statistics, recent flights, and recent bookings. | None | `unknown (Partner Dashboard metrics)` |
 
 ---
 

@@ -43,10 +43,10 @@ Represents a message in the AI chat history.
 
 ### Endpoints
 
-| Method | Path | Auth | Description | Request Body / Response |
-|--------|------|------|-------------|-------------------------|
-| **GET** | `/api/v1/interactions` | None | Health check endpoint for the interactions module. | Returns status `200 OK`. |
-| **POST** | `/api/v1/qa/ask` | None | Send a question to the AI Travel Assistant. | **JSON Body:**<br>```json{"question": "STRING", "history": [{"role": "STRING", "content": "STRING"}], "currency": "STRING"}```<br>**Response:** `AirTicketAnswerResponse` |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/interactions` | None | Health check endpoint for the interactions module. | None | `unknown` (Status 200 OK) |
+| **POST** | `/api/qa/ask` | None | Send a question to the AI Travel Assistant. | `{ question: string, history: Array<{ role: string, content: string }>, currency: string }` | `AirTicketAnswerResponse { answer: string, ... }` |
 
 ---
 

@@ -100,22 +100,22 @@ These exist only while the server is running and are not persisted to the databa
 
 ### Client → Server Methods
 
-| Method | Parameters | Description |
-|--------|------------|-------------|
-| `CustomerJoinChat` | `airlineId: Guid`, `customerName: string` | Customer enters the support queue for a specific airline. If no name is provided, defaults to "Guest". |
-| `StaffRegister` | `airlineId: Guid`, `staffName: string` | Staff member goes online for their airline. If no name is provided, defaults to "Support Staff". |
-| `SendMessageToAirline` | `message: string` | Customer sends a message to their assigned staff. If unassigned, triggers re-assignment. |
-| `SendMessageToCustomer` | `customerConnectionId: string`, `message: string` | Staff sends a message to a specific customer by their connection ID. |
+| Method | Parameters | Description | Input Type | Output Type |
+|--------|------------|-------------|------------|-------------|
+| `CustomerJoinChat` | `airlineId: Guid`, `customerName: string` | Customer enters the support queue for a specific airline. If no name is provided, defaults to "Guest". | `{ airlineId: string, customerName: string }` | `void` (triggers `SystemMessage` and/or `AgentAssigned` events) |
+| `StaffRegister` | `airlineId: Guid`, `staffName: string` | Staff member goes online for their airline. If no name is provided, defaults to "Support Staff". | `{ airlineId: string, staffName: string }` | `void` (triggers auto-assignment of waiting customers) |
+| `SendMessageToAirline` | `message: string` | Customer sends a message to their assigned staff. If unassigned, triggers re-assignment. | `{ message: string }` | `void` (triggers `ReceiveMessage` event to staff) |
+| `SendMessageToCustomer` | `customerConnectionId: string`, `message: string` | Staff sends a message to a specific customer by their connection ID. | `{ customerConnectionId: string, message: string }` | `void` (triggers `ReceiveMessage` event to customer) |
 
 ### Server → Client Events
 
-| Event | Parameters | Description |
-|-------|------------|-------------|
-| `SystemMessage` | `message: string` | General system notification (welcome, errors, staff disconnect notices). |
-| `AgentAssigned` | `staffName: string` | Notifies the customer that a staff member has been assigned. |
-| `ReceiveMessage` | `senderConnectionId: string`, `senderRole: string`, `senderName: string`, `message: string` | Delivers an incoming chat message to the recipient. |
-| `NewCustomerChat` | `customerConnectionId: string`, `customerName: string` | Notifies a staff member that a new customer has been assigned to them. |
-| `CustomerDisconnected` | `customerConnectionId: string`, `customerName: string` | Notifies a staff member that a customer has disconnected. |
+| Event | Parameters | Description | Output Type |
+|-------|------------|-------------|-------------|
+| `SystemMessage` | `message: string` | General system notification (welcome, errors, staff disconnect notices). | `{ message: string }` |
+| `AgentAssigned` | `staffName: string` | Notifies the customer that a staff member has been assigned. | `{ staffName: string }` |
+| `ReceiveMessage` | `senderConnectionId: string`, `senderRole: string`, `senderName: string`, `message: string` | Delivers an incoming chat message to the recipient. | `{ senderConnectionId: string, senderRole: string, senderName: string, message: string }` |
+| `NewCustomerChat` | `customerConnectionId: string`, `customerName: string` | Notifies a staff member that a new customer has been assigned to them. | `{ customerConnectionId: string, customerName: string }` |
+| `CustomerDisconnected` | `customerConnectionId: string`, `customerName: string` | Notifies a staff member that a customer has disconnected. | `{ customerConnectionId: string, customerName: string }` |
 
 ### Disconnection Handling (`OnDisconnectedAsync`)
 - **Customer disconnects**: Removes from active sessions. Staff receives `CustomerDisconnected` event.

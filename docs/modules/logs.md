@@ -40,10 +40,10 @@ Represents a single log entry in the system.
 
 ### Endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| **GET** | `/api/admin/logs` | AdminOnly | Retrieves all system logs. Supports `level`, `search`, `airlineId`, `isSystemLog`, `pageIndex`, and `pageSize` query parameters. |
-| **GET** | `/api/partner/logs` | PartnerOnly | Retrieves logs scoped to the authenticated partner's airline. Supports `level`, `search`, `pageIndex`, and `pageSize` query parameters. The `airlineId` is automatically extracted from the token. |
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/admin/logs` | AdminOnly | Retrieves all system logs. | None (Query params `level?: string, search?: string, airlineId?: string, pageIndex: number, pageSize: number`) | `PagedResult<SystemLog> { items: SystemLog[] { id: string, level: string, message: string, source?: string, exception?: string, userId?: string, airlineId?: string, airlineName?: string, ipAddress?: string, createdAt: string }, totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+| **GET** | `/api/partner/logs` | PartnerOnly | Retrieves logs scoped to the authenticated partner's airline. | None (Query params `level?: string, search?: string, pageIndex: number, pageSize: number`) | `PagedResult<SystemLog>` |
 
 ### Query Parameters
 | Parameter | Type | Description |
