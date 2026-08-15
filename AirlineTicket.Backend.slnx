@@ -104,4 +104,8 @@
   <Folder Name="/tests/UnitTest/Users/">
     <Project Path="tests/UnitTest/Modules/v1/Users/AirlineTicket.Modules.Users.Application.UnitTests/AirlineTicket.Modules.Users.Application.UnitTests.csproj" />
   </Folder>
+  <Folder Name="/tests/PerformanceTest/">
+    <Project Path="tests/PerformanceTest/AirlineTicket.LoadTests/AirlineTicket.LoadTests.csproj" />
+    <Project Path="tests/PerformanceTest/AirlineTicket.Benchmarks/AirlineTicket.Benchmarks.csproj" />
+  </Folder>
 </Solution>
