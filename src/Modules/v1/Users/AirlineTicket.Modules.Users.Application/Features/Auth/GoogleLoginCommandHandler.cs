@@ -122,7 +122,7 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
                 user.Email,
                 user.FullName,
                 user.Phone,
-                user.Role.ToString(),
+                ((Domain.Enums.UserRole)user.Role).ToString(),
                 (int)user.Role,
                 user.AirlineId,
                 user.AirlineName,

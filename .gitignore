@@ -79,3 +79,7 @@ PR_DESCRIPTION.md
 
 # Python
 *.py
+
+# Reports
+reports/
+BenchmarkDotNet.Artifacts/

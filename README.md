@@ -258,5 +258,40 @@ AirlineTicket.Backend/
 ├── docs/                                # Documentation
 │   ├── api/api-list.md                  # Complete API endpoint reference
 │   └── database/database_design.md      # Full database schema documentation
-└── tests/                               # Unit & Integration tests
+└── tests/                               # Unit, Integration & Performance tests
+    ├── IntegrationTest/                 # Module API integration tests
+    ├── UnitTest/                        # Module application unit tests
+    └── PerformanceTest/                 # Load testing & Microbenchmarks
+        ├── AirlineTicket.LoadTests/     # NBomber HTTP scenario & load tests
+        └── AirlineTicket.Benchmarks/    # BenchmarkDotNet memory & execution benchmarks
 ```
+
+---
+
+## Performance Testing (SRS Verification)
+
+Performance testing suites evaluate high-throughput scenarios, concurrency bottlenecks, and memory allocation efficiency under load to verify Non-Functional Requirements (SRS).
+
+### 1. Load & Scenario Testing (`AirlineTicket.LoadTests`)
+
+Built with **NBomber 5** to simulate real-world traffic on core REST API endpoints.
+
+- **Scenarios Covered**:
+  - `flight_search_load`: Evaluates throughput and latency percentiles on `POST /api/flights` under constant query load.
+  - `booking_creation_load`: Validates concurrent ticket reservations and atomic seat locks on `POST /api/bookings` with dynamic seat discovery.
+- **Run Load Tests**:
+  ```bash
+  API_BASE_URL="http://localhost:5179" dotnet run --project tests/PerformanceTest/AirlineTicket.LoadTests/AirlineTicket.LoadTests.csproj
+  ```
+- **Output**: Generates HTML and console latency distribution reports under `./reports`.
+
+### 2. Micro-benchmarks (`AirlineTicket.Benchmarks`)
+
+Built with **BenchmarkDotNet** for in-process algorithmic analysis and memory allocation diagnostics.
+
+- **Benchmarks Covered**:
+  - `FlightPricingBenchmarks`: Compares base fare calculations versus dynamic demand-based pricing algorithms, verifying execution speed and GC allocation overhead (`[MemoryDiagnoser]`).
+- **Run Benchmarks**:
+  ```bash
+  dotnet run -c Release --project tests/PerformanceTest/AirlineTicket.Benchmarks/AirlineTicket.Benchmarks.csproj
+  ```
