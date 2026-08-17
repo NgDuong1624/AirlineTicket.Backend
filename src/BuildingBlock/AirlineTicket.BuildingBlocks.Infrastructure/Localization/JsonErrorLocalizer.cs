@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using AirlineTicket.BuildingBlocks.Application.Localization;
 using AirlineTicket.BuildingBlocks.Responses;
 
@@ -13,6 +14,14 @@ namespace AirlineTicket.BuildingBlocks.Infrastructure.Localization;
 public class JsonErrorLocalizer : IErrorLocalizer
 {
     private const string DefaultCulture = "en";
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    private static readonly Regex CultureRegex = new(@"errors\.([a-zA-Z]{2,3})\.json", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+    private static readonly char[] ResourceSeparators = ['.', '/', '\\'];
+
     private readonly ConcurrentDictionary<string, Dictionary<string, string>> _dictionaries = new(StringComparer.OrdinalIgnoreCase);
     private readonly ILanguageResolver _languageResolver;
 
@@ -97,15 +106,21 @@ public class JsonErrorLocalizer : IErrorLocalizer
         {
             if (!resourceName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
 
-            // Extracts culture from names like "errors.vi.json" or "AirlineTicket.BuildingBlocks.Infrastructure.Resources.Localization.errors.vi.json"
-            var fileName = resourceName.Contains('/')
-                ? Path.GetFileName(resourceName)
-                : resourceName;
+            var match = CultureRegex.Match(resourceName);
+            var culture = match.Success
+                ? match.Groups[1].Value.ToLowerInvariant()
+                : null;
 
-            var parts = fileName.Split('.');
-            if (parts.Length < 2) continue;
+            if (string.IsNullOrEmpty(culture))
+            {
+                var parts = resourceName.Split(ResourceSeparators, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
+                {
+                    culture = parts[^2].ToLowerInvariant();
+                }
+            }
 
-            var culture = parts[^2];
+            if (string.IsNullOrEmpty(culture)) continue;
 
             try
             {
@@ -115,10 +130,7 @@ public class JsonErrorLocalizer : IErrorLocalizer
                 using var reader = new StreamReader(stream);
                 var json = reader.ReadToEnd();
 
-                var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(json, JsonOptions);
 
                 if (parsed != null)
                 {
