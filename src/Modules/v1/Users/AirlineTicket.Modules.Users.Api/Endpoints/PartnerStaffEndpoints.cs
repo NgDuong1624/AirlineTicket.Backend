@@ -198,7 +198,7 @@ public class PartnerStaffEndpoints : IEndpoint
         fullName = u.FullName,
         email = u.Email,
         phone = u.Phone,
-        role = u.Role.ToString(),
+        role = ((Domain.Enums.UserRole)u.Role).ToString(),
         roleId = (int)u.Role,
         isActive = u.IsActive,
         airlineId = u.AirlineId,

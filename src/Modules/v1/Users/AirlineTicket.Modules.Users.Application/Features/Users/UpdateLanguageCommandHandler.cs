@@ -5,7 +5,7 @@ using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using MediatR;
 
-namespace AirlineTicket.Modules.Users.Application.Features.Commands;
+namespace AirlineTicket.Modules.Users.Application.Features.Users;
 
 public class UpdateLanguageCommandHandler : IRequestHandler<UpdateLanguageCommand, Result>
 {
