@@ -20,7 +20,24 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Resources\Localization\*.json" />
+    <EmbeddedResource Include="Resources\Localization\errors.en.json">
+      <LogicalName>errors.en.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Localization\errors.vi.json">
+      <LogicalName>errors.vi.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Localization\errors.zh.json">
+      <LogicalName>errors.zh.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Localization\errors.ja.json">
+      <LogicalName>errors.ja.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Localization\errors.ko.json">
+      <LogicalName>errors.ko.json</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Localization\errors.fr.json">
+      <LogicalName>errors.fr.json</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

@@ -97,11 +97,15 @@ public class JsonErrorLocalizer : IErrorLocalizer
         {
             if (!resourceName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
 
-            // Pattern: AirlineTicket.BuildingBlocks.Infrastructure.Resources.Localization.errors.en.json
-            var parts = resourceName.Split('.');
-            if (parts.Length < 3) continue;
+            // Extracts culture from names like "errors.vi.json" or "AirlineTicket.BuildingBlocks.Infrastructure.Resources.Localization.errors.vi.json"
+            var fileName = resourceName.Contains('/')
+                ? Path.GetFileName(resourceName)
+                : resourceName;
 
-            var culture = parts[^2]; // "en", "vi", "zh", etc.
+            var parts = fileName.Split('.');
+            if (parts.Length < 2) continue;
+
+            var culture = parts[^2];
 
             try
             {
