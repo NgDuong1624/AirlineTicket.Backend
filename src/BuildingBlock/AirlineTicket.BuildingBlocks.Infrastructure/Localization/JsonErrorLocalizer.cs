@@ -19,9 +19,6 @@ public class JsonErrorLocalizer : IErrorLocalizer
         PropertyNameCaseInsensitive = true
     };
 
-    private static readonly Regex CultureRegex = new(@"errors\.([a-zA-Z]{2,3})\.json", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    private static readonly char[] ResourceSeparators = ['.', '/', '\\'];
-
     private readonly ConcurrentDictionary<string, Dictionary<string, string>> _dictionaries = new(StringComparer.OrdinalIgnoreCase);
     private readonly ILanguageResolver _languageResolver;
 
@@ -99,48 +96,119 @@ public class JsonErrorLocalizer : IErrorLocalizer
 
     private void LoadEmbeddedDictionaries()
     {
-        var assembly = typeof(JsonErrorLocalizer).Assembly;
-        var resourceNames = assembly.GetManifestResourceNames();
-
-        foreach (var resourceName in resourceNames)
+        // Check both this assembly and calling/loaded assemblies containing resources
+        var assemblies = new[]
         {
-            if (!resourceName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
+            typeof(JsonErrorLocalizer).Assembly,
+            Assembly.GetEntryAssembly(),
+            Assembly.GetExecutingAssembly()
+        };
 
-            var match = CultureRegex.Match(resourceName);
-            var culture = match.Success
-                ? match.Groups[1].Value.ToLowerInvariant()
-                : null;
+        var loadedLanguages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            if (string.IsNullOrEmpty(culture))
-            {
-                var parts = resourceName.Split(ResourceSeparators, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length >= 2)
-                {
-                    culture = parts[^2].ToLowerInvariant();
-                }
-            }
+        foreach (var assembly in assemblies)
+        {
+            if (assembly == null) continue;
 
-            if (string.IsNullOrEmpty(culture)) continue;
-
+            string[] resourceNames;
             try
             {
-                using var stream = assembly.GetManifestResourceStream(resourceName);
-                if (stream == null) continue;
-
-                using var reader = new StreamReader(stream);
-                var json = reader.ReadToEnd();
-
-                var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(json, JsonOptions);
-
-                if (parsed != null)
-                {
-                    _dictionaries[culture] = new Dictionary<string, string>(parsed, StringComparer.OrdinalIgnoreCase);
-                }
+                resourceNames = assembly.GetManifestResourceNames();
             }
             catch
             {
-                // Continue loading other resources
+                continue;
             }
+
+            foreach (var resourceName in resourceNames)
+            {
+                if (!resourceName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var culture = ExtractCulture(resourceName);
+                if (string.IsNullOrEmpty(culture) || loadedLanguages.Contains(culture)) continue;
+
+                try
+                {
+                    using var stream = assembly.GetManifestResourceStream(resourceName);
+                    if (stream == null) continue;
+
+                    using var reader = new StreamReader(stream);
+                    var json = reader.ReadToEnd();
+
+                    var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(json, JsonOptions);
+                    if (parsed != null && parsed.Count > 0)
+                    {
+                        _dictionaries[culture] = new Dictionary<string, string>(parsed, StringComparer.OrdinalIgnoreCase);
+                        loadedLanguages.Add(culture);
+                    }
+                }
+                catch
+                {
+                    // Ignore parse errors on non-dictionary files
+                }
+            }
+        }
+
+        // Fallback: If running in test environment or development without embedded resources, read from disk
+        if (_dictionaries.IsEmpty)
+        {
+            LoadFromDiskFallback();
+        }
+    }
+
+    private static string? ExtractCulture(string resourceName)
+    {
+        var match = Regex.Match(resourceName, @"errors\.([a-zA-Z]{2,3})\.json", RegexOptions.IgnoreCase);
+        if (match.Success)
+        {
+            return match.Groups[1].Value.ToLowerInvariant();
+        }
+
+        var clean = resourceName.Replace('\\', '/');
+        var parts = clean.Split(new[] { '.', '/' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2 && parts[^1].Equals("json", StringComparison.OrdinalIgnoreCase))
+        {
+            return parts[^2].ToLowerInvariant();
+        }
+
+        return null;
+    }
+
+    private void LoadFromDiskFallback()
+    {
+        var supportedCultures = new[] { "en", "vi", "zh", "ja", "ko", "fr" };
+        var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+
+        // Traverse upwards to search for Resources/Localization folder
+        var current = new DirectoryInfo(baseDir);
+        while (current != null)
+        {
+            var targetDir = Path.Combine(current.FullName, "src", "BuildingBlock", "AirlineTicket.BuildingBlocks.Infrastructure", "Resources", "Localization");
+            if (Directory.Exists(targetDir))
+            {
+                foreach (var culture in supportedCultures)
+                {
+                    var filePath = Path.Combine(targetDir, $"errors.{culture}.json");
+                    if (File.Exists(filePath))
+                    {
+                        try
+                        {
+                            var json = File.ReadAllText(filePath);
+                            var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(json, JsonOptions);
+                            if (parsed != null)
+                            {
+                                _dictionaries[culture] = new Dictionary<string, string>(parsed, StringComparer.OrdinalIgnoreCase);
+                            }
+                        }
+                        catch
+                        {
+                            // Continue with other cultures
+                        }
+                    }
+                }
+                break;
+            }
+            current = current.Parent;
         }
     }
 }
