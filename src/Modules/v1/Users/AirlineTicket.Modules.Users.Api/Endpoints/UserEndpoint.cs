@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using AirlineTicket.Modules.Users.Application.Features.Commands;
 using AirlineTicket.Modules.Users.Application.Features.Users;
 using AirlineTicket.BuildingBlocks.Domain.Constants;
 
@@ -337,3 +336,5 @@ public sealed record RefreshTokenRequest(string RefreshToken);
 public sealed record LogoutRequest(string RefreshToken);
 public sealed record AdminUserRequest(string Email, string FullName, string? Phone, int? RoleId, bool? IsActive, string? Password, Guid? AirlineId);
 public sealed record AdminPermissionRequest(string Code, string Name, string? Description);
+
+public record UpdateLanguageRequest(string Language);

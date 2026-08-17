@@ -204,7 +204,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials());
+              .AllowCredentials()
+              .SetPreflightMaxAge(TimeSpan.FromHours(24)));
 });
 
 // 1. Scan all Assemblies belonging to the AirlineTicket system (for endpoints & validators)
