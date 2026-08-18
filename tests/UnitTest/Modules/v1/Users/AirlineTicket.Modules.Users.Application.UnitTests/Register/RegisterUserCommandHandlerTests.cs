@@ -1,4 +1,5 @@
 using AirlineTicket.BuildingBlocks.Responses;
+using AirlineTicket.BuildingBlocks.Application.Localization;
 using AirlineTicket.Modules.Users.Application.Features.Auth;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
@@ -16,13 +17,17 @@ public class RegisterUserCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
+    private readonly Mock<ILanguageResolver> _languageResolverMock;
     private readonly RegisterUserCommandHandler _handler;
 
     public RegisterUserCommandHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
-        _handler = new RegisterUserCommandHandler(_userRepositoryMock.Object, _passwordHasherMock.Object);
+        _languageResolverMock = new Mock<ILanguageResolver>();
+        _languageResolverMock.Setup(x => x.ResolveLanguage()).Returns("en");
+        _languageResolverMock.Setup(x => x.NormalizeCulture(It.IsAny<string>())).Returns<string>(c => c.ToLowerInvariant());
+        _handler = new RegisterUserCommandHandler(_userRepositoryMock.Object, _passwordHasherMock.Object, _languageResolverMock.Object);
     }
 
     [Fact]

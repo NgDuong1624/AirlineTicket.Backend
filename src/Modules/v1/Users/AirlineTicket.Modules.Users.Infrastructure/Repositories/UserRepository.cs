@@ -101,24 +101,7 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Users
-            .AsNoTracking()
-            .Where(u => u.Id == id)
-            .Select(u => new User
-            {
-                Id = u.Id,
-                Email = u.Email,
-                FullName = u.FullName,
-                Phone = u.Phone,
-                IsActive = u.IsActive,
-                IsDeleted = u.IsDeleted,
-                CreatedAt = u.CreatedAt,
-                UpdatedAt = u.UpdatedAt,
-                AirlineId = u.AirlineId,
-                Role = u.Role,
-                AirlineName = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
-                AirlineLogoUrl = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
-            })
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
     }
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)

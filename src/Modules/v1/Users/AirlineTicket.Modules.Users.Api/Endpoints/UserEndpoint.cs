@@ -70,7 +70,7 @@ public class UserEndpoint : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var command = new RegisterUserCommand(request.Email, request.Password, request.FullName, request.Phone);
+                var command = new RegisterUserCommand(request.Email, request.Password, request.FullName, request.Phone, request.LanguagePreference);
                 var result = await sender.Send(command, ct);
                 if (result.IsFailure)
                 {
@@ -206,13 +206,14 @@ public class UserEndpoint : IEndpoint
                 CancellationToken ct) =>
             {
                 var command = new AdminCreateUserCommand(
-                    request.Email, 
-                    request.FullName, 
-                    request.Phone, 
-                    request.RoleId, 
-                    request.IsActive, 
-                    request.Password, 
-                    request.AirlineId);
+                    request.Email,
+                    request.FullName,
+                    request.Phone,
+                    request.RoleId,
+                    request.IsActive,
+                    request.Password,
+                    request.AirlineId,
+                    request.LanguagePreference);
                 var result = await sender.Send(command, ct);
                 return result.IsSuccess ? Results.Created($"/api/admin/users/{result.Value}", new { Id = result.Value }) : result.ToErrorResult();
             })
@@ -329,12 +330,12 @@ public class UserEndpoint : IEndpoint
     }
 }
 
-public sealed record RegisterUserRequest(string Email, string Password, string FullName, string Phone);
+public sealed record RegisterUserRequest(string Email, string Password, string FullName, string Phone, string? LanguagePreference = null);
 public sealed record LoginUserRequest(string Email, string Password);
 public sealed record GoogleLoginRequest(string IdToken);
 public sealed record RefreshTokenRequest(string RefreshToken);
 public sealed record LogoutRequest(string RefreshToken);
-public sealed record AdminUserRequest(string Email, string FullName, string? Phone, int? RoleId, bool? IsActive, string? Password, Guid? AirlineId);
+public sealed record AdminUserRequest(string Email, string FullName, string? Phone, int? RoleId, bool? IsActive, string? Password, Guid? AirlineId, string? LanguagePreference = null);
 public sealed record AdminPermissionRequest(string Code, string Name, string? Description);
 
 public record UpdateLanguageRequest(string Language);

@@ -53,7 +53,31 @@ public class GlobalExceptionHandlingMiddleware
             : ex.Message;
 
         var localizedErrors = new Dictionary<string, string[]>();
-        if (ex.Errors != null)
+
+        if (ex.FailureInfos != null && ex.FailureInfos.Count > 0)
+        {
+            foreach (var group in ex.FailureInfos.GroupBy(x => x.PropertyName))
+            {
+                var propertyName = group.Key;
+                var translatedList = new List<string>();
+
+                foreach (var info in group)
+                {
+                    if (localizer != null)
+                    {
+                        var translated = localizer.Localize(info.ErrorCode, fallbackMessage: info.ErrorMessage, args: info.CustomArgs);
+                        translatedList.Add(translated);
+                    }
+                    else
+                    {
+                        translatedList.Add(info.ErrorMessage);
+                    }
+                }
+
+                localizedErrors[propertyName] = translatedList.ToArray();
+            }
+        }
+        else if (ex.Errors != null)
         {
             foreach (var kvp in ex.Errors)
             {
@@ -64,7 +88,6 @@ public class GlobalExceptionHandlingMiddleware
                 {
                     if (localizer != null)
                     {
-                        // Map failure PropertyName as arg {0}
                         var translatedErr = localizer.Localize(err, fallbackMessage: err, args: [propertyName]);
                         translatedList.Add(translatedErr);
                     }

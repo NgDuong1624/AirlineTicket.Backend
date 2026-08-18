@@ -33,6 +33,7 @@ public class GetUserProfileQueryHandler : IQueryHandler<GetUserProfileQuery, Res
             user.AirlineId,
             user.AirlineName,
             user.AirlineLogoUrl,
+            user.LanguagePreference,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         );
