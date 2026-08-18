@@ -53,6 +53,7 @@ public class LoginUserCommandHandler : ICommandHandler<LoginUserCommand, Result<
             user.AirlineId,
             user.AirlineName,
             user.AirlineLogoUrl,
+            user.LanguagePreference,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         );

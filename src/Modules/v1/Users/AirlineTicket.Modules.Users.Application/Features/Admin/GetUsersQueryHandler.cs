@@ -27,11 +27,12 @@ public class GetUsersQueryHandler : IQueryHandler<GetUsersQuery, Result<PagedRes
             user.Email,
             user.FullName,
             user.Phone,
-            user.Role.ToString(),
+            ((Domain.Enums.UserRole)user.Role).ToString(),
             user.Role,
             user.AirlineId,
             user.AirlineName,
             user.AirlineLogoUrl,
+            user.LanguagePreference,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         )).ToList();

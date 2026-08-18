@@ -42,6 +42,7 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, R
             user.AirlineId,
             user.AirlineName,
             user.AirlineLogoUrl,
+            user.LanguagePreference,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         );

@@ -6,10 +6,11 @@ using System;
 namespace AirlineTicket.Modules.Users.Application.Features.Admin;
 
 public record AdminCreateUserCommand(
-    string Email, 
-    string FullName, 
-    string? Phone, 
-    int? RoleId, 
-    bool? IsActive, 
-    string? Password, 
-    Guid? AirlineId) : ICommand<Result<Guid>>;
+    string Email,
+    string FullName,
+    string? Phone,
+    int? RoleId,
+    bool? IsActive,
+    string? Password,
+    Guid? AirlineId,
+    string? LanguagePreference = null) : ICommand<Result<Guid>>;

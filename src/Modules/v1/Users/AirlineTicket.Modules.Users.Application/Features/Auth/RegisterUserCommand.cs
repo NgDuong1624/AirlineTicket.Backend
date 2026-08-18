@@ -5,7 +5,7 @@ using FluentValidation;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Auth;
 
-public record RegisterUserCommand(string Email, string Password, string FullName, string Phone) : ICommand<Result<Guid>>;
+public record RegisterUserCommand(string Email, string Password, string FullName, string Phone, string? LanguagePreference = null) : ICommand<Result<Guid>>;
 
 public class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
 {

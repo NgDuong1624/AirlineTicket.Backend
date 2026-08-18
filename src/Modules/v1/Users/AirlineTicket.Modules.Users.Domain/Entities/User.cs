@@ -18,7 +18,7 @@ public class User
     [NotMapped]
     public string? AirlineLogoUrl { get; set; }
     public string? AvatarUrl { get; set; }
-    public string? LanguagePreference { get; set; } = "vi";
+    public string? LanguagePreference { get; set; } = "en";
 
     // OAuth support
     public string? GoogleId { get; set; }

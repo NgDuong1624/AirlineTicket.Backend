@@ -27,11 +27,12 @@ public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, Result<Us
             user.Email,
             user.FullName,
             user.Phone,
-            user.Role.ToString(),
+            ((Domain.Enums.UserRole)user.Role).ToString(),
             (int)user.Role,
             user.AirlineId,
             user.AirlineName,
             user.AirlineLogoUrl,
+            user.LanguagePreference,
             user.IsActive,
             user.CreatedAt.ToString("yyyy-MM-dd")
         );

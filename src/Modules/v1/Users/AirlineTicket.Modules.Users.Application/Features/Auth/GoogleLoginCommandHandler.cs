@@ -1,6 +1,7 @@
 using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
+using AirlineTicket.BuildingBlocks.Application.Localization;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Application.Services;
 using AirlineTicket.Modules.Users.Domain.Entities;
@@ -21,15 +22,18 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
     private readonly IUserRepository _userRepository;
     private readonly IJwtService _jwtService;
     private readonly IConfiguration _configuration;
+    private readonly ILanguageResolver _languageResolver;
 
     public GoogleLoginCommandHandler(
         IUserRepository userRepository,
         IJwtService jwtService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        ILanguageResolver languageResolver)
     {
         _userRepository = userRepository;
         _jwtService = jwtService;
         _configuration = configuration;
+        _languageResolver = languageResolver;
     }
 
     public async Task<Result<LoginResponse>> Handle(GoogleLoginCommand request, CancellationToken cancellationToken)
@@ -63,6 +67,7 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
 
             if (user == null)
             {
+                var resolvedLanguage = _languageResolver.ResolveLanguage();
                 // Create a new user if not found
                 user = new User
                 {
@@ -75,6 +80,7 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
                     GoogleId = payload.Subject,
                     AuthProvider = "Google",
                     PasswordHash = string.Empty, // External auth user has no password hash
+                    LanguagePreference = string.IsNullOrWhiteSpace(resolvedLanguage) ? "en" : resolvedLanguage,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
@@ -127,6 +133,7 @@ public class GoogleLoginCommandHandler : ICommandHandler<GoogleLoginCommand, Res
                 user.AirlineId,
                 user.AirlineName,
                 user.AirlineLogoUrl,
+                user.LanguagePreference,
                 user.IsActive,
                 user.CreatedAt.ToString("yyyy-MM-dd")
             );
