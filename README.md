@@ -213,9 +213,27 @@ dotnet test tests/UnitTest/
 
 # Integration tests
 dotnet test tests/IntegrationTest/
+
+# API Testing (Postman / Newman)
+newman run tests/ApisTest/AirlineTicket.postman_collection.json -e tests/ApisTest/AirlineTicket.postman_environment.json
 ```
 
 Target: 80%+ code coverage for core business logic.
+
+### Postman API Test Suite (`tests/ApisTest/`)
+
+- **Collection**: `tests/ApisTest/AirlineTicket.postman_collection.json`
+- **Environment**: `tests/ApisTest/AirlineTicket.postman_environment.json`
+- **Modules**:
+  - `01. Users & Authentication` (4-role JWT login, auto token capture, refresh token rotation, logout, admin user management, partner staff)
+  - `02. Flights & Infrastructure` (Airports, airlines, aircraft models, airplanes, routes, public flight search, partner & admin flight operations)
+  - `03. Bookings & Payments` (Public booking lifecycle, PNR lookup, payments, e-tickets, staff sales, partner & admin dashboards)
+  - `04. Promotions` (Coupons & campaigns for public, partner, and admin)
+  - `05. CMS & System Settings` (System settings, admin/partner dashboard metrics)
+  - `06. Notifications` (User notifications, read status, admin templates)
+  - `07. Logs & Auditing` (System & partner audit logs)
+  - `08. Interactions & QA Assistant` (Health checks, AI Travel Assistant Q&A)
+  - `09. Support Chat` (SignalR WebSocket handshake & negotiate)
 
 ## Project Structure
 
@@ -239,13 +257,6 @@ AirlineTicket.Backend/
 │   ├── Realtime/AirlineTicket.SignalR/  # SignalR Hubs (seats, support chat, notifications)
 │   └── Workers/AirlineTicket.Worker/    # Background workers
 ├── database/                            # SQL scripts for seeding
-│       ├── Flights/
-│       ├── Interactions/
-│       ├── Logs/
-│       ├── Notifications/
-│       ├── Promotions/
-│       └── Users/
-├── database/                            # SQL scripts for seeding
 │   ├── core/                            # Core reference data
 │   ├── development/                     # Sample data for local dev/demo
 │   ├── test/                            # Minimal data for integration/unit tests
@@ -257,8 +268,21 @@ AirlineTicket.Backend/
 ├── deploy/                              # Docker & Nginx configs
 ├── docs/                                # Documentation
 │   ├── api/api-list.md                  # Complete API endpoint reference
-│   └── database/database_design.md      # Full database schema documentation
-└── tests/                               # Unit, Integration & Performance tests
+│   ├── database/database_design.md      # Full database schema documentation
+│   └── modules/                         # Module specification documentation
+│       ├── bookings.md
+│       ├── cms.md
+│       ├── flights.md
+│       ├── interactions.md
+│       ├── logs.md
+│       ├── notifications.md
+│       ├── promotions.md
+│       ├── support-chat.md
+│       └── users.md
+└── tests/                               # Unit, Integration, Performance & API tests
+    ├── ApisTest/                        # Postman collection & environment JSON
+    │   ├── AirlineTicket.postman_collection.json
+    │   └── AirlineTicket.postman_environment.json
     ├── IntegrationTest/                 # Module API integration tests
     ├── UnitTest/                        # Module application unit tests
     └── PerformanceTest/                 # Load testing & Microbenchmarks
