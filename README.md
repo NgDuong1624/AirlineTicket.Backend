@@ -96,7 +96,7 @@ The database includes a modular seeding system to populate initial data. Seed fi
 
 The system exposes **100+ REST API endpoints** across 12 sections:
 
-1. **Authentication** — Login, Register, Me, Google Login
+1. **Authentication** — Login, Register, Me (with booking spending stats), Google Login, Update Language
 2. **Flights (Public)** — Search (one-way, round-trip), Details, Trending, Seats
 3. **Airports, Airlines & Routes** — List, Search
 4. **Bookings** — Create, Pay, History, Update, Cancel
