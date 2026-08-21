@@ -72,9 +72,9 @@ public class BookingRepository : IBookingRepository
         var query = _context.Bookings
             .AsNoTracking()
             .Where(b => b.UserId == userId);
-            
+
         var totalCount = await query.CountAsync(cancellationToken);
-        
+
         var items = await query
             .OrderByDescending(b => b.CreatedAt)
             .Skip((pageIndex - 1) * pageSize)
@@ -92,8 +92,36 @@ public class BookingRepository : IBookingRepository
                 UpdatedAt = b.UpdatedAt
             })
             .ToListAsync(cancellationToken);
-            
+
         return (items, totalCount);
+    }
+
+    public async Task<UserBookingStatsDto> GetStatsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var bookings = await _context.Bookings
+            .AsNoTracking()
+            .Where(b => b.UserId == userId && b.Status != BookingStatus.Cancelled)
+            .Select(b => new { b.TotalPrice, b.CreatedAt })
+            .ToListAsync(cancellationToken);
+
+        var totalBookings = bookings.Count;
+        var totalSpent = bookings.Sum(b => b.TotalPrice);
+
+        var now = DateTime.UtcNow;
+        var firstDayCurrentMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var firstDayLastMonth = firstDayCurrentMonth.AddMonths(-1);
+        var firstDayCurrentYear = new DateTime(now.Year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var firstDayLastYear = firstDayCurrentYear.AddYears(-1);
+
+        var lastMonthSpent = bookings
+            .Where(b => b.CreatedAt >= firstDayLastMonth && b.CreatedAt < firstDayCurrentMonth)
+            .Sum(b => b.TotalPrice);
+
+        var lastYearSpent = bookings
+            .Where(b => b.CreatedAt >= firstDayLastYear && b.CreatedAt < firstDayCurrentYear)
+            .Sum(b => b.TotalPrice);
+
+        return new UserBookingStatsDto(totalBookings, totalSpent, lastMonthSpent, lastYearSpent);
     }
 
     public async Task<(List<BookingDto> Items, int TotalCount)> GetAllAsync(
