@@ -88,7 +88,8 @@ Represents the payment transaction details.
 | **GET** | `/api/bookings/search?pnr={pnr}` | None | Search for a booking using PNR code. | None (Query param `pnrCode: string`) | `Booking { id: string, userId: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, SpecialRequests?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }>, tickets: Array<{ id: string, ticketNumber: string, seatNumber: string, status: number }> }` |
 | **POST** | `/api/bookings/{id}/pay` | None | Process payment for a pending booking. | `{ paymentMethod: string, amount: number }` | `{ status: string, transactionId: string }` |
 | **GET** | `/api/tickets/{id}` | None | Retrieve e-ticket details. | None | `Ticket { id: string, bookingId: string, passengerId: string, flightId: string, seatId: string, ticketNumber: string, gate?: string, boardingTime?: string, status: number }` |
-| **GET** | `/api/bookings/my-bookings` | User | Retrieve booking history for the logged-in user. | None | `{ bookings: Booking[] }` |
+| **GET** | `/api/bookings/user/{id}` | User | Retrieve booking history for a user (owner or privileged). | None (Query params `pageNumber: number, pageSize: number`) | `PagedResult<BookingDto> { items: BookingDto[], totalCount: number, pageNumber: number, pageSize: number }` |
+| **GET** | `/api/bookings/user/{id}/stats` | User | Retrieve booking statistics for a user (owner or privileged). | None | `UserBookingStatsDto { totalBookings: number, totalSpent: number, lastMonthSpent: number, lastYearSpent: number }` |
 
 #### Staff Endpoints
 | Method | Path | Auth | Description | Input Type | Output Type |

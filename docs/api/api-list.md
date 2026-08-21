@@ -66,7 +66,8 @@ APIs requiring a valid JWT token, regardless of user role.
 | :--- | :--- | :--- |
 | **GET** | `/api/auth/me` | Currently logged-in user's information |
 | **PUT** | `/api/auth/language` | Update preferred language |
-| **GET** | `/api/bookings/my-bookings` | User's booking history |
+| **GET** | `/api/bookings/user/{id}` | User's booking history |
+| **GET** | `/api/bookings/user/{id}/stats` | User's booking statistics |
 | **GET** | `/api/notifications` | Paginated list of user notifications |
 | **GET** | `/api/notifications/unread-count` | Unread notification count |
 | **PUT** | `/api/notifications/{id}/read` | Mark a specific notification as read |

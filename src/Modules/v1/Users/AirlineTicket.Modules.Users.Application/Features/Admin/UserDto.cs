@@ -1,5 +1,4 @@
 using System;
-using AirlineTicket.Modules.Users.Application.Contracts;
 
 namespace AirlineTicket.Modules.Users.Application.Features.Admin;
 
@@ -15,5 +14,4 @@ public record UserDto(
     string? AirlineLogoUrl,
     string? LanguagePreference,
     bool IsActive,
-    string CreatedAt,
-    UserBookingStatsDto? BookingStats = null);
+    string CreatedAt);

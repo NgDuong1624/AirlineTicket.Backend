@@ -45,6 +45,7 @@ public interface IBookingRepository
     Task<BookingDto?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<BookingDetailDto?> GetDetailByPnrAsync(string pnrCode, CancellationToken cancellationToken = default);
     Task<(List<BookingDto> Items, int TotalCount)> GetByUserIdAsync(Guid userId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
+    Task<UserBookingStatsDto> GetStatsByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
     Task<(List<BookingDto> Items, int TotalCount)> GetAllAsync(
         int pageIndex, 
         int pageSize, 

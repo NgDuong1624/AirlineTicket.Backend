@@ -88,8 +88,9 @@ public class BookingEndpoints : IEndpoint
             .Produces(404)
             .AllowAnonymous();
 
-        // GET /api/bookings/my-bookings — Get booking history of logged-in user
-        group.MapGet("/my-bookings", async (
+        // GET /api/bookings/user/{id:guid} — Get bookings for user
+        group.MapGet("/user/{id:guid}", async (
+                Guid id,
                 [FromServices] ISender sender,
                 ClaimsPrincipal user,
                 CancellationToken ct,
@@ -97,19 +98,50 @@ public class BookingEndpoints : IEndpoint
                 [FromQuery] int pageSize = 10) =>
             {
                 var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (!Guid.TryParse(userIdClaim, out var userId))
+                var userRole = user.FindFirst(ClaimTypes.Role)?.Value ?? user.FindFirst(AuthConstants.Claims.Role)?.Value;
+
+                bool isPrivileged = userRole is AuthConstants.Roles.Admin or AuthConstants.Roles.Staff or AuthConstants.Roles.Partner;
+                if (!Guid.TryParse(userIdClaim, out var currentUserId) || (!isPrivileged && currentUserId != id))
                 {
-                    return Results.Json(new { Code = "UNAUTHORIZED", Message = "Invalid user token." }, statusCode: 401);
+                    return Results.Json(new { Code = "FORBIDDEN", Message = "Access denied." }, statusCode: 403);
                 }
 
-                var query = new GetMyBookingsQuery(userId, pageNumber, pageSize);
+                var query = new GetMyBookingsQuery(id, pageNumber, pageSize);
                 var result = await sender.Send(query, ct);
                 return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
-            .WithName("GetMyBookings")
-            .WithSummary("Get booking history of logged-in user")
+            .WithName("GetUserBookings")
+            .WithSummary("Get bookings for user")
             .Produces(200)
             .Produces(401)
+            .Produces(403)
+            .RequireAuthorization();
+
+        // GET /api/bookings/user/{id:guid}/stats — Get booking statistics for user
+        group.MapGet("/user/{id:guid}/stats", async (
+                Guid id,
+                [FromServices] ISender sender,
+                ClaimsPrincipal user,
+                CancellationToken ct) =>
+            {
+                var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var userRole = user.FindFirst(ClaimTypes.Role)?.Value ?? user.FindFirst(AuthConstants.Claims.Role)?.Value;
+
+                bool isPrivileged = userRole is AuthConstants.Roles.Admin or AuthConstants.Roles.Staff or AuthConstants.Roles.Partner;
+                if (!Guid.TryParse(userIdClaim, out var currentUserId) || (!isPrivileged && currentUserId != id))
+                {
+                    return Results.Json(new { Code = "FORBIDDEN", Message = "Access denied." }, statusCode: 403);
+                }
+
+                var query = new GetUserBookingStatsQuery(id);
+                var result = await sender.Send(query, ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
+            })
+            .WithName("GetUserBookingStats")
+            .WithSummary("Get booking statistics for user")
+            .Produces(200)
+            .Produces(401)
+            .Produces(403)
             .RequireAuthorization();
 
         // PUT /api/bookings/{id:guid} — Update booking information
