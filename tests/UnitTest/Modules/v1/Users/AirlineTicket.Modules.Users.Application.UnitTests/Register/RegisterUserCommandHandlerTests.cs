@@ -43,7 +43,7 @@ public class RegisterUserCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("EMAIL_ALREADY_EXISTS");
+        result.Error.Code.Should().Be("Auth.EmailAlreadyExists");
         _userRepositoryMock.Verify(x => x.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

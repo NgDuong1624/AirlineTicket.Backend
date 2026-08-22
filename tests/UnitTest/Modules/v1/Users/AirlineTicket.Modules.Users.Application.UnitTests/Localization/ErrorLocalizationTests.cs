@@ -59,23 +59,23 @@ public class ErrorLocalizationTests
     [Fact]
     public void Localize_KnownErrorCode_ShouldReturnTranslatedString()
     {
-        var viMessage = _localizer.Localize("USER_NOT_FOUND", culture: "vi");
+        var viMessage = _localizer.Localize("User.NotFound", culture: "vi");
         Assert.Equal("Không tìm thấy thông tin người dùng.", viMessage);
 
-        var jaMessage = _localizer.Localize("USER_NOT_FOUND", culture: "ja");
+        var jaMessage = _localizer.Localize("User.NotFound", culture: "ja");
         Assert.Equal("ユーザーが見つかりません。", jaMessage);
 
-        var enMessage = _localizer.Localize("USER_NOT_FOUND", culture: "en");
+        var enMessage = _localizer.Localize("User.NotFound", culture: "en");
         Assert.Equal("User not found.", enMessage);
     }
 
     [Fact]
     public void Localize_WithDynamicArgs_ShouldInterpolateParameters()
     {
-        var localized = _localizer.Localize("SEAT_CONFLICT", culture: "vi", args: new object[] { "12A" });
+        var localized = _localizer.Localize("Seat.Conflict", culture: "vi", args: new object[] { "12A" });
         Assert.Equal("Ghế 12A đã được đặt hoặc không còn khả dụng.", localized);
 
-        var localizedEn = _localizer.Localize("SEAT_CONFLICT", culture: "en", args: new object[] { "12A" });
+        var localizedEn = _localizer.Localize("Seat.Conflict", culture: "en", args: new object[] { "12A" });
         Assert.Equal("Seat 12A is already reserved or unavailable.", localizedEn);
     }
 
@@ -94,10 +94,10 @@ public class ErrorLocalizationTests
     [Fact]
     public void GetLocalizedError_ShouldPreserveCodeAndLocalizeMessage()
     {
-        var error = Error.Create("SEAT_CONFLICT", "Seat conflict fallback", "14C");
+        var error = Error.Create("Seat.Conflict", "Seat conflict fallback", "14C");
         var localizedError = _localizer.GetLocalizedError(error, culture: "vi");
 
-        Assert.Equal("SEAT_CONFLICT", localizedError.Code);
+        Assert.Equal("Seat.Conflict", localizedError.Code);
         Assert.Equal("Ghế 14C đã được đặt hoặc không còn khả dụng.", localizedError.Message);
     }
 }
