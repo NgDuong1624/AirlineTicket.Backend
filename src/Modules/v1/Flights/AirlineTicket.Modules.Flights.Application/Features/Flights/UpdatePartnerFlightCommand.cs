@@ -30,32 +30,32 @@ internal sealed class UpdatePartnerFlightCommandHandler : ICommandHandler<Update
         var existing = await _flightRepository.GetByIdAsync(request.Id, cancellationToken);
         if (existing is null)
         {
-            return Result.Failure<bool>(new Error("FLIGHT_NOT_FOUND", "Flight not found."));
+            return Result.Failure<bool>(new Error("Flight.NotFound", "Flight not found."));
         }
 
         // 2. Verify airline ownership
         if (existing.AirlineId != request.AirlineId)
         {
-            return Result.Failure<bool>(new Error("FORBIDDEN", "This flight does not belong to your airline."));
+            return Result.Failure<bool>(new Error("Common.Forbidden", "This flight does not belong to your airline."));
         }
 
         // 3. Validate flight status
         var status = (FlightStatus)existing.Status;
         if (status == FlightStatus.Cancelled)
         {
-            return Result.Failure<bool>(new Error("FLIGHT_CANCELLED", "Cannot edit a cancelled flight."));
+            return Result.Failure<bool>(new Error("Flight.Cancelled", "Cannot edit a cancelled flight."));
         }
 
         if (status != FlightStatus.Scheduled && status != FlightStatus.Delayed)
         {
-            return Result.Failure<bool>(new Error("FLIGHT_NOT_EDITABLE", "Only Scheduled or Delayed flights can be updated."));
+            return Result.Failure<bool>(new Error("Flight.NotEditable", "Only Scheduled or Delayed flights can be updated."));
         }
 
         // 4. Fetch route to calculate arrival time
         var route = await _routeRepository.GetByIdAsync(existing.RouteId, cancellationToken);
         if (route is null || !route.EstimatedDurationMinutes.HasValue || route.EstimatedDurationMinutes.Value <= 0)
         {
-            return Result.Failure<bool>(new Error("ROUTE_DURATION_INVALID", "Route not found or has invalid estimated duration."));
+            return Result.Failure<bool>(new Error("Route.DurationInvalid", "Route not found or has invalid estimated duration."));
         }
 
         // 5. Determine new status: if Scheduled and departure pushed later → Delayed

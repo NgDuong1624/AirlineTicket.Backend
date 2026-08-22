@@ -45,7 +45,7 @@ public class GetBookingByIdQueryHandlerTests
     }
 
     [Fact]
-    public async Task GetBookingByIdQueryHandler_ShouldReturnNull_WhenNotExists()
+    public async Task GetBookingByIdQueryHandler_ShouldReturnFailure_WhenNotExists()
     {
         var handler = new GetBookingByIdQueryHandler(_bookingRepoMock.Object);
         var bookingId = Guid.NewGuid();
@@ -56,7 +56,7 @@ public class GetBookingByIdQueryHandlerTests
         var result = await handler.Handle(new GetBookingByIdQuery(bookingId), CancellationToken.None);
 
         result.Should().NotBeNull();
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeNull();
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be("Booking.NotFound");
     }
 }

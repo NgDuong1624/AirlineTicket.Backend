@@ -21,7 +21,7 @@ public class UpdateUserProfileCommandHandler : ICommandHandler<UpdateUserProfile
     {
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null)
-            return Result.Failure<Unit>(new Error("USER_NOT_FOUND", "User not found."));
+            return Result.Failure<Unit>(new Error("User.NotFound", "User not found."));
 
         user.FullName = request.FullName;
         user.Phone = request.Phone;

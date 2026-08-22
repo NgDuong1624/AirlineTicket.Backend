@@ -135,7 +135,7 @@ public class JsonErrorLocalizer : IErrorLocalizer
                     using var reader = new StreamReader(stream);
                     var json = reader.ReadToEnd();
 
-                    var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(json, JsonOptions);
+                    var parsed = FlattenJsonDictionary(json);
                     if (parsed != null && parsed.Count > 0)
                     {
                         _dictionaries[culture] = new Dictionary<string, string>(parsed, StringComparer.OrdinalIgnoreCase);
@@ -194,7 +194,7 @@ public class JsonErrorLocalizer : IErrorLocalizer
                         try
                         {
                             var json = File.ReadAllText(filePath);
-                            var parsed = JsonSerializer.Deserialize<Dictionary<string, string>>(json, JsonOptions);
+                            var parsed = FlattenJsonDictionary(json);
                             if (parsed != null)
                             {
                                 _dictionaries[culture] = new Dictionary<string, string>(parsed, StringComparer.OrdinalIgnoreCase);
@@ -209,6 +209,37 @@ public class JsonErrorLocalizer : IErrorLocalizer
                 break;
             }
             current = current.Parent;
+        }
+    }
+
+    private static Dictionary<string, string>? FlattenJsonDictionary(string json)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            FlattenElement(doc.RootElement, string.Empty, result);
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static void FlattenElement(JsonElement element, string prefix, Dictionary<string, string> dict)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                var nextPrefix = string.IsNullOrEmpty(prefix) ? property.Name : $"{prefix}.{property.Name}";
+                FlattenElement(property.Value, nextPrefix, dict);
+            }
+        }
+        else if (element.ValueKind == JsonValueKind.String)
+        {
+            dict[prefix] = element.GetString() ?? string.Empty;
         }
     }
 }

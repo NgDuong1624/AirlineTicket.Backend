@@ -35,7 +35,7 @@ public class GetUserProfileQueryHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("USER_NOT_FOUND");
+        result.Error.Code.Should().Be("User.NotFound");
     }
 
     [Fact]

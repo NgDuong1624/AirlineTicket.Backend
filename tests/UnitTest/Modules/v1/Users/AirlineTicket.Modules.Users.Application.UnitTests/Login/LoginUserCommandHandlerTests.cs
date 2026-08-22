@@ -44,7 +44,7 @@ public class LoginUserCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("UNAUTHORIZED");
+        result.Error.Code.Should().Be("Common.Unauthorized");
     }
 
     [Fact]
@@ -65,7 +65,7 @@ public class LoginUserCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("UNAUTHORIZED");
+        result.Error.Code.Should().Be("Common.Unauthorized");
     }
 
     [Fact]

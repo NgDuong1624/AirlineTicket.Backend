@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using MediatR;
@@ -41,10 +42,10 @@ public class StaffBookingEndpoints : IEndpoint
                 if (result.IsSuccess)
                     return Results.Ok(result.Value);
 
-                if (result.Error.Code == "SEAT_CONFLICT")
-                    return Results.Conflict(result.Error);
+                if (result.Error.Code == "Seat.Conflict")
+                    return result.ToErrorResult(statusCode: 409);
 
-                return Results.BadRequest(result.Error);
+                return result.ToErrorResult();
             })
             .WithName("StaffCreateBooking")
             .WithSummary("Staff creates a booking on behalf of a call-in customer")
@@ -63,7 +64,7 @@ public class StaffBookingEndpoints : IEndpoint
                 CancellationToken ct = default) =>
             {
                 var result = await sender.Send(new GetStaffSalesQuery(pageIndex, pageSize, search, status), ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
             })
             .WithTags("Staff Bookings")
             .WithName("StaffGetSales")

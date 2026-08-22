@@ -8,9 +8,9 @@ using MediatR;
 
 namespace AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 
-public record GetBookingByIdQuery(Guid Id) : IQuery<Result<BookingDto?>>;
+public record GetBookingByIdQuery(Guid Id) : IQuery<Result<BookingDto>>;
 
-public class GetBookingByIdQueryHandler : IQueryHandler<GetBookingByIdQuery, Result<BookingDto?>>
+public class GetBookingByIdQueryHandler : IQueryHandler<GetBookingByIdQuery, Result<BookingDto>>
 {
     private readonly IBookingRepository _bookingRepository;
 
@@ -19,9 +19,11 @@ public class GetBookingByIdQueryHandler : IQueryHandler<GetBookingByIdQuery, Res
         _bookingRepository = bookingRepository;
     }
 
-    public async Task<Result<BookingDto?>> Handle(GetBookingByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<BookingDto>> Handle(GetBookingByIdQuery request, CancellationToken cancellationToken)
     {
         var booking = await _bookingRepository.GetByIdAsync(request.Id, cancellationToken);
-        return Result.Success(booking);
+        return booking != null
+            ? Result.Success(booking)
+            : Result.Failure<BookingDto>(new Error("Booking.NotFound", "Booking not found."));
     }
 }

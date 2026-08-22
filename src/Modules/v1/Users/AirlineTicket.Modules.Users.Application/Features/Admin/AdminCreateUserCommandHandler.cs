@@ -31,7 +31,7 @@ public class AdminCreateUserCommandHandler : ICommandHandler<AdminCreateUserComm
     public async Task<Result<Guid>> Handle(AdminCreateUserCommand request, CancellationToken cancellationToken)
     {
         if (!await _userRepository.IsEmailUniqueAsync(request.Email, cancellationToken))
-            return Result.Failure<Guid>(new Error("BAD_REQUEST", "Email already exists"));
+            return Result.Failure<Guid>(new Error("Auth.EmailAlreadyExists", "Email address is already registered."));
 
         var resolvedLanguage = !string.IsNullOrWhiteSpace(request.LanguagePreference)
             ? _languageResolver.NormalizeCulture(request.LanguagePreference)

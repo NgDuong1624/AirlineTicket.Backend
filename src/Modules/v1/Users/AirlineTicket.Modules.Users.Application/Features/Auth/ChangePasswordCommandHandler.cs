@@ -25,12 +25,12 @@ public class ChangePasswordCommandHandler : ICommandHandler<ChangePasswordComman
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null)
         {
-            return Result.Failure<Unit>(new Error("USER_NOT_FOUND", "User not found."));
+            return Result.Failure<Unit>(new Error("User.NotFound", "User not found."));
         }
 
         if (!_passwordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
         {
-            return Result.Failure<Unit>(new Error("INCORRECT_PASSWORD", "Incorrect current password."));
+            return Result.Failure<Unit>(new Error("Auth.IncorrectPassword", "Incorrect email or password."));
         }
 
         user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);

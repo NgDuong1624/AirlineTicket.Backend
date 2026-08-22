@@ -38,7 +38,7 @@ public class RefreshTokenCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("INVALID_REFRESH_TOKEN");
+        result.Error.Code.Should().Be("Auth.InvalidRefreshToken");
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class RefreshTokenCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error.Code.Should().Be("INVALID_REFRESH_TOKEN");
+        result.Error.Code.Should().Be("Auth.InvalidRefreshToken");
     }
 
     [Fact]

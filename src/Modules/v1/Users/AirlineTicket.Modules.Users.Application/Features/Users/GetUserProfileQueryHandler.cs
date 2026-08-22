@@ -21,7 +21,7 @@ public class GetUserProfileQueryHandler : IQueryHandler<GetUserProfileQuery, Res
     {
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null)
-            return Result.Failure<UserDto?>(new Error("USER_NOT_FOUND", "User not found."));
+            return Result.Failure<UserDto?>(new Error("User.NotFound", "User not found."));
 
         var userDto = new UserDto(
             user.Id,

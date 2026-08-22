@@ -20,7 +20,7 @@ public class GetUserByIdQueryHandler : IQueryHandler<GetUserByIdQuery, Result<Us
     {
         var user = await _userRepository.GetByIdAsync(request.Id, cancellationToken);
         if (user == null)
-            return Result.Failure<UserDto?>(new Error("USER_NOT_FOUND", "User not found."));
+            return Result.Failure<UserDto?>(new Error("User.NotFound", "User not found."));
 
         var userDto = new UserDto(
             user.Id,

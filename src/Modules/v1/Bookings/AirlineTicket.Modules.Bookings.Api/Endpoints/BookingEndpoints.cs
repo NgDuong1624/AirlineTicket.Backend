@@ -5,6 +5,7 @@ using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.BuildingBlocks.Domain.Constants;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using AirlineTicket.Modules.Bookings.Application.Features.Payments;
 using AirlineTicket.Modules.Bookings.Application.Features.Tickets;
@@ -80,7 +81,7 @@ public class BookingEndpoints : IEndpoint
             {
                 var query = new GetBookingByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult(statusCode: 404);
             })
             .WithName("GetBookingById")
             .WithSummary("Get booking details")
@@ -103,7 +104,7 @@ public class BookingEndpoints : IEndpoint
                 bool isPrivileged = userRole is AuthConstants.Roles.Admin or AuthConstants.Roles.Staff or AuthConstants.Roles.Partner;
                 if (!Guid.TryParse(userIdClaim, out var currentUserId) || (!isPrivileged && currentUserId != id))
                 {
-                    return Results.Json(new { Code = "FORBIDDEN", Message = "Access denied." }, statusCode: 403);
+                    return new Error("Common.Forbidden", "Access forbidden.").ToErrorResult(statusCode: 403);
                 }
 
                 var query = new GetMyBookingsQuery(id, pageNumber, pageSize);
@@ -130,7 +131,7 @@ public class BookingEndpoints : IEndpoint
                 bool isPrivileged = userRole is AuthConstants.Roles.Admin or AuthConstants.Roles.Staff or AuthConstants.Roles.Partner;
                 if (!Guid.TryParse(userIdClaim, out var currentUserId) || (!isPrivileged && currentUserId != id))
                 {
-                    return Results.Json(new { Code = "FORBIDDEN", Message = "Access denied." }, statusCode: 403);
+                    return new Error("Common.Forbidden", "Access forbidden.").ToErrorResult(statusCode: 403);
                 }
 
                 var query = new GetUserBookingStatsQuery(id);
@@ -249,7 +250,7 @@ public class BookingEndpoints : IEndpoint
             {
                 var query = new GetTicketByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult(statusCode: 404);
             })
             .WithTags("Tickets Module")
             .WithName("GetTicketById")

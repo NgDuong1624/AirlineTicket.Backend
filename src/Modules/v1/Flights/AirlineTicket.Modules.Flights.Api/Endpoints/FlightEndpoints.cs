@@ -143,7 +143,7 @@ public class FlightEndpoints : IEndpoint
             {
                 var query = new GetFlightByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult(statusCode: 404);
             })
             .WithName("GetFlightById")
             .WithSummary("Get flight details by ID")
