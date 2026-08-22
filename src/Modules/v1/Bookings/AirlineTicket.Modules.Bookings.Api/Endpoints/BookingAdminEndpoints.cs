@@ -1,7 +1,9 @@
 using System;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.BuildingBlocks.Domain.Constants;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -31,7 +33,7 @@ public class BookingAdminEndpoints : IEndpoint
             {
                 var query = new GetAllBookingsQuery(pageIndex, pageSize, search, status, date);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount }) : result.ToErrorResult();
             })
             .WithName("AdminGetBookings")
             .WithSummary("Get paginated list of bookings")
@@ -48,7 +50,7 @@ public class BookingAdminEndpoints : IEndpoint
             {
                 var query = new GetBookingByIdQuery(id);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound();
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult(statusCode: 404);
             })
             .WithName("AdminGetBookingById")
             .WithSummary("Get booking by ID")
@@ -67,7 +69,7 @@ public class BookingAdminEndpoints : IEndpoint
                 var passengers = request.Passengers?.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
                 var command = new UpdateBookingCommand(id, passengers, request.ContactEmail, request.ContactPhone);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.Ok() : result.ToErrorResult();
             })
             .WithName("AdminUpdateBooking")
             .WithSummary("Update booking details")
@@ -86,8 +88,8 @@ public class BookingAdminEndpoints : IEndpoint
                 var command = new UpdateBookingStatusCommand(id, request.Status);
                 var result = await sender.Send(command, ct);
                 if (result.IsSuccess) return Results.Ok();
-                if (result.Error.Code == "NOT_FOUND") return Results.NotFound(result.Error);
-                return Results.BadRequest(result.Error);
+                if (result.Error.Code == "Booking.NotFound" || result.Error.Code == "Common.NotFound") return result.ToErrorResult(statusCode: 404);
+                return result.ToErrorResult();
             })
             .WithName("AdminUpdateBookingStatus")
             .WithSummary("Update booking status")
@@ -105,7 +107,7 @@ public class BookingAdminEndpoints : IEndpoint
             {
                 var command = new CancelBookingCommand(id);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
             })
             .WithName("AdminDeleteBooking")
             .WithSummary("Cancel a booking")

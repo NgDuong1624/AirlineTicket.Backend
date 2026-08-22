@@ -84,5 +84,5 @@ public class PartnerRevenueDashboardEndpoints : IEndpoint
     }
 
     private static IResult Forbidden() =>
-        Results.Json(new { Code = "FORBIDDEN", Message = "No airline scope on token." }, statusCode: 403);
+        new Error("Common.Forbidden", "No airline scope on token.").ToErrorResult(statusCode: 403);
 }

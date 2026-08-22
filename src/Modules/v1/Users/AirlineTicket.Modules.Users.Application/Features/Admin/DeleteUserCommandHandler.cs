@@ -22,7 +22,7 @@ public class DeleteUserCommandHandler : ICommandHandler<DeleteUserCommand, Resul
         var user = await _userRepository.GetByIdAsync(request.Id, cancellationToken);
         if (user == null)
         {
-            return Result.Failure<Unit>(new Error("USER_NOT_FOUND", "User not found."));
+            return Result.Failure<Unit>(new Error("User.NotFound", "User not found."));
         }
 
         await _userRepository.DeleteAsync(user, cancellationToken);

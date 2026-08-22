@@ -21,6 +21,8 @@ public class GetTicketByIdQueryHandler : IQueryHandler<GetTicketByIdQuery, Resul
     public async Task<Result<object>> Handle(GetTicketByIdQuery request, CancellationToken cancellationToken)
     {
         var ticket = await _ticketRepository.GetByIdAsync(request.TicketId, cancellationToken);
-        return ticket != null ? Result.Success<object>(ticket) : Result.Failure<object>(new Error("NOT_FOUND", "Ticket not found"));
+        return ticket != null
+            ? Result.Success<object>(ticket)
+            : Result.Failure<object>(new Error("Ticket.NotFound", "Ticket not found."));
     }
 }

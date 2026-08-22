@@ -24,7 +24,7 @@ internal sealed class GetPromotionByCodeQueryHandler : IQueryHandler<GetPromotio
         var promotion = await _promotionRepository.GetByCodeAsync(request.Code, cancellationToken);
         if (promotion == null)
         {
-            return Result.Failure<PromotionDto>(new Error("PROMOTION_NOT_FOUND", $"Promotion with code {request.Code} was not found."));
+            return Result.Failure<PromotionDto>(new Error("Promotion.NotFound", $"Promotion with code {request.Code} was not found."));
         }
         return Result.Success(promotion);
     }

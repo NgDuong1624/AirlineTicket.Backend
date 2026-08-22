@@ -72,7 +72,7 @@ public class StaffCreateBookingCommandHandler : ICommandHandler<StaffCreateBooki
         }
         catch (SeatUnavailableException ex)
         {
-            return Result.Failure<StaffBookingResult>(new Error("SEAT_CONFLICT", ex.Message));
+            return Result.Failure<StaffBookingResult>(new Error("Seat.Conflict", ex.Message));
         }
 
         var totalPrice = reserved.Values.Sum(r => r.Price);

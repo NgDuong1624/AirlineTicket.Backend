@@ -32,7 +32,7 @@ public class RegisterUserCommandHandler : ICommandHandler<RegisterUserCommand, R
     {
         if (!await _userRepository.IsEmailUniqueAsync(request.Email, cancellationToken))
         {
-            return Result.Failure<Guid>(new Error("EMAIL_ALREADY_EXISTS", "Email already exists."));
+            return Result.Failure<Guid>(new Error("Auth.EmailAlreadyExists", "Email address is already registered."));
         }
 
         var resolvedLanguage = !string.IsNullOrWhiteSpace(request.LanguagePreference)

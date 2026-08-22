@@ -23,11 +23,11 @@ public class UpdateBookingStatusCommandHandler : ICommandHandler<UpdateBookingSt
     public async Task<Result<Unit>> Handle(UpdateBookingStatusCommand request, CancellationToken cancellationToken)
     {
         if (!Enum.TryParse<BookingStatus>(request.Status, ignoreCase: true, out var status))
-            return Result.Failure<Unit>(new Error("BAD_REQUEST", $"Invalid booking status '{request.Status}'. Allowed values: Pending, Confirmed, Cancelled."));
+            return Result.Failure<Unit>(new Error("Common.BadRequest", $"Invalid booking status '{request.Status}'. Allowed values: Pending, Confirmed, Cancelled."));
 
         var booking = await _bookingRepository.GetByIdAsync(request.BookingId, cancellationToken);
         if (booking == null)
-            return Result.Failure<Unit>(new Error("NOT_FOUND", $"Booking with ID {request.BookingId} not found."));
+            return Result.Failure<Unit>(new Error("Booking.NotFound", $"Booking with ID {request.BookingId} not found."));
 
         booking.Status = status.ToString();
         await _bookingRepository.UpdateAsync(booking, cancellationToken);

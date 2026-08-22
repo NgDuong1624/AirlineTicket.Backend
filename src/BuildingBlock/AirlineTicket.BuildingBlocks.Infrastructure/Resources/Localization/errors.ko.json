@@ -1,36 +1,66 @@
 {
-  "BAD_REQUEST": "잘못된 요청입니다.",
-  "UNAUTHORIZED": "인증되지 않은 접근입니다.",
-  "FORBIDDEN": "접근 권한이 없습니다.",
-  "NOT_FOUND": "요청한 리소스를 찾을 수 없습니다.",
-  "INTERNAL_SERVER_ERROR": "시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.",
-  "Error.NullValue": "결과 값이 null 일 수 없습니다.",
-  "VALIDATION_FAILED": "입력 데이터 유효성 검사에 실패했습니다.",
-  "Validation.Required": "{0} 필드는 필수 항목입니다.",
-  "Validation.Invalid": "{0} 값이 유효하지 않습니다.",
-  "Validation.InvalidEmail": "올바른 이메일 형식이 아닙니다.",
-  "Validation.MinLength": "{0} 필드는 최소 {1}자 이상이어야 합니다.",
-  "Validation.MaxLength": "{0} 필드는 최대 {1}자를 초과할 수 없습니다.",
-  "Validation.Range": "{0} 필드는 {1}에서 {2} 사이여야 합니다.",
-  "INVALID_REFRESH_TOKEN": "유효하지 않거나 만료된 리프레시 토큰입니다.",
-  "USER_NOT_FOUND": "사용자를 찾을 수 없습니다.",
-  "User.NotFound": "사용자를 찾을 수 없습니다.",
-  "INCORRECT_PASSWORD": "이메일 또는 비밀번호가 일치하지 않습니다.",
-  "EMAIL_ALREADY_EXISTS": "이미 등록된 이메일 주소입니다.",
-  "Language.Invalid": "유효하지 않은 언어 코드입니다.",
-  "Flight.NotFound": "항공편을 찾을 수 없습니다.",
-  "FLIGHT_NOT_FOUND": "항공편을 찾을 수 없습니다.",
-  "FLIGHT_CANCELLED": "해당 항공편은 취소되었습니다.",
-  "FLIGHT_NOT_EDITABLE": "현재 상태에서는 항공편 정보를 수정할 수 없습니다.",
-  "Airplane.NotFound": "항공기 정보를 찾을 수 없습니다.",
-  "AIRPLANE_NOT_FOUND": "항공기 정보를 찾을 수 없습니다.",
-  "Airline.NotFound": "항공사를 찾을 수 없습니다.",
-  "AircraftModel.NotFound": "항공기 기종 정보를 찾을 수 없습니다.",
-  "Airport.NotFound": "공항을 찾을 수 없습니다.",
-  "ROUTE_NOT_FOUND": "노선을 찾을 수 없습니다.",
-  "ROUTE_DURATION_INVALID": "노선 비행시간이 유효하지 않습니다.",
-  "SEAT_CONFLICT": "{0} 좌석은 이미 예약되었거나 사용할 수 없습니다.",
-  "BOOKING_NOT_FOUND": "예약 정보를 찾을 수 없습니다.",
-  "PROMOTION_NOT_FOUND": "프로모션 코드를 찾을 수 없습니다.",
-  "PROMOTION_INVALID": "유효하지 않거나 만료된 프로모션 코드입니다."
+  "Common": {
+    "BadRequest": "잘못된 요청입니다.",
+    "Unauthorized": "인증되지 않은 접근입니다.",
+    "Forbidden": "접근 권한이 없습니다.",
+    "NotFound": "요청한 리소스를 찾을 수 없습니다.",
+    "InternalServerError": "시스템 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+  },
+  "Validation": {
+    "Failed": "입력 데이터 유효성 검사에 실패했습니다.",
+    "Required": "{0} 필드는 필수 항목입니다.",
+    "Invalid": "{0} 값이 유효하지 않습니다.",
+    "InvalidEmail": "올바른 이메일 형식이 아닙니다.",
+    "MinLength": "{0} 필드는 최소 {1}자 이상이어야 합니다.",
+    "MaxLength": "{0} 필드는 최대 {1}자를 초과할 수 없습니다.",
+    "Range": "{0} 필드는 {1}에서 {2} 사이여야 합니다."
+  },
+  "Error": {
+    "NullValue": "결과 값이 null 일 수 없습니다."
+  },
+  "Auth": {
+    "InvalidRefreshToken": "유효하지 않거나 만료된 리프레시 토큰입니다.",
+    "IncorrectPassword": "이메일 또는 비밀번호가 일치하지 않습니다."
+  },
+  "User": {
+    "NotFound": "사용자를 찾을 수 없습니다.",
+    "EmailAlreadyExists": "이미 등록된 이메일 주소입니다."
+  },
+  "Language": {
+    "Invalid": "유효하지 않은 언어 코드입니다."
+  },
+  "Flight": {
+    "NotFound": "항공편을 찾을 수 없습니다.",
+    "Cancelled": "해당 항공편은 취소되었습니다.",
+    "NotEditable": "현재 상태에서는 항공편 정보를 수정할 수 없습니다."
+  },
+  "Airplane": {
+    "NotFound": "항공기 정보를 찾을 수 없습니다."
+  },
+  "Airline": {
+    "NotFound": "항공사를 찾을 수 없습니다."
+  },
+  "AircraftModel": {
+    "NotFound": "항공기 기종 정보를 찾을 수 없습니다."
+  },
+  "Airport": {
+    "NotFound": "공항을 찾을 수 없습니다."
+  },
+  "Route": {
+    "NotFound": "노선을 찾을 수 없습니다.",
+    "DurationInvalid": "노선 비행시간이 유효하지 않습니다."
+  },
+  "Seat": {
+    "Conflict": "{0} 좌석은 이미 예약되었거나 사용할 수 없습니다."
+  },
+  "Booking": {
+    "NotFound": "예약 정보를 찾을 수 없습니다."
+  },
+  "Ticket": {
+    "NotFound": "항공권 정보를 찾을 수 없습니다."
+  },
+  "Promotion": {
+    "NotFound": "프로모션 코드를 찾을 수 없습니다.",
+    "Invalid": "유효하지 않거나 만료된 프로모션 코드입니다."
+  }
 }

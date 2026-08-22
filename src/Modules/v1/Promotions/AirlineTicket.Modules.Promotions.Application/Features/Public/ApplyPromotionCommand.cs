@@ -26,7 +26,7 @@ public class ApplyPromotionCommandHandler : ICommandHandler<ApplyPromotionComman
         var promo = await _promotionRepository.GetByCodeAsync(request.PromoCode, cancellationToken);
         if (promo == null || promo.EndDate < DateTime.UtcNow || promo.CurrentUsage >= promo.MaxUsage)
         {
-            return Result.Failure<ApplyPromotionResponse>(new Error("PROMOTION_INVALID", "Mã giảm giá không hợp lệ hoặc đã hết hạn."));
+            return Result.Failure<ApplyPromotionResponse>(new Error("Promotion.Invalid", "Promotion code is invalid or expired."));
         }
 
         decimal discountAmount = 0;

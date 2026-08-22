@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
+using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
 using MediatR;
@@ -38,7 +39,7 @@ public class PartnerBookingEndpoints : IEndpoint
                 var result = await sender.Send(new GetAllBookingsQuery(pageIndex, pageSize, search, status, date), ct);
                 return result.IsSuccess
                     ? Results.Ok(new { items = result.Items, totalCount = result.TotalCount })
-                    : Results.BadRequest(result.Error);
+                    : result.ToErrorResult();
             })
             .WithName("PartnerGetBookings")
             .WithSummary("Get paginated list of bookings for partner")
@@ -56,8 +57,8 @@ public class PartnerBookingEndpoints : IEndpoint
             {
                 var result = await sender.Send(new UpdateBookingStatusCommand(id, request.Status), ct);
                 if (result.IsSuccess) return Results.Ok();
-                if (result.Error.Code == "NOT_FOUND") return Results.NotFound(result.Error);
-                return Results.BadRequest(result.Error);
+                if (result.Error.Code == "Booking.NotFound" || result.Error.Code == "Common.NotFound") return result.ToErrorResult(statusCode: 404);
+                return result.ToErrorResult();
             })
             .WithName("PartnerUpdateBooking")
             .WithSummary("Update booking status for partner")

@@ -26,7 +26,7 @@ public class PayBookingCommandHandler : ICommandHandler<PayBookingCommand, Resul
     {
         var booking = await _bookingRepository.GetByIdAsync(request.BookingId, cancellationToken);
         if (booking == null)
-            return Result.Failure<Guid>(new Error("NOT_FOUND", "Booking not found"));
+            return Result.Failure<Guid>(new Error("Booking.NotFound", "Booking not found"));
 
         booking.Status = "Confirmed";
         await _bookingRepository.UpdateAsync(booking, cancellationToken);

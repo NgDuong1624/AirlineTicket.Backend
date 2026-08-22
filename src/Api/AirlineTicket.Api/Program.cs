@@ -328,3 +328,9 @@ app.MapGet("/api/health", async (IFlightRepository flightRepository) =>
 .WithTags("Health");
 
 app.Run();
+
+namespace AirlineTicket.Api
+{
+    public partial class Program { }
+}
+

@@ -24,7 +24,7 @@ public class UpdateBookingCommandHandler : ICommandHandler<UpdateBookingCommand,
     {
         var booking = await _bookingRepository.GetByIdAsync(request.BookingId, cancellationToken);
         if (booking == null)
-            return Result.Failure<Unit>(new Error("NOT_FOUND", $"Booking with ID {request.BookingId} not found."));
+            return Result.Failure<Unit>(new Error("Booking.NotFound", $"Booking with ID {request.BookingId} not found."));
 
         if (!string.IsNullOrEmpty(request.ContactEmail))
             booking.ContactEmail = request.ContactEmail;

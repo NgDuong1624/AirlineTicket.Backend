@@ -43,12 +43,12 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
         var route = await _routeRepository.GetByIdAsync(request.RouteId, cancellationToken);
         if (route is null || route.AirlineId != request.AirlineId)
         {
-            return Result.Failure<Guid>(new Error("ROUTE_NOT_FOUND", "The specified route does not exist or does not belong to your airline."));
+            return Result.Failure<Guid>(new Error("Route.NotFound", "The specified route does not exist or does not belong to your airline."));
         }
 
         if (!route.EstimatedDurationMinutes.HasValue || route.EstimatedDurationMinutes.Value <= 0)
         {
-            return Result.Failure<Guid>(new Error("ROUTE_DURATION_INVALID", "The route does not have a valid estimated duration."));
+            return Result.Failure<Guid>(new Error("Route.DurationInvalid", "The route does not have a valid estimated duration."));
         }
 
         // 2. Validate if the airplane belongs to the partner's airline
@@ -56,7 +56,7 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
         var airplaneExists = airplanes.Exists(a => a.Id == request.AirplaneId);
         if (!airplaneExists)
         {
-            return Result.Failure<Guid>(new Error("AIRPLANE_NOT_FOUND", "The specified airplane does not exist or does not belong to your airline."));
+            return Result.Failure<Guid>(new Error("Airplane.NotFound", "The specified airplane does not exist or does not belong to your airline."));
         }
 
         // 3. Create the flight

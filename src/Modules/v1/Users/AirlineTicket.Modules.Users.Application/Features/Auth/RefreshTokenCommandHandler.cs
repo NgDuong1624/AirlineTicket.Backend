@@ -26,7 +26,7 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, R
         var user = await _userRepository.GetByRefreshTokenAsync(request.RefreshToken, cancellationToken);
         if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
-            return Result.Failure<LoginResponse>(new Error("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token."));
+            return Result.Failure<LoginResponse>(new Error("Auth.InvalidRefreshToken", "Invalid or expired refresh token."));
         }
 
         var tokens = _jwtService.GenerateToken(user);

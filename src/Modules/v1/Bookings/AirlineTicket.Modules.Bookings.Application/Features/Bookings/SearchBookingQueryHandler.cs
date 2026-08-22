@@ -21,7 +21,7 @@ public class SearchBookingQueryHandler : IQueryHandler<SearchBookingQuery, Resul
         var booking = await _bookingRepository.GetDetailByPnrAsync(request.PnrCode, cancellationToken);
         
         if (booking == null)
-            return Result.Failure<BookingDetailDto>(new Error("NOT_FOUND", "Booking not found"));
+            return Result.Failure<BookingDetailDto>(new Error("Booking.NotFound", "Booking not found"));
 
         return Result.Success(booking);
     }
