@@ -207,16 +207,33 @@ docker compose --env-file deploy/docker/.env.prod -f deploy/docker/docker-compos
 
 ## Testing
 
+### Prerequisites for Integration Tests
+- **Docker Desktop / Docker Engine** running (required by **Testcontainers** to spin up isolated PostgreSQL 16 and Redis 7 containers).
+
+### Test Commands
+
 ```bash
-# Unit tests
+# Run all unit tests
 dotnet test tests/UnitTest/
 
-# Integration tests
+# Run all integration tests (uses Testcontainers: PostgreSQL + Redis)
 dotnet test tests/IntegrationTest/
+
+# Run individual module integration tests
+dotnet test tests/IntegrationTest/Modules/v1/Users/AirlineTicket.Modules.Users.Api.IntegrationTests/
+dotnet test tests/IntegrationTest/Modules/v1/Flights/AirlineTicket.Modules.Flights.Api.IntegrationTests/
+dotnet test tests/IntegrationTest/Modules/v1/Promotions/AirlineTicket.Modules.Promotions.Api.IntegrationTests/
+dotnet test tests/IntegrationTest/Modules/v1/Bookings/AirlineTicket.Modules.Bookings.Api.IntegrationTests/
 
 # API Testing (Postman / Newman)
 newman run tests/ApisTest/AirlineTicket.postman_collection.json -e tests/ApisTest/AirlineTicket.postman_environment.json
 ```
+
+### Integration Test Architecture
+- **Testcontainers**: Automated PostgreSQL (`postgres:16-alpine`) and Redis (`redis:7-alpine`) lifecycle per test run.
+- **CustomWebApplicationFactory**: In-memory test host with auto schema migrations (`DatabaseInitializer.MigrateAsync`) and core seed data (`DatabaseInitializer.SeedCoreAsync`).
+- **Test Authentication Handler**: Header-based mock authentication supporting multi-role scopes (`Admin`, `Customer`, `Partner`, `Staff`) and custom permissions.
+
 
 Target: 80%+ code coverage for core business logic.
 

@@ -1,29 +1,52 @@
 using System.Net;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc.Testing;
+using System.Net.Http.Json;
+using System.Text.Json;
+using AirlineTicket.IntegrationTests.Shared;
+using AirlineTicket.IntegrationTests.Shared.Auth;
+using AirlineTicket.Modules.Bookings.Api.Endpoints;
+using FluentAssertions;
 using Xunit;
 
 namespace AirlineTicket.Modules.Bookings.Api.IntegrationTests;
 
-// Note: To run this integration test, ensure AirlineTicket.Api has a public Program class 
-// and uncomment the ProjectReference in the .csproj file.
-public class BookingEndpointsTests // : IClassFixture<WebApplicationFactory<Program>>
+public class BookingEndpointsTests : BaseIntegrationTest
 {
-    // private readonly HttpClient _client;
-
-    // public BookingEndpointsTests(WebApplicationFactory<Program> factory)
-    // {
-    //     _client = factory.CreateClient();
-    // }
+    public BookingEndpointsTests(CustomWebApplicationFactory factory) : base(factory)
+    {
+    }
 
     [Fact]
     public async Task GetBookingById_ShouldReturnNotFound_WhenBookingDoesNotExist()
     {
-        // Uncomment logic when WebApplicationFactory is fully set up.
-        // var response = await _client.GetAsync($"/api/v1/bookings/{System.Guid.NewGuid()}");
-        // Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        
-        await Task.CompletedTask;
+        // Act
+        var response = await Client.AsAnonymous().GetAsync($"/api/bookings/{Guid.NewGuid()}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task GetAllBookings_ShouldReturnForbidden_WhenAnonymousOrRegularCustomer()
+    {
+        // Act
+        var anonResponse = await Client.AsAnonymous().GetAsync("/api/bookings");
+        var custResponse = await Client.AsCustomer().GetAsync("/api/bookings");
+
+        // Assert
+        anonResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        custResponse.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task GetAllBookings_ShouldReturnOk_WhenStaffUser()
+    {
+        // Arrange
+        var airlineId = Guid.NewGuid();
+
+        // Act
+        var response = await Client.AsStaff(airlineId).GetAsync("/api/bookings");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }
