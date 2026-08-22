@@ -2,6 +2,7 @@ using System.Security.Claims;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.BuildingBlocks.Domain.Constants;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Features.Revenue.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
