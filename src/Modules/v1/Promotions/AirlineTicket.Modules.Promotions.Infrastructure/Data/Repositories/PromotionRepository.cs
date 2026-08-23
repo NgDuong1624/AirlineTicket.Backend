@@ -139,32 +139,34 @@ public class PromotionRepository : IPromotionRepository
         return coupon.Id;
     }
 
-    public async Task UpdateAsync(PromotionDto promotion, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(PromotionDto promotion, CancellationToken cancellationToken = default)
     {
         var coupon = await _context.Coupons
             .FirstOrDefaultAsync(c => c.Id == promotion.Id, cancellationToken);
 
-        if (coupon != null)
-        {
-            coupon.DiscountValue = promotion.DiscountValue;
-            coupon.EndDate = promotion.EndDate;
-            if (!string.IsNullOrEmpty(promotion.Name))
-                coupon.Code = promotion.Name;
-            await _context.SaveChangesAsync(cancellationToken);
-        }
+        if (coupon == null)
+            return false;
+
+        coupon.DiscountValue = promotion.DiscountValue;
+        coupon.EndDate = promotion.EndDate;
+        if (!string.IsNullOrEmpty(promotion.Name))
+            coupon.Code = promotion.Name;
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var coupon = await _context.Coupons
             .FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
-        if (coupon != null)
-        {
-            // Soft delete - mark inactive instead of removing
-            coupon.IsActive = false;
-            await _context.SaveChangesAsync(cancellationToken);
-        }
+        if (coupon == null)
+            return false;
+
+        // Soft delete - mark inactive instead of removing
+        coupon.IsActive = false;
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<Guid> CreateCampaignAsync(Campaign campaign, CancellationToken cancellationToken = default)
@@ -177,10 +179,10 @@ public class PromotionRepository : IPromotionRepository
         return campaign.Id;
     }
 
-    public async Task UpdateCampaignAsync(Campaign campaign, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateCampaignAsync(Campaign campaign, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Campaigns.FirstOrDefaultAsync(c => c.Id == campaign.Id, cancellationToken);
-        if (existing is null) return;
+        if (existing is null) return false;
 
         existing.Title = campaign.Title;
         existing.BannerUrl = campaign.BannerUrl;
@@ -189,15 +191,17 @@ public class PromotionRepository : IPromotionRepository
         existing.EndDate = campaign.EndDate;
         existing.IsFeatured = campaign.IsFeatured;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteCampaignAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteCampaignAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Campaigns.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
-        if (existing is null) return;
+        if (existing is null) return false;
 
         existing.IsDeleted = true;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     // ——————————————————————— Airline-scoped (partner) promotions ————————————————————————————————
@@ -228,11 +232,11 @@ public class PromotionRepository : IPromotionRepository
         return coupon.Id;
     }
 
-    public async Task UpdateCouponAsync(Coupon coupon, Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateCouponAsync(Coupon coupon, Guid airlineId, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Coupons
             .FirstOrDefaultAsync(c => c.Id == coupon.Id && c.AirlineId == airlineId, cancellationToken);
-        if (existing is null) return;
+        if (existing is null) return false;
 
         existing.Code = coupon.Code;
         existing.Description = coupon.Description;
@@ -245,16 +249,18 @@ public class PromotionRepository : IPromotionRepository
         existing.UsageLimit = coupon.UsageLimit;
         existing.IsActive = coupon.IsActive;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteCouponAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteCouponAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Coupons
             .FirstOrDefaultAsync(c => c.Id == id && c.AirlineId == airlineId, cancellationToken);
-        if (existing is null) return;
+        if (existing is null) return false;
 
         existing.IsDeleted = true;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<(List<Campaign> Items, int TotalCount)> GetCampaignsByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)

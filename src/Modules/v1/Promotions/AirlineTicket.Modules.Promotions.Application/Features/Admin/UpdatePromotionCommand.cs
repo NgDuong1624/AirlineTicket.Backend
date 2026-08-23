@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Promotions.Application.Contracts;
 using AirlineTicket.BuildingBlocks.Caching;
@@ -25,10 +26,12 @@ internal sealed class UpdatePromotionCommandHandler : ICommandHandler<UpdateProm
 
     public async Task<Result<Unit>> Handle(UpdatePromotionCommand request, CancellationToken cancellationToken)
     {
-        await _repo.UpdateAsync(new PromotionDto { Id = request.Id, Name = request.Name, DiscountValue = request.DiscountValue, EndDate = request.EndDate }, cancellationToken);
-        
+        var updated = await _repo.UpdateAsync(new PromotionDto { Id = request.Id, Name = request.Name, DiscountValue = request.DiscountValue, EndDate = request.EndDate }, cancellationToken);
+        if (!updated)
+            return Result.Failure<Unit>(Error.Create(EndpointErrorCodes.BAD_REQUEST, "Coupon not found."));
+
         await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetActivePromotionsQuery>("all"), cancellationToken);
-        
+
         return Result.Success(Unit.Value);
     }
 }

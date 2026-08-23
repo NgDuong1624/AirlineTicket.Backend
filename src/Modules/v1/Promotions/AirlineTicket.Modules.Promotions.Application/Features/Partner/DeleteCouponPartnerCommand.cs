@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Promotions.Application.Contracts;
 using MediatR;
@@ -17,7 +18,10 @@ internal sealed class DeleteCouponPartnerCommandHandler : ICommandHandler<Delete
 
     public async Task<Result<Unit>> Handle(DeleteCouponPartnerCommand request, CancellationToken cancellationToken)
     {
-        await _promotionRepository.DeleteCouponAsync(request.Id, request.AirlineId, cancellationToken);
+        var deleted = await _promotionRepository.DeleteCouponAsync(request.Id, request.AirlineId, cancellationToken);
+        if (!deleted)
+            return Result.Failure<Unit>(Error.Create(EndpointErrorCodes.BAD_REQUEST, "Coupon not found."));
+
         return Result.Success(Unit.Value);
     }
 }
