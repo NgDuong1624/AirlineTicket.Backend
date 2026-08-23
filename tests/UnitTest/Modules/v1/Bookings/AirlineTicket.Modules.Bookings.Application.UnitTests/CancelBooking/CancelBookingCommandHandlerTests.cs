@@ -38,7 +38,7 @@ public class CancelBookingCommandHandlerTests
     }
 
     [Fact]
-    public async Task CancelBookingCommandHandler_ShouldNotThrow_WhenBookingNotFound()
+    public async Task CancelBookingCommandHandler_ShouldReturnFailure_WhenBookingNotFound()
     {
         var handler = new CancelBookingCommandHandler(_bookingRepoMock.Object);
         var bookingId = Guid.NewGuid();
@@ -48,8 +48,8 @@ public class CancelBookingCommandHandlerTests
 
         var result = await handler.Handle(new CancelBookingCommand(bookingId), CancellationToken.None);
 
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().Be(MediatR.Unit.Value);
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("Booking.NotFound");
         _bookingRepoMock.Verify(x => x.UpdateAsync(It.IsAny<BookingDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
