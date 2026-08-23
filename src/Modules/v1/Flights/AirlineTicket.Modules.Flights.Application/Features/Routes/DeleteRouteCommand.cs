@@ -23,8 +23,12 @@ internal sealed class DeleteRouteCommandHandler : ICommandHandler<DeleteRouteCom
 
     public async Task<Result<bool>> Handle(DeleteRouteCommand request, CancellationToken cancellationToken)
     {
-        await _routeRepository.DeleteAsync(request.Id, request.AirlineId, cancellationToken);
-        
+        var deleted = await _routeRepository.DeleteAsync(request.Id, request.AirlineId, cancellationToken);
+        if (!deleted)
+        {
+            return Result.Failure<bool>(new Error("Route.NotFound", "Route not found."));
+        }
+
         await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetRoutesQuery>("all"), cancellationToken);
 
         return Result.Success(true);

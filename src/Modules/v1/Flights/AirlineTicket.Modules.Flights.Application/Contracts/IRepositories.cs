@@ -60,8 +60,8 @@ public interface IFlightRepository
     Task<(List<StaffFlightListItemDto> Items, int TotalCount)> GetStaffFlightsAsync(string? search, Guid? airlineId = null, int pageIndex = 1, int pageSize = 10, CancellationToken cancellationToken = default);
     Task<(List<FlightDto> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<(List<FlightDto> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
-    Task UpdateAsync(FlightDto flight, Guid? airlineId = null, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Guid id, Guid? airlineId = null, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(FlightDto flight, Guid? airlineId = null, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, Guid? airlineId = null, CancellationToken cancellationToken = default);
     Task<bool> CanConnectAsync(CancellationToken cancellationToken = default);
     Task<List<FlightDto>> GetByIdsAsync(List<Guid> ids, CancellationToken cancellationToken = default);
 }
@@ -71,8 +71,8 @@ public interface IAirlineRepository
     Task<Airline?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<(List<Airline> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(Airline airline, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Airline airline, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(Airline airline, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IAirportRepository
@@ -80,8 +80,8 @@ public interface IAirportRepository
     Task<Airport?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<(List<Airport> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, string? search = null, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(Airport airport, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Airport airport, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(Airport airport, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IRouteRepository
@@ -90,16 +90,16 @@ public interface IRouteRepository
     Task<List<Route>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<(List<Route> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(Route route, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Route route, Guid airlineId, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(Route route, Guid airlineId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
 }
 
 public interface IAirplaneRepository
 {
     Task<(List<Airplane> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(Airplane airplane, CancellationToken cancellationToken = default);
-    Task UpdateAsync(Airplane airplane, Guid airlineId, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(Airplane airplane, Guid airlineId, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default);
     Task GenerateSeatsFromTemplateAsync(Guid airplaneId, Guid aircraftModelId, CancellationToken cancellationToken = default);
 }
 
@@ -108,8 +108,8 @@ public interface IAircraftModelRepository
     Task<List<AircraftModel>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<AircraftModel?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(AircraftModel model, CancellationToken cancellationToken = default);
-    Task UpdateAsync(AircraftModel model, CancellationToken cancellationToken = default);
-    Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(AircraftModel model, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 public interface IFlightSeatRepository

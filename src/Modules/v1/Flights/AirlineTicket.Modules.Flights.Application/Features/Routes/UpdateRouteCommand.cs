@@ -33,8 +33,12 @@ internal sealed class UpdateRouteCommandHandler : ICommandHandler<UpdateRouteCom
             EstimatedDurationMinutes = request.EstimatedDurationMinutes
         };
 
-        await _routeRepository.UpdateAsync(route, request.AirlineId, cancellationToken);
-        
+        var updated = await _routeRepository.UpdateAsync(route, request.AirlineId, cancellationToken);
+        if (!updated)
+        {
+            return Result.Failure<bool>(new Error("Route.NotFound", "Route not found."));
+        }
+
         await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetRoutesQuery>("all"), cancellationToken);
 
         return Result.Success(true);

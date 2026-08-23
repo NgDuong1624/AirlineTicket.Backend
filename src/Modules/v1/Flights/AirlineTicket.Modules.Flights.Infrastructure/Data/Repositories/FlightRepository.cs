@@ -283,7 +283,7 @@ public class FlightRepository : IFlightRepository
         return (items, totalCount);
     }
 
-    public async Task UpdateAsync(FlightDto flightDto, Guid? airlineId = null, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(FlightDto flightDto, Guid? airlineId = null, CancellationToken cancellationToken = default)
     {
         var query = _context.Flights.Include(f => f.Route).AsQueryable();
         if (airlineId.HasValue)
@@ -292,7 +292,7 @@ public class FlightRepository : IFlightRepository
         }
         var flight = await query.FirstOrDefaultAsync(f => f.Id == flightDto.Id && !f.IsDeleted, cancellationToken);
 
-        if (flight is null) return;
+        if (flight is null) return false;
 
         // Only update allowed fields (DepartureTime, ArrivalTime, Status)
         flight.DepartureTime = flightDto.DepartureTime;
@@ -306,9 +306,10 @@ public class FlightRepository : IFlightRepository
         flight.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteAsync(Guid id, Guid? airlineId = null, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid? airlineId = null, CancellationToken cancellationToken = default)
     {
         var query = _context.Flights.Include(f => f.Route).AsQueryable();
         if (airlineId.HasValue)
@@ -317,12 +318,13 @@ public class FlightRepository : IFlightRepository
         }
         var flight = await query.FirstOrDefaultAsync(f => f.Id == id && !f.IsDeleted, cancellationToken);
 
-        if (flight is null) return;
+        if (flight is null) return false;
 
         flight.IsDeleted = true;
         flight.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<bool> CanConnectAsync(CancellationToken cancellationToken = default)
@@ -403,10 +405,10 @@ public class AirportRepository : IAirportRepository
         return airport.Id;
     }
 
-    public async Task UpdateAsync(Airport airport, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(Airport airport, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.Airports.FirstOrDefaultAsync(a => a.Id == airport.Id, cancellationToken);
-        if (existing is null) return;
+        var existing = await _context.Airports.FirstOrDefaultAsync(a => a.Id == airport.Id && !a.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.IataCode = airport.IataCode;
         existing.NameEn = airport.NameEn;
@@ -417,15 +419,17 @@ public class AirportRepository : IAirportRepository
         existing.Timezone = airport.Timezone;
         existing.IsActive = airport.IsActive;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.Airports.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
-        if (existing is null) return;
+        var existing = await _context.Airports.FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.IsDeleted = true;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }
 
@@ -479,27 +483,29 @@ public class RouteRepository : IRouteRepository
         return route.Id;
     }
 
-    public async Task UpdateAsync(Route route, Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(Route route, Guid airlineId, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Routes
-            .FirstOrDefaultAsync(r => r.Id == route.Id && r.AirlineId == airlineId, cancellationToken);
-        if (existing is null) return;
+            .FirstOrDefaultAsync(r => r.Id == route.Id && r.AirlineId == airlineId && !r.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.OriginAirportId = route.OriginAirportId;
         existing.DestinationAirportId = route.DestinationAirportId;
         existing.DistanceKm = route.DistanceKm;
         existing.EstimatedDurationMinutes = route.EstimatedDurationMinutes;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Routes
-            .FirstOrDefaultAsync(r => r.Id == id && r.AirlineId == airlineId, cancellationToken);
-        if (existing is null) return;
+            .FirstOrDefaultAsync(r => r.Id == id && r.AirlineId == airlineId && !r.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.IsDeleted = true;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }
 
@@ -536,26 +542,28 @@ public class AirplaneRepository : IAirplaneRepository
         return airplane.Id;
     }
 
-    public async Task UpdateAsync(Airplane airplane, Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(Airplane airplane, Guid airlineId, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Airplanes
-            .FirstOrDefaultAsync(a => a.Id == airplane.Id && a.AirlineId == airlineId, cancellationToken);
-        if (existing is null) return;
+            .FirstOrDefaultAsync(a => a.Id == airplane.Id && a.AirlineId == airlineId && !a.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.Model = airplane.Model;
         existing.RegistrationNumber = airplane.RegistrationNumber;
         existing.TotalCapacity = airplane.TotalCapacity;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, Guid airlineId, CancellationToken cancellationToken = default)
     {
         var existing = await _context.Airplanes
-            .FirstOrDefaultAsync(a => a.Id == id && a.AirlineId == airlineId, cancellationToken);
-        if (existing is null) return;
+            .FirstOrDefaultAsync(a => a.Id == id && a.AirlineId == airlineId && !a.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.IsDeleted = true;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task GenerateSeatsFromTemplateAsync(Guid airplaneId, Guid aircraftModelId, CancellationToken cancellationToken = default)
@@ -680,10 +688,10 @@ public class AirlineRepository : IAirlineRepository
         return airline.Id;
     }
 
-    public async Task UpdateAsync(Airline airline, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(Airline airline, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.Airlines.FirstOrDefaultAsync(a => a.Id == airline.Id, cancellationToken);
-        if (existing is null) return;
+        var existing = await _context.Airlines.FirstOrDefaultAsync(a => a.Id == airline.Id && !a.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.IataCode = airline.IataCode;
         existing.Name = airline.Name;
@@ -694,15 +702,17 @@ public class AirlineRepository : IAirlineRepository
         existing.SupportPhone = airline.SupportPhone;
         existing.IsActive = airline.IsActive;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.Airlines.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
-        if (existing is null) return;
+        var existing = await _context.Airlines.FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.IsDeleted = true;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }
 
@@ -740,12 +750,12 @@ public class AircraftModelRepository : IAircraftModelRepository
         return model.Id;
     }
 
-    public async Task UpdateAsync(AircraftModel model, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateAsync(AircraftModel model, CancellationToken cancellationToken = default)
     {
         var existing = await _context.AircraftModels
             .Include(m => m.SeatTemplates)
             .FirstOrDefaultAsync(m => m.Id == model.Id && !m.IsDeleted, cancellationToken);
-        if (existing is null) return;
+        if (existing is null) return false;
 
         existing.Name = model.Name;
         existing.Manufacturer = model.Manufacturer;
@@ -761,14 +771,16 @@ public class AircraftModelRepository : IAircraftModelRepository
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var existing = await _context.AircraftModels.FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
-        if (existing is null) return;
+        var existing = await _context.AircraftModels.FirstOrDefaultAsync(m => m.Id == id && !m.IsDeleted, cancellationToken);
+        if (existing is null) return false;
 
         existing.IsDeleted = true;
         await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }

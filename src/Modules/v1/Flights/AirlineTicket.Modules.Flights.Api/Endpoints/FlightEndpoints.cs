@@ -175,7 +175,7 @@ public class FlightEndpoints : IEndpoint
             {
                 var query = new GetFlightSeatsQuery(id);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult(statusCode: 404);
             })
             .WithName("GetFlightSeats")
             .WithSummary("Get flight seat map")

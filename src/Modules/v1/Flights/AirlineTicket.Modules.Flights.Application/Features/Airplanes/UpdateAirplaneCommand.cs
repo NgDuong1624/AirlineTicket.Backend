@@ -29,7 +29,11 @@ internal sealed class UpdateAirplaneCommandHandler : ICommandHandler<UpdateAirpl
             TotalCapacity = request.TotalCapacity
         };
 
-        await _airplaneRepository.UpdateAsync(airplane, request.AirlineId, cancellationToken);
+        var updated = await _airplaneRepository.UpdateAsync(airplane, request.AirlineId, cancellationToken);
+        if (!updated)
+        {
+            return Result.Failure<bool>(new Error("Airplane.NotFound", "Airplane not found."));
+        }
         return Result.Success(true);
     }
 }

@@ -322,7 +322,7 @@ public class FlightPartnerEndpoints : IEndpoint
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
                 var command = new UpdatePartnerSettingsCommand(airlineId, request.AirlineName, request.Address, request.SupportEmail, request.SupportPhone);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.Ok() : Results.NotFound();
+                return result.IsSuccess ? Results.Ok() : Results.BadRequest(result.Error);
             });
     }
 

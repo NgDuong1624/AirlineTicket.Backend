@@ -20,7 +20,11 @@ internal sealed class DeleteAircraftModelCommandHandler : ICommandHandler<Delete
 
     public async Task<Result<bool>> Handle(DeleteAircraftModelCommand request, CancellationToken cancellationToken)
     {
-        await _repository.DeleteAsync(request.Id, cancellationToken);
+        var deleted = await _repository.DeleteAsync(request.Id, cancellationToken);
+        if (!deleted)
+        {
+            return Result.Failure<bool>(new Error("AircraftModel.NotFound", "Aircraft model not found."));
+        }
         return Result.Success(true);
     }
 }
