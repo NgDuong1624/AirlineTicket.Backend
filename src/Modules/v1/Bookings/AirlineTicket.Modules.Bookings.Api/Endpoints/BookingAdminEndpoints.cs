@@ -69,14 +69,15 @@ public class BookingAdminEndpoints : IEndpoint
                 var passengers = request.Passengers?.ConvertAll(p => new AirlineTicket.Modules.Bookings.Application.Features.Bookings.PassengerDto(p.FirstName, p.LastName, p.IdentityCard, p.SeatNumber));
                 var command = new UpdateBookingCommand(id, passengers, request.ContactEmail, request.ContactPhone);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.Ok() : result.ToErrorResult();
+                return result.IsSuccess ? Results.Ok() : result.ToErrorResult(statusCode: 404);
             })
             .WithName("AdminUpdateBooking")
             .WithSummary("Update booking details")
             .Produces(200)
             .Produces(400)
             .Produces(401)
-            .Produces(403);
+            .Produces(403)
+            .Produces(404);
 
         // PUT /api/admin/bookings/{id}/status — Update booking status
         adminBookings.MapPut("/{id:guid}/status", async (
@@ -88,8 +89,7 @@ public class BookingAdminEndpoints : IEndpoint
                 var command = new UpdateBookingStatusCommand(id, request.Status);
                 var result = await sender.Send(command, ct);
                 if (result.IsSuccess) return Results.Ok();
-                if (result.Error.Code == "Booking.NotFound" || result.Error.Code == "Common.NotFound") return result.ToErrorResult(statusCode: 404);
-                return result.ToErrorResult();
+                return result.ToErrorResult(statusCode: 404);
             })
             .WithName("AdminUpdateBookingStatus")
             .WithSummary("Update booking status")
@@ -107,7 +107,7 @@ public class BookingAdminEndpoints : IEndpoint
             {
                 var command = new CancelBookingCommand(id);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
+                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult(statusCode: 404);
             })
             .WithName("AdminDeleteBooking")
             .WithSummary("Cancel a booking")

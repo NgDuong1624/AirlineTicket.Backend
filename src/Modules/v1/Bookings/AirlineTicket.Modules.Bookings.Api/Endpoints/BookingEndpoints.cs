@@ -158,12 +158,13 @@ public class BookingEndpoints : IEndpoint
 
                 return result.IsSuccess
                     ? Results.Ok(new { Message = "Cập nhật đặt chỗ thành công." })
-                    : result.ToErrorResult();
+                    : result.ToErrorResult(statusCode: 404);
             })
             .WithName("UpdateBooking")
             .WithSummary("Update booking information")
             .Produces(200)
             .Produces(400)
+            .Produces(404)
             .Produces(500);
 
         // DELETE /api/bookings/{id:guid} — Cancel booking
@@ -174,12 +175,13 @@ public class BookingEndpoints : IEndpoint
             {
                 var command = new CancelBookingCommand(id);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
+                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult(statusCode: 404);
             })
             .WithName("CancelBooking")
             .WithSummary("Cancel booking")
             .Produces(204)
-            .Produces(400);
+            .Produces(400)
+            .Produces(404);
 
         // GET /api/bookings/search — Search booking
         group.MapGet("/search", async (
@@ -189,7 +191,7 @@ public class BookingEndpoints : IEndpoint
             {
                 var query = new SearchBookingQuery(pnrCode);
                 var result = await sender.Send(query, ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult();
+                return result.IsSuccess ? Results.Ok(result.Value) : result.ToErrorResult(statusCode: 404);
             })
             .WithName("SearchBooking")
             .WithSummary("Search booking")
