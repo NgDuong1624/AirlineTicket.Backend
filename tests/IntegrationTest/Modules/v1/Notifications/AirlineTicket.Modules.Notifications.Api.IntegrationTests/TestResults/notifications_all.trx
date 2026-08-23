@@ -1,0 +1,566 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="4b7a9bb3-e683-4dd8-8f6d-834091283924" name="@tdunz-laptop 2026-08-23 09:16:35" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-08-23T09:16:35.9470519+07:00" queuing="2026-08-23T09:16:35.9470520+07:00" start="2026-08-23T09:16:22.7791986+07:00" finish="2026-08-23T09:17:12.5287077+07:00" />
+  <TestSettings name="default" id="b54c58fb-7776-428e-8a32-7d7174145e6e">
+    <Deployment runDeploymentRoot="_tdunz-laptop_2026-08-23_09_16_35" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="24b5a101-bc05-4429-ae7a-e44a4bfa4e95" testId="e29aacfc-c21d-ec90-bcf9-29271f5b3e27" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.Read.MarkNotificationAsReadTests.MarkAsRead_ShouldReturnNotFound_WhenNotificationDoesNotExist" computerName="tdunz-laptop" duration="00:00:00.2402636" startTime="2026-08-23T09:17:00.9371900+07:00" endTime="2026-08-23T09:17:01.1775530+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="24b5a101-bc05-4429-ae7a-e44a4bfa4e95" />
+    <UnitTestResult executionId="33f29a8e-86c6-4058-af80-1c629ea1a7eb" testId="d2ebcdf6-6df5-1b3c-55a1-8484b5270bfd" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.DeleteNotificationTests.DeleteNotification_ShouldReturnNotFound_WhenNotificationDoesNotExist" computerName="tdunz-laptop" duration="00:00:00.0601326" startTime="2026-08-23T09:17:05.7048414+07:00" endTime="2026-08-23T09:17:05.7650200+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="33f29a8e-86c6-4058-af80-1c629ea1a7eb" />
+    <UnitTestResult executionId="5c38d57e-1dc8-40b5-9879-d3460a72e392" testId="7250892e-e61a-fd3f-369d-0676a0bcb955" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.UpdateTemplateTests.UpdateTemplate_ShouldReturnBadRequest_WhenInvalidLanguage" computerName="tdunz-laptop" duration="00:00:00.0195346" startTime="2026-08-23T09:16:35.7664687+07:00" endTime="2026-08-23T09:16:35.7672414+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5c38d57e-1dc8-40b5-9879-d3460a72e392" />
+    <UnitTestResult executionId="ab43c17f-788b-4807-8ac0-ce2a8c5b55c7" testId="e6a77e82-4dcc-704b-23d3-2a3eaa9a1c1a" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.ReadAll.MarkAllNotificationsAsReadTests.MarkAllAsRead_ShouldReturnUnauthorized_WhenAnonymous" computerName="tdunz-laptop" duration="00:00:00.0065493" startTime="2026-08-23T09:16:49.6362839+07:00" endTime="2026-08-23T09:16:49.6428795+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="ab43c17f-788b-4807-8ac0-ce2a8c5b55c7" />
+    <UnitTestResult executionId="1e06d534-a557-4dd4-bf12-f667c1c4109a" testId="7f83eedc-e2ac-d9ae-31f2-31504e0b2e14" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.GetTemplateByIdTests.GetTemplateById_ShouldReturnNotFound_WhenTemplateDoesNotExist" computerName="tdunz-laptop" duration="00:00:00.2875618" startTime="2026-08-23T09:16:40.9235690+07:00" endTime="2026-08-23T09:16:41.2101242+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="1e06d534-a557-4dd4-bf12-f667c1c4109a" />
+    <UnitTestResult executionId="4c6cea9c-2ec8-48b5-a279-3e36281e2f02" testId="e061bd05-6fa1-b6a9-46b6-71a21dc75a04" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.UpdateTemplateTests.UpdateTemplate_ShouldReturnNotFound_WhenTemplateDoesNotExist" computerName="tdunz-laptop" duration="00:00:01.3556670" startTime="2026-08-23T09:16:34.4191766+07:00" endTime="2026-08-23T09:16:35.7455282+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4c6cea9c-2ec8-48b5-a279-3e36281e2f02" />
+    <UnitTestResult executionId="44d76c48-aa50-4406-a5e0-bc28cfe83c95" testId="357cd0bd-b0b6-7de7-0d2f-71b7f5ac888b" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.UnreadCount.GetUnreadNotificationCountTests.GetUnreadCount_ShouldReturnOk_WhenCustomer" computerName="tdunz-laptop" duration="00:00:00.0394771" startTime="2026-08-23T09:16:57.7326527+07:00" endTime="2026-08-23T09:16:57.7722596+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="44d76c48-aa50-4406-a5e0-bc28cfe83c95" />
+    <UnitTestResult executionId="db08846d-2715-49ab-896b-aa2de568425e" testId="733b424c-ecfa-06b7-2359-7908faadd8f1" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Status.GetNotificationsStatusTests.GetStatus_ShouldReturnOk_WhenAnonymous" computerName="tdunz-laptop" duration="00:00:00.2645559" startTime="2026-08-23T09:16:54.0453697+07:00" endTime="2026-08-23T09:16:54.3098279+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="db08846d-2715-49ab-896b-aa2de568425e" />
+    <UnitTestResult executionId="e8fd99da-e7aa-42db-8496-ba54becbba59" testId="915e0071-3694-5a23-f0e7-1e91d227dad3" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.DeleteNotificationTests.DeleteNotification_ShouldReturnUnauthorized_WhenAnonymous" computerName="tdunz-laptop" duration="00:00:00.2476599" startTime="2026-08-23T09:17:05.4566543+07:00" endTime="2026-08-23T09:17:05.7045930+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="e8fd99da-e7aa-42db-8496-ba54becbba59" />
+    <UnitTestResult executionId="7a624853-1afa-449d-a8c2-b09cd6cbeb77" testId="ab105a60-ee6d-7a8d-8883-3f7e00bceade" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.Read.MarkNotificationAsReadTests.MarkAsRead_ShouldReturnUnauthorized_WhenAnonymous" computerName="tdunz-laptop" duration="00:00:00.0085016" startTime="2026-08-23T09:17:01.1777797+07:00" endTime="2026-08-23T09:17:01.1863454+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7a624853-1afa-449d-a8c2-b09cd6cbeb77" />
+    <UnitTestResult executionId="3dd1d0f3-efaf-48ed-97e1-07a1b5645a44" testId="7fa6ccfc-636a-862e-dd0e-f85cc5273f3f" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.GetTemplatesTests.GetTemplates_ShouldReturnForbidden_WhenCustomer" computerName="tdunz-laptop" duration="00:00:00.2181271" startTime="2026-08-23T09:16:45.8361047+07:00" endTime="2026-08-23T09:16:46.0540771+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="3dd1d0f3-efaf-48ed-97e1-07a1b5645a44" />
+    <UnitTestResult executionId="43f00ff7-f0d4-4e20-9b82-4fe1dc0b1886" testId="753c7041-a467-39c6-5fdd-9b2132a77842" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.UnreadCount.GetUnreadNotificationCountTests.GetUnreadCount_ShouldReturnUnauthorized_WhenAnonymous" computerName="tdunz-laptop" duration="00:00:00.2186981" startTime="2026-08-23T09:16:57.5137922+07:00" endTime="2026-08-23T09:16:57.7324757+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="43f00ff7-f0d4-4e20-9b82-4fe1dc0b1886" />
+    <UnitTestResult executionId="4db3ec22-8e1b-4800-906a-235775e816d6" testId="50e8b022-2daf-dfaf-15a8-38bf966fb045" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.ReadAll.MarkAllNotificationsAsReadTests.MarkAllAsRead_ShouldReturnNoContent_WhenCustomer" computerName="tdunz-laptop" duration="00:00:00.2948170" startTime="2026-08-23T09:16:49.3414262+07:00" endTime="2026-08-23T09:16:49.6361052+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4db3ec22-8e1b-4800-906a-235775e816d6" />
+    <UnitTestResult executionId="991d54ea-37c2-402c-a6ab-501baacba1eb" testId="ddf6965e-2af7-e68b-58d4-84220b59b270" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnOk_WhenCustomer" computerName="tdunz-laptop" duration="00:00:00.0164656" startTime="2026-08-23T09:17:10.7646093+07:00" endTime="2026-08-23T09:17:10.7811544+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="991d54ea-37c2-402c-a6ab-501baacba1eb" />
+    <UnitTestResult executionId="bb199c3f-0573-4fb1-9874-12384ec9a962" testId="014bfc5c-c271-803d-ba14-42f9104136f3" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnUnauthorized_WhenAnonymous" computerName="tdunz-laptop" duration="00:00:00.3092864" startTime="2026-08-23T09:17:10.4553484+07:00" endTime="2026-08-23T09:17:10.7644562+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bb199c3f-0573-4fb1-9874-12384ec9a962" />
+    <UnitTestResult executionId="da8ce5db-25be-44ae-8e88-0c6a7d4beab2" testId="9754e7d0-55a8-5179-81b0-fd14c4b39955" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.GetTemplatesTests.GetTemplates_ShouldReturnOk_WhenAdmin" computerName="tdunz-laptop" duration="00:00:00.0391845" startTime="2026-08-23T09:16:46.0543381+07:00" endTime="2026-08-23T09:16:46.0934874+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="da8ce5db-25be-44ae-8e88-0c6a7d4beab2" />
+    <UnitTestResult executionId="7e8ff9c7-e0c4-4b7d-ac4b-7a5577f3cca8" testId="37675976-bb72-1a12-516a-f37f48a3c3cf" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.GetTemplateByIdTests.GetTemplateById_ShouldReturnForbidden_WhenCustomer" computerName="tdunz-laptop" duration="00:00:00.0117010" startTime="2026-08-23T09:16:41.2103489+07:00" endTime="2026-08-23T09:16:41.2220275+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7e8ff9c7-e0c4-4b7d-ac4b-7a5577f3cca8" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnUnauthorized_WhenAnonymous" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="014bfc5c-c271-803d-ba14-42f9104136f3">
+      <Execution id="bb199c3f-0573-4fb1-9874-12384ec9a962" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests" name="GetUserNotifications_ShouldReturnUnauthorized_WhenAnonymous" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.DeleteNotificationTests.DeleteNotification_ShouldReturnNotFound_WhenNotificationDoesNotExist" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="d2ebcdf6-6df5-1b3c-55a1-8484b5270bfd">
+      <Execution id="33f29a8e-86c6-4058-af80-1c629ea1a7eb" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.DeleteNotificationTests" name="DeleteNotification_ShouldReturnNotFound_WhenNotificationDoesNotExist" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.ReadAll.MarkAllNotificationsAsReadTests.MarkAllAsRead_ShouldReturnNoContent_WhenCustomer" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="50e8b022-2daf-dfaf-15a8-38bf966fb045">
+      <Execution id="4db3ec22-8e1b-4800-906a-235775e816d6" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.ReadAll.MarkAllNotificationsAsReadTests" name="MarkAllAsRead_ShouldReturnNoContent_WhenCustomer" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.Read.MarkNotificationAsReadTests.MarkAsRead_ShouldReturnNotFound_WhenNotificationDoesNotExist" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="e29aacfc-c21d-ec90-bcf9-29271f5b3e27">
+      <Execution id="24b5a101-bc05-4429-ae7a-e44a4bfa4e95" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.Read.MarkNotificationAsReadTests" name="MarkAsRead_ShouldReturnNotFound_WhenNotificationDoesNotExist" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.UpdateTemplateTests.UpdateTemplate_ShouldReturnBadRequest_WhenInvalidLanguage" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="7250892e-e61a-fd3f-369d-0676a0bcb955">
+      <Execution id="5c38d57e-1dc8-40b5-9879-d3460a72e392" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.UpdateTemplateTests" name="UpdateTemplate_ShouldReturnBadRequest_WhenInvalidLanguage" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.UnreadCount.GetUnreadNotificationCountTests.GetUnreadCount_ShouldReturnOk_WhenCustomer" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="357cd0bd-b0b6-7de7-0d2f-71b7f5ac888b">
+      <Execution id="44d76c48-aa50-4406-a5e0-bc28cfe83c95" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.UnreadCount.GetUnreadNotificationCountTests" name="GetUnreadCount_ShouldReturnOk_WhenCustomer" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.Read.MarkNotificationAsReadTests.MarkAsRead_ShouldReturnUnauthorized_WhenAnonymous" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="ab105a60-ee6d-7a8d-8883-3f7e00bceade">
+      <Execution id="7a624853-1afa-449d-a8c2-b09cd6cbeb77" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.Read.MarkNotificationAsReadTests" name="MarkAsRead_ShouldReturnUnauthorized_WhenAnonymous" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnOk_WhenCustomer" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="ddf6965e-2af7-e68b-58d4-84220b59b270">
+      <Execution id="991d54ea-37c2-402c-a6ab-501baacba1eb" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests" name="GetUserNotifications_ShouldReturnOk_WhenCustomer" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.DeleteNotificationTests.DeleteNotification_ShouldReturnUnauthorized_WhenAnonymous" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="915e0071-3694-5a23-f0e7-1e91d227dad3">
+      <Execution id="e8fd99da-e7aa-42db-8496-ba54becbba59" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Id.DeleteNotificationTests" name="DeleteNotification_ShouldReturnUnauthorized_WhenAnonymous" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Status.GetNotificationsStatusTests.GetStatus_ShouldReturnOk_WhenAnonymous" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="733b424c-ecfa-06b7-2359-7908faadd8f1">
+      <Execution id="db08846d-2715-49ab-896b-aa2de568425e" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.Status.GetNotificationsStatusTests" name="GetStatus_ShouldReturnOk_WhenAnonymous" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.GetTemplateByIdTests.GetTemplateById_ShouldReturnForbidden_WhenCustomer" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="37675976-bb72-1a12-516a-f37f48a3c3cf">
+      <Execution id="7e8ff9c7-e0c4-4b7d-ac4b-7a5577f3cca8" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.GetTemplateByIdTests" name="GetTemplateById_ShouldReturnForbidden_WhenCustomer" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.GetTemplatesTests.GetTemplates_ShouldReturnOk_WhenAdmin" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="9754e7d0-55a8-5179-81b0-fd14c4b39955">
+      <Execution id="da8ce5db-25be-44ae-8e88-0c6a7d4beab2" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.GetTemplatesTests" name="GetTemplates_ShouldReturnOk_WhenAdmin" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.ReadAll.MarkAllNotificationsAsReadTests.MarkAllAsRead_ShouldReturnUnauthorized_WhenAnonymous" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="e6a77e82-4dcc-704b-23d3-2a3eaa9a1c1a">
+      <Execution id="ab43c17f-788b-4807-8ac0-ce2a8c5b55c7" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.ReadAll.MarkAllNotificationsAsReadTests" name="MarkAllAsRead_ShouldReturnUnauthorized_WhenAnonymous" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.UnreadCount.GetUnreadNotificationCountTests.GetUnreadCount_ShouldReturnUnauthorized_WhenAnonymous" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="753c7041-a467-39c6-5fdd-9b2132a77842">
+      <Execution id="43f00ff7-f0d4-4e20-9b82-4fe1dc0b1886" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.UnreadCount.GetUnreadNotificationCountTests" name="GetUnreadCount_ShouldReturnUnauthorized_WhenAnonymous" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.UpdateTemplateTests.UpdateTemplate_ShouldReturnNotFound_WhenTemplateDoesNotExist" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="e061bd05-6fa1-b6a9-46b6-71a21dc75a04">
+      <Execution id="4c6cea9c-2ec8-48b5-a279-3e36281e2f02" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.UpdateTemplateTests" name="UpdateTemplate_ShouldReturnNotFound_WhenTemplateDoesNotExist" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.GetTemplateByIdTests.GetTemplateById_ShouldReturnNotFound_WhenTemplateDoesNotExist" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="7f83eedc-e2ac-d9ae-31f2-31504e0b2e14">
+      <Execution id="1e06d534-a557-4dd4-bf12-f667c1c4109a" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.Id.GetTemplateByIdTests" name="GetTemplateById_ShouldReturnNotFound_WhenTemplateDoesNotExist" />
+    </UnitTest>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.GetTemplatesTests.GetTemplates_ShouldReturnForbidden_WhenCustomer" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="7fa6ccfc-636a-862e-dd0e-f85cc5273f3f">
+      <Execution id="3dd1d0f3-efaf-48ed-97e1-07a1b5645a44" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Admin.Notifications.Templates.GetTemplatesTests" name="GetTemplates_ShouldReturnForbidden_WhenCustomer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="e29aacfc-c21d-ec90-bcf9-29271f5b3e27" executionId="24b5a101-bc05-4429-ae7a-e44a4bfa4e95" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d2ebcdf6-6df5-1b3c-55a1-8484b5270bfd" executionId="33f29a8e-86c6-4058-af80-1c629ea1a7eb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7250892e-e61a-fd3f-369d-0676a0bcb955" executionId="5c38d57e-1dc8-40b5-9879-d3460a72e392" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e6a77e82-4dcc-704b-23d3-2a3eaa9a1c1a" executionId="ab43c17f-788b-4807-8ac0-ce2a8c5b55c7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7f83eedc-e2ac-d9ae-31f2-31504e0b2e14" executionId="1e06d534-a557-4dd4-bf12-f667c1c4109a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e061bd05-6fa1-b6a9-46b6-71a21dc75a04" executionId="4c6cea9c-2ec8-48b5-a279-3e36281e2f02" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="357cd0bd-b0b6-7de7-0d2f-71b7f5ac888b" executionId="44d76c48-aa50-4406-a5e0-bc28cfe83c95" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="733b424c-ecfa-06b7-2359-7908faadd8f1" executionId="db08846d-2715-49ab-896b-aa2de568425e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="915e0071-3694-5a23-f0e7-1e91d227dad3" executionId="e8fd99da-e7aa-42db-8496-ba54becbba59" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ab105a60-ee6d-7a8d-8883-3f7e00bceade" executionId="7a624853-1afa-449d-a8c2-b09cd6cbeb77" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7fa6ccfc-636a-862e-dd0e-f85cc5273f3f" executionId="3dd1d0f3-efaf-48ed-97e1-07a1b5645a44" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="753c7041-a467-39c6-5fdd-9b2132a77842" executionId="43f00ff7-f0d4-4e20-9b82-4fe1dc0b1886" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="50e8b022-2daf-dfaf-15a8-38bf966fb045" executionId="4db3ec22-8e1b-4800-906a-235775e816d6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="ddf6965e-2af7-e68b-58d4-84220b59b270" executionId="991d54ea-37c2-402c-a6ab-501baacba1eb" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="014bfc5c-c271-803d-ba14-42f9104136f3" executionId="bb199c3f-0573-4fb1-9874-12384ec9a962" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="9754e7d0-55a8-5179-81b0-fd14c4b39955" executionId="da8ce5db-25be-44ae-8e88-0c6a7d4beab2" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="37675976-bb72-1a12-516a-f37f48a3c3cf" executionId="7e8ff9c7-e0c4-4b7d-ac4b-7a5577f3cca8" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="17" executed="17" passed="17" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.03] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.44]   Discovering: AirlineTicket.Modules.Notifications.Api.IntegrationTests
+[xUnit.net 00:00:00.67]   Discovered:  AirlineTicket.Modules.Notifications.Api.IntegrationTests
+[xUnit.net 00:00:00.72]   Starting:    AirlineTicket.Modules.Notifications.Api.IntegrationTests
+[testcontainers.org 00:00:00.32] Connected to Docker:
+  Host: unix:///home/tdunz/.docker/desktop/docker.sock
+  Server Version: 29.6.2
+  Kernel Version: 6.12.76-linuxkit
+  API Version: 1.55
+  Operating System: Docker Desktop
+  Total Memory: 3.55 GB
+  Labels: 
+    com.docker.desktop.address=unix:///home/tdunz/.docker/desktop/docker-cli.sock
+[testcontainers.org 00:00:00.63] Docker container a2d2ce206021 created
+[testcontainers.org 00:00:00.70] Start Docker container a2d2ce206021
+[testcontainers.org 00:00:00.98] Wait for Docker container a2d2ce206021 to complete readiness checks
+[testcontainers.org 00:00:00.99] Docker container a2d2ce206021 ready
+[testcontainers.org 00:00:01.20] Docker container 010504ed27e5 created
+[testcontainers.org 00:00:01.22] Start Docker container 010504ed27e5
+[testcontainers.org 00:00:01.53] Wait for Docker container 010504ed27e5 to complete readiness checks
+[testcontainers.org 00:00:01.56] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 010504ed27e5
+[testcontainers.org 00:00:02.70] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 010504ed27e5
+[testcontainers.org 00:00:02.77] Docker container 010504ed27e5 ready
+[testcontainers.org 00:00:02.88] Docker container 6b549b1f44ab created
+[testcontainers.org 00:00:02.89] Start Docker container 6b549b1f44ab
+[testcontainers.org 00:00:03.07] Wait for Docker container 6b549b1f44ab to complete readiness checks
+[testcontainers.org 00:00:03.09] Execute "redis-cli ping" at Docker container 6b549b1f44ab
+[testcontainers.org 00:00:03.16] Docker container 6b549b1f44ab ready
+[09:16:29 INF] Application started. Press Ctrl+C to shut down.
+[09:16:29 INF] Hosting environment: Development
+[09:16:29 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:16:30 ERR] Failed executing DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[testcontainers.org 00:00:05.62] Docker container 9ac9f4afa8a9 created
+[testcontainers.org 00:00:05.63] Start Docker container 9ac9f4afa8a9
+[testcontainers.org 00:00:05.81] Wait for Docker container 9ac9f4afa8a9 to complete readiness checks
+[testcontainers.org 00:00:05.82] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 9ac9f4afa8a9
+[testcontainers.org 00:00:06.91] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 9ac9f4afa8a9
+[testcontainers.org 00:00:06.98] Docker container 9ac9f4afa8a9 ready
+[testcontainers.org 00:00:07.14] Docker container 12f7859c055c created
+[testcontainers.org 00:00:07.15] Start Docker container 12f7859c055c
+[testcontainers.org 00:00:07.35] Wait for Docker container 12f7859c055c to complete readiness checks
+[testcontainers.org 00:00:07.36] Execute "redis-cli ping" at Docker container 12f7859c055c
+[testcontainers.org 00:00:07.46] Docker container 12f7859c055c ready
+[09:16:33 INF] Application started. Press Ctrl+C to shut down.
+[09:16:33 INF] Hosting environment: Development
+[09:16:33 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:16:33 ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:16:34 INF] [HTTP START] [N/A] PUT /api/admin/notifications/templates/ed205eee-6d12-4c63-91fb-729ac5c56639
+[09:16:34 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:16:34 INF] [Notifications] [UpdateTemplateCommand] [Correlation: d4ffbf702b504ae198f901df7aeb8e8a] [User: null] [START] Handling UpdateTemplateCommand UpdateTemplateCommand { Id = ed205eee-6d12-4c63-91fb-729ac5c56639, Subject = Booking Confirmed, BodyTemplate = Your booking {{Pnr}} is confirmed, Language = en }
+[09:16:35 INF] [Notifications] [UpdateTemplateCommand] [Correlation: d4ffbf702b504ae198f901df7aeb8e8a] [User: null] [END] Handled UpdateTemplateCommand { ElapsedMs = 823 }
+[09:16:35 WRN] [HTTP END] [N/A] PUT /api/admin/notifications/templates/ed205eee-6d12-4c63-91fb-729ac5c56639 responded 404 in 928ms
+[09:16:35 INF] [HTTP START] [N/A] PUT /api/admin/notifications/templates/6b75940f-2708-4873-8590-3ae8c76698cc
+[09:16:35 WRN] [HTTP END] [N/A] PUT /api/admin/notifications/templates/6b75940f-2708-4873-8590-3ae8c76698cc responded 400 in 11ms
+[testcontainers.org 00:00:09.68] Stop Docker container 9ac9f4afa8a9
+[testcontainers.org 00:00:09.92] Stop Docker container 12f7859c055c
+[09:16:36 INF] Application is shutting down...
+[testcontainers.org 00:00:10.63] Docker container 8ed14f473b31 created
+[testcontainers.org 00:00:10.64] Start Docker container 8ed14f473b31
+[testcontainers.org 00:00:11.05] Wait for Docker container 8ed14f473b31 to complete readiness checks
+[testcontainers.org 00:00:11.06] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 8ed14f473b31
+[testcontainers.org 00:00:12.22] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 8ed14f473b31
+[testcontainers.org 00:00:13.30] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 8ed14f473b31
+[testcontainers.org 00:00:13.38] Docker container 8ed14f473b31 ready
+[testcontainers.org 00:00:13.54] Docker container 8b8cf0ad6d7d created
+[testcontainers.org 00:00:13.55] Start Docker container 8b8cf0ad6d7d
+[testcontainers.org 00:00:13.80] Wait for Docker container 8b8cf0ad6d7d to complete readiness checks
+[testcontainers.org 00:00:13.81] Execute "redis-cli ping" at Docker container 8b8cf0ad6d7d
+[testcontainers.org 00:00:13.90] Docker container 8b8cf0ad6d7d ready
+[09:16:40 INF] Application started. Press Ctrl+C to shut down.
+[09:16:40 INF] Hosting environment: Development
+[09:16:40 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:16:40 ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:16:41 INF] [HTTP START] [N/A] GET /api/admin/notifications/templates/dfb47aed-7d1f-4ca7-b9e7-19b443dac062
+[09:16:41 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:16:41 INF] [Notifications] [GetTemplateByIdQuery] [Correlation: 9ac08dc1e7ba4213905e7800c9a2db82] [User: null] [START] Handling GetTemplateByIdQuery GetTemplateByIdQuery { Id = dfb47aed-7d1f-4ca7-b9e7-19b443dac062 }
+[09:16:41 INF] [Notifications] [GetTemplateByIdQuery] [Correlation: 9ac08dc1e7ba4213905e7800c9a2db82] [User: null] [END] Handled GetTemplateByIdQuery { ElapsedMs = 13 }
+[09:16:41 WRN] [HTTP END] [N/A] GET /api/admin/notifications/templates/dfb47aed-7d1f-4ca7-b9e7-19b443dac062 responded 404 in 26ms
+[09:16:41 INF] [HTTP START] [N/A] GET /api/admin/notifications/templates/0e57e8fd-68f3-4c14-b688-4e0eb42c1fb0
+[09:16:41 INF] AuthenticationScheme: TestScheme was forbidden.
+[09:16:41 WRN] [HTTP END] [N/A] GET /api/admin/notifications/templates/0e57e8fd-68f3-4c14-b688-4e0eb42c1fb0 responded 403 in 5ms
+[testcontainers.org 00:00:15.13] Stop Docker container 8ed14f473b31
+[testcontainers.org 00:00:15.39] Stop Docker container 8b8cf0ad6d7d
+[09:16:41 INF] Application is shutting down...
+[testcontainers.org 00:00:16.09] Docker container 90463a58854c created
+[testcontainers.org 00:00:16.12] Start Docker container 90463a58854c
+[testcontainers.org 00:00:16.46] Wait for Docker container 90463a58854c to complete readiness checks
+[testcontainers.org 00:00:16.49] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 90463a58854c
+[testcontainers.org 00:00:17.64] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 90463a58854c
+[testcontainers.org 00:00:18.72] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 90463a58854c
+[testcontainers.org 00:00:18.79] Docker container 90463a58854c ready
+[testcontainers.org 00:00:18.93] Docker container dc2cc5edf32e created
+[testcontainers.org 00:00:18.93] Start Docker container dc2cc5edf32e
+[testcontainers.org 00:00:19.14] Wait for Docker container dc2cc5edf32e to complete readiness checks
+[testcontainers.org 00:00:19.15] Execute "redis-cli ping" at Docker container dc2cc5edf32e
+[testcontainers.org 00:00:19.25] Docker container dc2cc5edf32e ready
+[09:16:45 INF] Application started. Press Ctrl+C to shut down.
+[09:16:45 INF] Hosting environment: Development
+[09:16:45 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:16:45 ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:16:46 INF] [HTTP START] [N/A] GET /api/admin/notifications/templates
+[09:16:46 INF] AuthenticationScheme: TestScheme was forbidden.
+[09:16:46 WRN] [HTTP END] [N/A] GET /api/admin/notifications/templates responded 403 in 0ms
+[09:16:46 INF] [HTTP START] [N/A] GET /api/admin/notifications/templates
+[09:16:46 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:16:46 INF] [Notifications] [GetTemplatesQuery] [Correlation: 0d37f112c8624c838e7d0f79b0d13e31] [User: null] [START] Handling GetTemplatesQuery GetTemplatesQuery { }
+[09:16:46 INF] [Notifications] [GetTemplatesQuery] [Correlation: 0d37f112c8624c838e7d0f79b0d13e31] [User: null] [END] Handled GetTemplatesQuery { ElapsedMs = 26 }
+[09:16:46 INF] [HTTP END] [N/A] GET /api/admin/notifications/templates responded 200 in 34ms
+[testcontainers.org 00:00:20.00] Stop Docker container 90463a58854c
+[testcontainers.org 00:00:20.22] Stop Docker container dc2cc5edf32e
+[09:16:46 INF] Application is shutting down...
+[testcontainers.org 00:00:20.72] Docker container 4a6d97da7003 created
+[testcontainers.org 00:00:20.73] Start Docker container 4a6d97da7003
+[testcontainers.org 00:00:20.95] Wait for Docker container 4a6d97da7003 to complete readiness checks
+[testcontainers.org 00:00:20.97] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 4a6d97da7003
+[testcontainers.org 00:00:22.07] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 4a6d97da7003
+[testcontainers.org 00:00:22.14] Docker container 4a6d97da7003 ready
+[testcontainers.org 00:00:22.33] Docker container 9483375e6239 created
+[testcontainers.org 00:00:22.34] Start Docker container 9483375e6239
+[testcontainers.org 00:00:22.50] Wait for Docker container 9483375e6239 to complete readiness checks
+[testcontainers.org 00:00:22.51] Execute "redis-cli ping" at Docker container 9483375e6239
+[testcontainers.org 00:00:22.60] Docker container 9483375e6239 ready
+[09:16:48 INF] Application started. Press Ctrl+C to shut down.
+[09:16:48 INF] Hosting environment: Development
+[09:16:48 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:16:48 ERR] Failed executing DbCommand (3ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:16:49 INF] [HTTP START] [N/A] PUT /api/notifications/read-all
+[09:16:49 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:16:49 INF] [Notifications] [MarkAllNotificationsAsReadCommand] [Correlation: f8b00de5c8284298951847f692dc1c13] [User: null] [START] Handling MarkAllNotificationsAsReadCommand MarkAllNotificationsAsReadCommand { UserId = d2b194b4-6b93-4542-894f-b442c81a85d9 }
+[09:16:49 INF] [Notifications] [MarkAllNotificationsAsReadCommand] [Correlation: f8b00de5c8284298951847f692dc1c13] [User: null] [END] Handled MarkAllNotificationsAsReadCommand { ElapsedMs = 34 }
+[09:16:49 INF] [HTTP END] [N/A] PUT /api/notifications/read-all responded 204 in 38ms
+[09:16:49 INF] [HTTP START] [N/A] PUT /api/notifications/read-all
+[09:16:49 INF] AuthenticationScheme: TestScheme was challenged.
+[09:16:49 WRN] [HTTP END] [N/A] PUT /api/notifications/read-all responded 401 in 2ms
+[testcontainers.org 00:00:23.55] Stop Docker container 4a6d97da7003
+[testcontainers.org 00:00:23.82] Stop Docker container 9483375e6239
+[09:16:50 INF] Application is shutting down...
+[testcontainers.org 00:00:24.33] Docker container b371b83e8d8d created
+[testcontainers.org 00:00:24.35] Start Docker container b371b83e8d8d
+[testcontainers.org 00:00:24.56] Wait for Docker container b371b83e8d8d to complete readiness checks
+[testcontainers.org 00:00:24.57] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container b371b83e8d8d
+[testcontainers.org 00:00:25.68] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container b371b83e8d8d
+[testcontainers.org 00:00:26.84] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container b371b83e8d8d
+[testcontainers.org 00:00:26.91] Docker container b371b83e8d8d ready
+[testcontainers.org 00:00:27.10] Docker container f33b965f63c7 created
+[testcontainers.org 00:00:27.13] Start Docker container f33b965f63c7
+[testcontainers.org 00:00:27.33] Wait for Docker container f33b965f63c7 to complete readiness checks
+[testcontainers.org 00:00:27.35] Execute "redis-cli ping" at Docker container f33b965f63c7
+[testcontainers.org 00:00:27.44] Docker container f33b965f63c7 ready
+[09:16:53 INF] Application started. Press Ctrl+C to shut down.
+[09:16:53 INF] Hosting environment: Development
+[09:16:53 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:16:53 ERR] Failed executing DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:16:54 INF] [HTTP START] [N/A] GET /api/notifications/status
+[09:16:54 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:16:54 INF] [Notifications] [GetNotificationsStatusQuery] [Correlation: 359d47487a6d4dc9b8b2c453aade785f] [User: null] [START] Handling GetNotificationsStatusQuery GetNotificationsStatusQuery { }
+[09:16:54 INF] [Notifications] [GetNotificationsStatusQuery] [Correlation: 359d47487a6d4dc9b8b2c453aade785f] [User: null] [END] Handled GetNotificationsStatusQuery { ElapsedMs = 0 }
+[09:16:54 INF] [HTTP END] [N/A] GET /api/notifications/status responded 200 in 6ms
+[testcontainers.org 00:00:28.21] Stop Docker container b371b83e8d8d
+[testcontainers.org 00:00:28.44] Stop Docker container f33b965f63c7
+[09:16:54 INF] Application is shutting down...
+[testcontainers.org 00:00:28.98] Docker container 54c6169bece6 created
+[testcontainers.org 00:00:28.99] Start Docker container 54c6169bece6
+[testcontainers.org 00:00:29.20] Wait for Docker container 54c6169bece6 to complete readiness checks
+[testcontainers.org 00:00:29.21] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 54c6169bece6
+[testcontainers.org 00:00:30.33] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 54c6169bece6
+[testcontainers.org 00:00:30.40] Docker container 54c6169bece6 ready
+[testcontainers.org 00:00:30.58] Docker container 77045bdd15ad created
+[testcontainers.org 00:00:30.58] Start Docker container 77045bdd15ad
+[testcontainers.org 00:00:30.78] Wait for Docker container 77045bdd15ad to complete readiness checks
+[testcontainers.org 00:00:30.79] Execute "redis-cli ping" at Docker container 77045bdd15ad
+[testcontainers.org 00:00:30.88] Docker container 77045bdd15ad ready
+[09:16:57 INF] Application started. Press Ctrl+C to shut down.
+[09:16:57 INF] Hosting environment: Development
+[09:16:57 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:16:57 ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:16:57 INF] [HTTP START] [N/A] GET /api/notifications/unread-count
+[09:16:57 INF] AuthenticationScheme: TestScheme was challenged.
+[09:16:57 WRN] [HTTP END] [N/A] GET /api/notifications/unread-count responded 401 in 0ms
+[09:16:57 INF] [HTTP START] [N/A] GET /api/notifications/unread-count
+[09:16:57 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:16:57 INF] [Notifications] [GetUnreadNotificationCountQuery] [Correlation: e8bc97a4596a41049f77475da5dc29a8] [User: null] [START] Handling GetUnreadNotificationCountQuery GetUnreadNotificationCountQuery { UserId = 8947cca2-e08e-49bc-8208-5d9fbed0a47c }
+[09:16:57 INF] [Notifications] [GetUnreadNotificationCountQuery] [Correlation: e8bc97a4596a41049f77475da5dc29a8] [User: null] [END] Handled GetUnreadNotificationCountQuery { ElapsedMs = 28 }
+[09:16:57 INF] [HTTP END] [N/A] GET /api/notifications/unread-count responded 200 in 35ms
+[testcontainers.org 00:00:31.68] Stop Docker container 54c6169bece6
+[testcontainers.org 00:00:31.90] Stop Docker container 77045bdd15ad
+[09:16:58 INF] Application is shutting down...
+[testcontainers.org 00:00:32.37] Docker container 7a874614e2da created
+[testcontainers.org 00:00:32.38] Start Docker container 7a874614e2da
+[testcontainers.org 00:00:32.59] Wait for Docker container 7a874614e2da to complete readiness checks
+[testcontainers.org 00:00:32.60] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 7a874614e2da
+[testcontainers.org 00:00:33.71] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 7a874614e2da
+[testcontainers.org 00:00:33.78] Docker container 7a874614e2da ready
+[testcontainers.org 00:00:33.91] Docker container 6a1b732caa34 created
+[testcontainers.org 00:00:33.93] Start Docker container 6a1b732caa34
+[testcontainers.org 00:00:34.19] Wait for Docker container 6a1b732caa34 to complete readiness checks
+[testcontainers.org 00:00:34.21] Execute "redis-cli ping" at Docker container 6a1b732caa34
+[testcontainers.org 00:00:34.38] Docker container 6a1b732caa34 ready
+[09:17:00 INF] Application started. Press Ctrl+C to shut down.
+[09:17:00 INF] Hosting environment: Development
+[09:17:00 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:17:00 ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:17:01 INF] [HTTP START] [N/A] PUT /api/notifications/360d4084-7ee1-431f-bfe5-bb7656f5255c/read
+[09:17:01 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:17:01 INF] [Notifications] [MarkNotificationAsReadCommand] [Correlation: 515ab17204ca400f9b63739b6c160ba4] [User: null] [START] Handling MarkNotificationAsReadCommand MarkNotificationAsReadCommand { NotificationId = 360d4084-7ee1-431f-bfe5-bb7656f5255c, UserId = 224c2d22-6b7a-4ff0-89a8-443a9b68e13d }
+[09:17:01 INF] [Notifications] [MarkNotificationAsReadCommand] [Correlation: 515ab17204ca400f9b63739b6c160ba4] [User: null] [END] Handled MarkNotificationAsReadCommand { ElapsedMs = 13 }
+[09:17:01 WRN] [HTTP END] [N/A] PUT /api/notifications/360d4084-7ee1-431f-bfe5-bb7656f5255c/read responded 404 in 16ms
+[09:17:01 INF] [HTTP START] [N/A] PUT /api/notifications/40c1f307-6aaa-4be9-a0f0-0debd87b6da5/read
+[09:17:01 INF] AuthenticationScheme: TestScheme was challenged.
+[09:17:01 WRN] [HTTP END] [N/A] PUT /api/notifications/40c1f307-6aaa-4be9-a0f0-0debd87b6da5/read responded 401 in 1ms
+[testcontainers.org 00:00:35.09] Stop Docker container 7a874614e2da
+[testcontainers.org 00:00:35.32] Stop Docker container 6a1b732caa34
+[09:17:01 INF] Application is shutting down...
+[testcontainers.org 00:00:35.90] Docker container e4091adbff7e created
+[testcontainers.org 00:00:35.92] Start Docker container e4091adbff7e
+[testcontainers.org 00:00:36.15] Wait for Docker container e4091adbff7e to complete readiness checks
+[testcontainers.org 00:00:36.16] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container e4091adbff7e
+[testcontainers.org 00:00:37.28] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container e4091adbff7e
+[testcontainers.org 00:00:38.34] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container e4091adbff7e
+[testcontainers.org 00:00:38.41] Docker container e4091adbff7e ready
+[testcontainers.org 00:00:38.53] Docker container eea5d94b89a3 created
+[testcontainers.org 00:00:38.55] Start Docker container eea5d94b89a3
+[testcontainers.org 00:00:38.73] Wait for Docker container eea5d94b89a3 to complete readiness checks
+[testcontainers.org 00:00:38.74] Execute "redis-cli ping" at Docker container eea5d94b89a3
+[testcontainers.org 00:00:38.82] Docker container eea5d94b89a3 ready
+[09:17:05 INF] Application started. Press Ctrl+C to shut down.
+[09:17:05 INF] Hosting environment: Development
+[09:17:05 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:17:05 ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:17:05 INF] [HTTP START] [N/A] DELETE /api/notifications/f13e5335-27ed-425e-8424-6140d7f92962
+[09:17:05 INF] AuthenticationScheme: TestScheme was challenged.
+[09:17:05 WRN] [HTTP END] [N/A] DELETE /api/notifications/f13e5335-27ed-425e-8424-6140d7f92962 responded 401 in 0ms
+[09:17:05 INF] [HTTP START] [N/A] DELETE /api/notifications/665ea03e-a5b8-4301-88cc-f4135321fb27
+[09:17:05 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:17:05 INF] [Notifications] [DeleteNotificationCommand] [Correlation: 0d22335bdc644132a344c4e5a4ed5447] [User: null] [START] Handling DeleteNotificationCommand DeleteNotificationCommand { NotificationId = 665ea03e-a5b8-4301-88cc-f4135321fb27, UserId = 6c3e5b91-7cde-4800-a745-c63723257bad }
+[09:17:05 INF] [Notifications] [DeleteNotificationCommand] [Correlation: 0d22335bdc644132a344c4e5a4ed5447] [User: null] [END] Handled DeleteNotificationCommand { ElapsedMs = 49 }
+[09:17:05 WRN] [HTTP END] [N/A] DELETE /api/notifications/665ea03e-a5b8-4301-88cc-f4135321fb27 responded 404 in 54ms
+[testcontainers.org 00:00:39.67] Stop Docker container e4091adbff7e
+[testcontainers.org 00:00:39.97] Stop Docker container eea5d94b89a3
+[09:17:06 INF] Application is shutting down...
+[testcontainers.org 00:00:40.55] Docker container ae0d3fe6694c created
+[testcontainers.org 00:00:40.57] Start Docker container ae0d3fe6694c
+[testcontainers.org 00:00:40.76] Wait for Docker container ae0d3fe6694c to complete readiness checks
+[testcontainers.org 00:00:40.78] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container ae0d3fe6694c
+[testcontainers.org 00:00:41.88] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container ae0d3fe6694c
+[testcontainers.org 00:00:42.94] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container ae0d3fe6694c
+[testcontainers.org 00:00:43.00] Docker container ae0d3fe6694c ready
+[testcontainers.org 00:00:43.13] Docker container a93b1a32909a created
+[testcontainers.org 00:00:43.15] Start Docker container a93b1a32909a
+[testcontainers.org 00:00:43.42] Wait for Docker container a93b1a32909a to complete readiness checks
+[testcontainers.org 00:00:43.44] Execute "redis-cli ping" at Docker container a93b1a32909a
+[testcontainers.org 00:00:43.65] Docker container a93b1a32909a ready
+[09:17:10 INF] Application started. Press Ctrl+C to shut down.
+[09:17:10 INF] Hosting environment: Development
+[09:17:10 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:17:10 ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:17:10 INF] [HTTP START] [N/A] GET /api/notifications
+[09:17:10 INF] AuthenticationScheme: TestScheme was challenged.
+[09:17:10 WRN] [HTTP END] [N/A] GET /api/notifications responded 401 in 0ms
+[09:17:10 INF] [HTTP START] [N/A] GET /api/notifications
+[09:17:10 INF] You have a valid license key for the Lucky Penny software Bundle Community edition. The license expires on 06/16/2027 00:00:00 +00:00.
+[09:17:10 INF] [Notifications] [GetNotificationsQuery] [Correlation: 432f46c5f57d4f57aaa51ae7f41393b1] [User: null] [START] Handling GetNotificationsQuery GetNotificationsQuery { UserId = 5f3a3e86-c364-45a7-8b5c-f781e387a028, PageNumber = 1, PageSize = 10, Language = en }
+[09:17:10 INF] [Notifications] [GetNotificationsQuery] [Correlation: 432f46c5f57d4f57aaa51ae7f41393b1] [User: null] [END] Handled GetNotificationsQuery { ElapsedMs = 6 }
+[09:17:10 INF] [HTTP END] [N/A] GET /api/notifications responded 200 in 12ms
+[testcontainers.org 00:00:44.69] Stop Docker container ae0d3fe6694c
+[testcontainers.org 00:00:44.92] Stop Docker container a93b1a32909a
+[09:17:11 INF] Application is shutting down...
+[testcontainers.org 00:00:45.41] Stop Docker container 010504ed27e5
+[testcontainers.org 00:00:45.83] Stop Docker container 6b549b1f44ab
+[09:17:12 INF] Application is shutting down...
+[xUnit.net 00:00:47.27]   Finished:    AirlineTicket.Modules.Notifications.Api.IntegrationTests
+</StdOut>
+    </Output>
+  </ResultSummary>
+</TestRun>
