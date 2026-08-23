@@ -232,15 +232,15 @@ public class UserEndpoint : IEndpoint
                 CancellationToken ct) =>
             {
                 var command = new AdminUpdateUserCommand(
-                    id, 
-                    request.FullName, 
-                    request.Phone, 
-                    request.RoleId, 
-                    request.IsActive, 
-                    request.Password, 
+                    id,
+                    request.FullName,
+                    request.Phone,
+                    request.RoleId,
+                    request.IsActive,
+                    request.Password,
                     request.AirlineId);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.Ok() : result.ToErrorResult();
+                return result.IsSuccess ? Results.Ok() : result.ToErrorResult(statusCode: 404);
             })
             .WithName("AdminUpdateUser")
             .WithSummary("Update a user")
@@ -250,7 +250,6 @@ public class UserEndpoint : IEndpoint
             .Produces(403)
             .Produces(404);
 
-        // GET /api/admin/users/{id:guid} — Get user by ID
         // GET /api/admin/users/{id:guid} — Get user by ID
         adminGroup.MapGet("/{id:guid}", async (Guid id, [FromServices] ISender sender, CancellationToken ct) =>
             {
@@ -266,12 +265,11 @@ public class UserEndpoint : IEndpoint
             .Produces(404);
 
         // DELETE /api/admin/users/{id:guid} — Delete a user
-        // DELETE /api/admin/users/{id:guid} — Delete a user
         adminGroup.MapDelete("/{id:guid}", async (Guid id, [FromServices] ISender sender, CancellationToken ct) =>
             {
                 var command = new DeleteUserCommand(id);
                 var result = await sender.Send(command, ct);
-                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult();
+                return result.IsSuccess ? Results.NoContent() : result.ToErrorResult(statusCode: 404);
             })
             .WithName("AdminDeleteUser")
             .WithSummary("Delete a user")
