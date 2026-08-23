@@ -23,8 +23,12 @@ internal sealed class DeleteAirlineCommandHandler : ICommandHandler<DeleteAirlin
 
     public async Task<Result<bool>> Handle(DeleteAirlineCommand request, CancellationToken cancellationToken)
     {
-        await _airlineRepository.DeleteAsync(request.Id, cancellationToken);
-        
+        var deleted = await _airlineRepository.DeleteAsync(request.Id, cancellationToken);
+        if (!deleted)
+        {
+            return Result.Failure<bool>(new Error("Airline.NotFound", "Airline not found."));
+        }
+
         await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetAirlinesQuery>("all"), cancellationToken);
 
         return Result.Success(true);

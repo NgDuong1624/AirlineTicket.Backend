@@ -22,11 +22,11 @@ public class CancelBookingCommandHandler : ICommandHandler<CancelBookingCommand,
     public async Task<Result<Unit>> Handle(CancelBookingCommand request, CancellationToken cancellationToken)
     {
         var booking = await _bookingRepository.GetByIdAsync(request.BookingId, cancellationToken);
-        if (booking != null)
-        {
-            booking.Status = "Cancelled";
-            await _bookingRepository.UpdateAsync(booking, cancellationToken);
-        }
+        if (booking == null)
+            return Result.Failure<Unit>(new Error("Booking.NotFound", $"Booking with ID {request.BookingId} not found."));
+
+        booking.Status = "Cancelled";
+        await _bookingRepository.UpdateAsync(booking, cancellationToken);
         return Result.Success(Unit.Value);
     }
 }

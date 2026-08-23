@@ -248,7 +248,7 @@ public class FlightAdminEndpoints : IEndpoint
                 CancellationToken ct) =>
             {
                 var result = await sender.Send(new GetAircraftModelByIdQuery(id), ct);
-                return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound(result.Error);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
             })
             .WithName("AdminGetAircraftModelById");
 

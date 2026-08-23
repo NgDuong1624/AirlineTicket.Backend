@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.CQRS;
+using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Promotions.Application.Contracts;
 using AirlineTicket.BuildingBlocks.Caching;
@@ -22,13 +23,15 @@ internal sealed class DeletePromotionCommandHandler : ICommandHandler<DeleteProm
         _promotionRepository = promotionRepository;
         _cacheService = cacheService;
     }
-    
+
     public async Task<Result<Unit>> Handle(DeletePromotionCommand request, CancellationToken cancellationToken)
     {
-        await _promotionRepository.DeleteAsync(request.Id, cancellationToken);
-        
+        var deleted = await _promotionRepository.DeleteAsync(request.Id, cancellationToken);
+        if (!deleted)
+            return Result.Failure<Unit>(Error.Create(EndpointErrorCodes.BAD_REQUEST, "Coupon not found."));
+
         await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetActivePromotionsQuery>("all"), cancellationToken);
-        
+
         return Result.Success(Unit.Value);
     }
 }

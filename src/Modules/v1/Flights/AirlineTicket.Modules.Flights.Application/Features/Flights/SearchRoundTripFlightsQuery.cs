@@ -46,8 +46,8 @@ public class SearchRoundTripFlightsQueryHandler : IQueryHandler<SearchRoundTripF
 
     public async Task<Result<RoundTripFlightResult>> Handle(SearchRoundTripFlightsQuery request, CancellationToken cancellationToken)
     {
-        // Execute both searches in parallel
-        var outboundSearchTask = _flightRepository.SearchAsync(
+        // Execute sequentially to avoid concurrent DbContext access on the same scoped instance
+        var outboundResult = await _flightRepository.SearchAsync(
             request.OriginCode,
             request.DestinationCode,
             request.OutboundDate,
@@ -60,7 +60,7 @@ public class SearchRoundTripFlightsQueryHandler : IQueryHandler<SearchRoundTripF
             request.Currency,
             cancellationToken: cancellationToken);
 
-        var returnSearchTask = _flightRepository.SearchAsync(
+        var returnResult = await _flightRepository.SearchAsync(
             request.DestinationCode,
             request.OriginCode,
             request.ReturnDate,
@@ -73,12 +73,10 @@ public class SearchRoundTripFlightsQueryHandler : IQueryHandler<SearchRoundTripF
             request.Currency,
             cancellationToken: cancellationToken);
 
-        await Task.WhenAll(outboundSearchTask, returnSearchTask);
-
         var result = new RoundTripFlightResult
         {
-            OutboundFlights = (await outboundSearchTask).Items,
-            ReturnFlights = (await returnSearchTask).Items
+            OutboundFlights = outboundResult.Items,
+            ReturnFlights = returnResult.Items
         };
 
         return Result.Success(result);

@@ -47,7 +47,11 @@ internal sealed class UpdateAircraftModelCommandHandler : ICommandHandler<Update
             }).ToList()
         };
 
-        await _repository.UpdateAsync(model, cancellationToken);
+        var updated = await _repository.UpdateAsync(model, cancellationToken);
+        if (!updated)
+        {
+            return Result.Failure<bool>(new Error("AircraftModel.NotFound", "Aircraft model not found."));
+        }
         return Result.Success(true);
     }
 }

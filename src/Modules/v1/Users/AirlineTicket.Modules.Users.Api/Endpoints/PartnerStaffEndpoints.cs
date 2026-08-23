@@ -21,8 +21,7 @@ public class PartnerStaffEndpoints : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         var staff = app.MapGroup("/api/partner/staff")
-            .WithTags("Partner Staff")
-            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
+            .WithTags("Partner Staff");
 
         // GET /api/partner/staff — Get partner staff members
         staff.MapGet("/", async (
@@ -49,7 +48,8 @@ public class PartnerStaffEndpoints : IEndpoint
             .WithSummary("Get partner staff members")
             .Produces(200)
             .Produces(401)
-            .Produces(403);
+            .Produces(403)
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // POST /api/partner/staff — Create a new partner staff member
         staff.MapPost("/", async (
@@ -85,7 +85,8 @@ public class PartnerStaffEndpoints : IEndpoint
             .Produces(201)
             .Produces(400)
             .Produces(401)
-            .Produces(403);
+            .Produces(403)
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // PUT /api/partner/staff/{id:guid} — Update a partner staff member
         staff.MapPut("/{id:guid}", async (
@@ -114,7 +115,8 @@ public class PartnerStaffEndpoints : IEndpoint
             .Produces(200)
             .Produces(401)
             .Produces(403)
-            .Produces(404);
+            .Produces(404)
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // DELETE /api/partner/staff/{id:guid} — Delete a partner staff member
         staff.MapDelete("/{id:guid}", async (
@@ -138,7 +140,8 @@ public class PartnerStaffEndpoints : IEndpoint
             .Produces(204)
             .Produces(401)
             .Produces(403)
-            .Produces(404);
+            .Produces(404)
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // PATCH /api/partner/staff/{id:guid}/status — Update partner staff status
         staff.MapPatch("/{id:guid}/status", async (
@@ -165,7 +168,8 @@ public class PartnerStaffEndpoints : IEndpoint
             .Produces(200)
             .Produces(401)
             .Produces(403)
-            .Produces(404);
+            .Produces(404)
+            .RequireAuthorization(AuthConstants.Policies.PartnerOnly);
 
         // GET /api/partner/staff/my-airline — Get all staff for my airline
         staff.MapGet("/my-airline", async (
@@ -189,7 +193,8 @@ public class PartnerStaffEndpoints : IEndpoint
             .WithSummary("Get all staff for my airline")
             .Produces(200)
             .Produces(401)
-            .Produces(403);
+            .Produces(403)
+            .RequireAuthorization(AuthConstants.Policies.PartnerOrStaff);
     }
 
     private static object ToDto(User u) => new

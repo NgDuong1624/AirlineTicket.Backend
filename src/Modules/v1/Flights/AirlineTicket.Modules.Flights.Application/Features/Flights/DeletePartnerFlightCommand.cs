@@ -20,7 +20,11 @@ internal sealed class DeletePartnerFlightCommandHandler : ICommandHandler<Delete
 
     public async Task<Result<bool>> Handle(DeletePartnerFlightCommand request, CancellationToken cancellationToken)
     {
-        await _flightRepository.DeleteAsync(request.Id, request.AirlineId, cancellationToken);
+        var deleted = await _flightRepository.DeleteAsync(request.Id, request.AirlineId, cancellationToken);
+        if (!deleted)
+        {
+            return Result.Failure<bool>(new Error("Flight.NotFound", "Flight not found."));
+        }
         return Result.Success(true);
     }
 }

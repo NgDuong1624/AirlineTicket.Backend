@@ -34,8 +34,12 @@ internal sealed class UpdateAirlineCommandHandler : ICommandHandler<UpdateAirlin
             IsActive = request.IsActive ?? true
         };
 
-        await _airlineRepository.UpdateAsync(airline, cancellationToken);
-        
+        var updated = await _airlineRepository.UpdateAsync(airline, cancellationToken);
+        if (!updated)
+        {
+            return Result.Failure<bool>(new Error("Airline.NotFound", "Airline not found."));
+        }
+
         await _cacheService.RemoveAsync(CacheKeyBuilder.ForQuery<GetAirlinesQuery>("all"), cancellationToken);
 
         return Result.Success(true);

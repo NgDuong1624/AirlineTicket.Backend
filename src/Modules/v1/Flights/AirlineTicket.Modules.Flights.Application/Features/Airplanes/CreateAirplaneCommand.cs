@@ -18,18 +18,30 @@ public record CreateAirplaneCommand(
 internal sealed class CreateAirplaneCommandHandler : ICommandHandler<CreateAirplaneCommand, Result<Guid>>
 {
     private readonly IAirplaneRepository _airplaneRepository;
+    private readonly IAircraftModelRepository _aircraftModelRepository;
     private readonly ISeatGenerationService _seatGenerationService;
 
     public CreateAirplaneCommandHandler(
         IAirplaneRepository airplaneRepository,
+        IAircraftModelRepository aircraftModelRepository,
         ISeatGenerationService seatGenerationService)
     {
         _airplaneRepository = airplaneRepository;
+        _aircraftModelRepository = aircraftModelRepository;
         _seatGenerationService = seatGenerationService;
     }
 
     public async Task<Result<Guid>> Handle(CreateAirplaneCommand request, CancellationToken cancellationToken)
     {
+        if (request.AircraftModelId.HasValue)
+        {
+            var model = await _aircraftModelRepository.GetByIdAsync(request.AircraftModelId.Value, cancellationToken);
+            if (model is null)
+            {
+                return Result.Failure<Guid>(new Error("AircraftModel.NotFound", "Aircraft model not found."));
+            }
+        }
+
         var airplane = new Airplane
         {
             AirlineId = request.AirlineId,

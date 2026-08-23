@@ -81,6 +81,18 @@
   <Folder Name="/tests/IntegrationTest/Users/">
     <Project Path="tests/IntegrationTest/Modules/v1/Users/AirlineTicket.Modules.Users.Api.IntegrationTests/AirlineTicket.Modules.Users.Api.IntegrationTests.csproj" />
   </Folder>
+  <Folder Name="/tests/IntegrationTest/Notifications/">
+    <Project Path="tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/AirlineTicket.Modules.Notifications.Api.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/IntegrationTest/Interactions/">
+    <Project Path="tests/IntegrationTest/Modules/v1/Interactions/AirlineTicket.Modules.Interactions.Api.IntegrationTests/AirlineTicket.Modules.Interactions.Api.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/IntegrationTest/Logs/">
+    <Project Path="tests/IntegrationTest/Modules/v1/Logs/AirlineTicket.Modules.Logs.Api.IntegrationTests/AirlineTicket.Modules.Logs.Api.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/IntegrationTest/CMS/">
+    <Project Path="tests/IntegrationTest/Modules/v1/CMS/AirlineTicket.Modules.CMS.Api.IntegrationTests/AirlineTicket.Modules.CMS.Api.IntegrationTests.csproj" />
+  </Folder>
   <Folder Name="/tests/UnitTest/" />
   <Folder Name="/tests/UnitTest/Bookings/">
     <Project Path="tests/UnitTest/Modules/v1/Bookings/AirlineTicket.Modules.Bookings.Application.UnitTests/AirlineTicket.Modules.Bookings.Application.UnitTests.csproj" />

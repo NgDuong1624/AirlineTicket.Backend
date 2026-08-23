@@ -45,8 +45,8 @@ public class NotificationEndpoints : IEndpoint
 
         // GET /api/notifications — Get user notifications
         group.MapGet("/", async (
-                [FromQuery] int pageNumber,
-                [FromQuery] int pageSize,
+                [FromQuery] int? pageNumber,
+                [FromQuery] int? pageSize,
                 [FromQuery] string? locale,
                 HttpContext context,
                 [FromServices] ISender sender,
@@ -55,11 +55,11 @@ public class NotificationEndpoints : IEndpoint
                 var userId = context.User.GetUserId();
                 if (userId is null) return Results.Unauthorized();
 
-                var query = new GetNotificationsQuery(userId.Value, pageNumber == 0 ? 1 : pageNumber, pageSize == 0 ? 10 : pageSize, locale ?? "en");
+                var query = new GetNotificationsQuery(userId.Value, pageNumber ?? 1, pageSize ?? 10, locale ?? "en");
                 var result = await sender.Send(query, ct);
                 return Results.Ok(result);
             })
-
+            .RequireAuthorization()
             .WithName("GetUserNotifications")
             .WithSummary("Get paginated notifications for the current user")
             .Produces(200)

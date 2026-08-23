@@ -4,6 +4,7 @@
     <ProjectReference Include="..\AirlineTicket.Modules.Bookings.Application\AirlineTicket.Modules.Bookings.Application.csproj" />
     <ProjectReference Include="..\AirlineTicket.Modules.Bookings.Domain\AirlineTicket.Modules.Bookings.Domain.csproj" />
     <ProjectReference Include="..\..\Flights\AirlineTicket.Modules.Flights.Domain\AirlineTicket.Modules.Flights.Domain.csproj" />
+    <ProjectReference Include="..\..\Flights\AirlineTicket.Modules.Flights.Infrastructure\AirlineTicket.Modules.Flights.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

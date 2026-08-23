@@ -1,0 +1,170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="335f2eff-19e0-49ef-a52a-c05b6fa2769b" name="@tdunz-laptop 2026-08-23 09:14:18" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-08-23T09:14:18.9082548+07:00" queuing="2026-08-23T09:14:18.9082548+07:00" start="2026-08-23T09:14:07.7355681+07:00" finish="2026-08-23T09:14:19.0885988+07:00" />
+  <TestSettings name="default" id="373fec0b-ada8-4c9d-a8d2-58e707f08bf7">
+    <Deployment runDeploymentRoot="_tdunz-laptop_2026-08-23_09_14_18" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="8c184e71-09e0-495c-a0b6-534a5e16c26c" testId="ddf6965e-2af7-e68b-58d4-84220b59b270" testName="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnOk_WhenCustomer" computerName="tdunz-laptop" duration="00:00:00.5593399" startTime="2026-08-23T09:14:17.3843011+07:00" endTime="2026-08-23T09:14:17.9298469+07:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8c184e71-09e0-495c-a0b6-534a5e16c26c">
+      <Output>
+        <ErrorInfo>
+          <Message>Expected response.StatusCode to be HttpStatusCode.OK {value: 200} because GET /api/notifications: GetUserNotifications must return 200 OK but return InternalServerError, but found HttpStatusCode.InternalServerError {value: 500}.</Message>
+          <StackTrace>   at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+   at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+   at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+   at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)
+   at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+   at AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnOk_WhenCustomer() in /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/Endpoints/Notifications/GetUserNotificationsTests.cs:line 33
+--- End of stack trace from previous location ---</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnOk_WhenCustomer" storage="/home/tdunz/projects/personal/airlineticket/airlineticket.backend/tests/integrationtest/modules/v1/notifications/airlineticket.modules.notifications.api.integrationtests/bin/debug/net10.0/airlineticket.modules.notifications.api.integrationtests.dll" id="ddf6965e-2af7-e68b-58d4-84220b59b270">
+      <Execution id="8c184e71-09e0-495c-a0b6-534a5e16c26c" />
+      <TestMethod codeBase="/home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/bin/Debug/net10.0/AirlineTicket.Modules.Notifications.Api.IntegrationTests.dll" adapterTypeName="executor://xunit/VsTestRunner3/netcore/" className="AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests" name="GetUserNotifications_ShouldReturnOk_WhenCustomer" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="ddf6965e-2af7-e68b-58d4-84220b59b270" executionId="8c184e71-09e0-495c-a0b6-534a5e16c26c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="1" executed="1" passed="0" failed="1" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v3.1.4+50e68bbb8b (64-bit .NET 10.0.11)
+[xUnit.net 00:00:00.13]   Discovering: AirlineTicket.Modules.Notifications.Api.IntegrationTests
+[xUnit.net 00:00:00.18]   Discovered:  AirlineTicket.Modules.Notifications.Api.IntegrationTests
+[xUnit.net 00:00:00.22]   Starting:    AirlineTicket.Modules.Notifications.Api.IntegrationTests
+[testcontainers.org 00:00:00.18] Connected to Docker:
+  Host: unix:///home/tdunz/.docker/desktop/docker.sock
+  Server Version: 29.6.2
+  Kernel Version: 6.12.76-linuxkit
+  API Version: 1.55
+  Operating System: Docker Desktop
+  Total Memory: 3.55 GB
+  Labels: 
+    com.docker.desktop.address=unix:///home/tdunz/.docker/desktop/docker-cli.sock
+[testcontainers.org 00:00:00.47] Docker container 49772d3207f1 created
+[testcontainers.org 00:00:00.54] Start Docker container 49772d3207f1
+[testcontainers.org 00:00:00.73] Wait for Docker container 49772d3207f1 to complete readiness checks
+[testcontainers.org 00:00:00.74] Docker container 49772d3207f1 ready
+[testcontainers.org 00:00:00.92] Docker container 348ae82a3718 created
+[testcontainers.org 00:00:00.94] Start Docker container 348ae82a3718
+[testcontainers.org 00:00:01.12] Wait for Docker container 348ae82a3718 to complete readiness checks
+[testcontainers.org 00:00:01.14] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 348ae82a3718
+[testcontainers.org 00:00:02.27] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 348ae82a3718
+[testcontainers.org 00:00:03.32] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 348ae82a3718
+[testcontainers.org 00:00:03.38] Docker container 348ae82a3718 ready
+[testcontainers.org 00:00:03.48] Docker container 36a56d051382 created
+[testcontainers.org 00:00:03.49] Start Docker container 36a56d051382
+[testcontainers.org 00:00:03.66] Wait for Docker container 36a56d051382 to complete readiness checks
+[testcontainers.org 00:00:03.67] Execute "redis-cli ping" at Docker container 36a56d051382
+[testcontainers.org 00:00:03.73] Docker container 36a56d051382 ready
+[09:14:13 INF] Application started. Press Ctrl+C to shut down.
+[09:14:13 INF] Hosting environment: Development
+[09:14:13 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:14:13 ERR] Failed executing DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[testcontainers.org 00:00:06.19] Docker container 4ec79eb80c21 created
+[testcontainers.org 00:00:06.20] Start Docker container 4ec79eb80c21
+[testcontainers.org 00:00:06.38] Wait for Docker container 4ec79eb80c21 to complete readiness checks
+[testcontainers.org 00:00:06.40] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 4ec79eb80c21
+[testcontainers.org 00:00:07.50] Execute "pg_isready --host localhost --dbname AirlineTicketTestDb --username postgres" at Docker container 4ec79eb80c21
+[testcontainers.org 00:00:07.57] Docker container 4ec79eb80c21 ready
+[testcontainers.org 00:00:07.67] Docker container 7cae8d7c2824 created
+[testcontainers.org 00:00:07.68] Start Docker container 7cae8d7c2824
+[testcontainers.org 00:00:07.85] Wait for Docker container 7cae8d7c2824 to complete readiness checks
+[testcontainers.org 00:00:07.86] Execute "redis-cli ping" at Docker container 7cae8d7c2824
+[testcontainers.org 00:00:07.95] Docker container 7cae8d7c2824 ready
+[09:14:16 INF] Application started. Press Ctrl+C to shut down.
+[09:14:16 INF] Hosting environment: Development
+[09:14:16 INF] Content root path: /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/Api/AirlineTicket.Api
+Applying database migrations...
+Database connection established.
+[09:14:16 ERR] Failed executing DbCommand (1ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+SELECT migration_id, product_version
+FROM "__EFMigrationsHistory"
+ORDER BY migration_id;
+All database migrations applied successfully.
+Seeding core data...
+Executing seed file: core/users/01_roles.sql
+Executing seed file: core/users/02_permissions.sql
+Executing seed file: core/users/03_role_permissions.sql
+Executing seed file: core/users/04_system_admin.sql
+Executing seed file: core/flights/01_airlines.sql
+Executing seed file: core/flights/02_airports.sql
+Executing seed file: core/flights/03_aircraft_models.sql
+Executing seed file: core/flights/04_seat_templates.sql
+Executing seed file: core/notifications/01_notification_templates.sql
+Core data seeded successfully.
+[09:14:17 INF] [HTTP START] [N/A] GET /api/notifications
+[09:14:17 INF] [HTTP END] [N/A] GET /api/notifications responded 200 in 185ms
+[09:14:17 ERR] An unhandled exception occurred during request execution: Required parameter "int pageNumber" was not provided from query string.
+Microsoft.AspNetCore.Http.BadHttpRequestException: Required parameter "int pageNumber" was not provided from query string.
+   at lambda_method86(Closure, Object, HttpContext)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at AirlineTicket.BuildingBlocks.Api.Middleware.SystemLogMiddleware.InvokeAsync(HttpContext context) in /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/BuildingBlock/AirlineTicket.BuildingBlocks.Api/Middleware/SystemLogMiddleware.cs:line 31
+   at AirlineTicket.BuildingBlocks.Api.Middleware.SystemLogMiddleware.InvokeAsync(HttpContext context) in /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/BuildingBlock/AirlineTicket.BuildingBlocks.Api/Middleware/SystemLogMiddleware.cs:line 78
+   at AirlineTicket.BuildingBlocks.Api.Middleware.RequestResponseLoggingMiddleware.InvokeAsync(HttpContext context) in /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/BuildingBlock/AirlineTicket.BuildingBlocks.Api/Middleware/RequestResponseLoggingMiddleware.cs:line 34
+   at AirlineTicket.BuildingBlocks.Api.Middleware.CorrelationMiddleware.InvokeAsync(HttpContext context, ICorrelationContext correlationContext) in /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/BuildingBlock/AirlineTicket.BuildingBlocks.Api/Middleware/CorrelationMiddleware.cs:line 43
+   at AirlineTicket.BuildingBlocks.Api.Middleware.GlobalExceptionHandlingMiddleware.InvokeAsync(HttpContext context) in /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/src/BuildingBlock/AirlineTicket.BuildingBlocks.Api/Middleware/GlobalExceptionHandlingMiddleware.cs:line 31
+     Warning:
+     The component "Fluent Assertions" is governed by the rules defined in the Xceed License Agreement and
+     the Xceed Fluent Assertions Community License. You may use Fluent Assertions free of charge for
+     non-commercial use only. An active subscription is required to use Fluent Assertions for commercial use.
+     Please contact Xceed Sales mailto:sales@xceed.com to acquire a subscription at a very low cost.
+     A paid commercial license supports the development and continued increasing support of
+     Fluent Assertions users under both commercial and community licenses. Help us
+     keep Fluent Assertions at the forefront of unit testing.
+     For more information, visit https://xceed.com/products/unit-testing/fluent-assertions/
+[xUnit.net 00:00:09.59]       Expected response.StatusCode to be HttpStatusCode.OK {value: 200} because GET /api/notifications: GetUserNotifications must return 200 OK but return InternalServerError, but found HttpStatusCode.InternalServerError {value: 500}.
+[xUnit.net 00:00:09.59]       Stack Trace:
+[xUnit.net 00:00:09.59]            at FluentAssertions.Execution.LateBoundTestFramework.Throw(String message)
+[xUnit.net 00:00:09.59]            at FluentAssertions.Execution.DefaultAssertionStrategy.HandleFailure(String message)
+[xUnit.net 00:00:09.59]            at FluentAssertions.Execution.AssertionScope.AddPreFormattedFailure(String formattedFailureMessage)
+[xUnit.net 00:00:09.59]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+[xUnit.net 00:00:09.59]            at FluentAssertions.Execution.AssertionChain.FailWith(Func`1 getFailureReason)
+[xUnit.net 00:00:09.59]            at FluentAssertions.Execution.AssertionChain.FailWith(String message, Object[] args)
+[xUnit.net 00:00:09.59]            at FluentAssertions.Primitives.EnumAssertions`2.Be(TEnum expected, String because, Object[] becauseArgs)
+[xUnit.net 00:00:09.59]         /home/tdunz/Projects/Personal/AirlineTicket/AirlineTicket.Backend/tests/IntegrationTest/Modules/v1/Notifications/AirlineTicket.Modules.Notifications.Api.IntegrationTests/Endpoints/Notifications/GetUserNotificationsTests.cs(33,0): at AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnOk_WhenCustomer()
+[xUnit.net 00:00:09.59]         --- End of stack trace from previous location ---
+[testcontainers.org 00:00:09.14] Stop Docker container 4ec79eb80c21
+[testcontainers.org 00:00:09.39] Stop Docker container 7cae8d7c2824
+[09:14:18 INF] Application is shutting down...
+[testcontainers.org 00:00:09.66] Stop Docker container 348ae82a3718
+[testcontainers.org 00:00:09.88] Stop Docker container 36a56d051382
+[09:14:18 INF] Application is shutting down...
+[xUnit.net 00:00:10.65]   Finished:    AirlineTicket.Modules.Notifications.Api.IntegrationTests
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="tdunz-laptop" outcome="Error" timestamp="2026-08-23T09:14:17.9327073+07:00">
+        <Text>[xUnit.net 00:00:09.59]     AirlineTicket.Modules.Notifications.Api.IntegrationTests.Endpoints.Notifications.GetUserNotificationsTests.GetUserNotifications_ShouldReturnOk_WhenCustomer [FAIL]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>
