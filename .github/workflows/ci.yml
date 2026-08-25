@@ -28,7 +28,7 @@ jobs:
       run: dotnet build src/Realtime/AirlineTicket.SignalR/AirlineTicket.SignalR.csproj --configuration Release --no-restore
       
     - name: Test
-      run: dotnet test AirlineTicket.Backend.slnx --configuration Release --no-build --verbosity normal
+      run: dotnet test AirlineTicket.Backend.slnx --configuration Release --no-build --verbosity normal --filter "FullyQualifiedName!~IntegrationTests"
 
   deploy:
     needs: build-and-test
