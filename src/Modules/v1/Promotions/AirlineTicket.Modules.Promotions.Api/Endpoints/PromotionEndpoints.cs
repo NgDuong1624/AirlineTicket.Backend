@@ -244,6 +244,121 @@ public class PromotionEndpoints : IEndpoint
             .WithSummary("Apply a promotion code to a flight booking")
             .Produces(200)
             .Produces(400);
+
+        // ——————————————————————— Customer Fare Alerts ——————————————————————————
+        var fareAlertsGroup = app.MapGroup("/api/fare-alerts")
+            .WithTags("Fare Alerts")
+            .RequireAuthorization();
+
+        // GET /api/fare-alerts — Get current user's fare alerts
+        fareAlertsGroup.MapGet("/", async (
+                HttpContext httpContext,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userIdClaim = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? httpContext.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                    return Results.Unauthorized();
+
+                var result = await sender.Send(new GetUserFareAlertsQuery(userId), ct);
+                return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
+            })
+            .WithName("GetUserFareAlerts")
+            .WithSummary("Get all fare alerts for current user")
+            .Produces<List<AirlineTicket.Modules.Promotions.Application.Contracts.FareAlertDto>>(200)
+            .Produces(401);
+
+        // POST /api/fare-alerts — Create a new fare alert
+        fareAlertsGroup.MapPost("/", async (
+                [FromBody] AirlineTicket.Modules.Promotions.Application.Contracts.CreateFareAlertRequest request,
+                HttpContext httpContext,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userIdClaim = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? httpContext.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                    return Results.Unauthorized();
+
+                var command = new CreateFareAlertCommand(
+                    userId,
+                    request.OriginAirportId,
+                    request.DestinationAirportId,
+                    request.DepartureDate,
+                    request.ReturnDate,
+                    request.TargetPrice,
+                    request.CurrentLowestPrice,
+                    request.Currency);
+
+                var result = await sender.Send(command, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Created($"/api/fare-alerts/{result.Value}", new { Id = result.Value });
+            })
+            .WithName("CreateFareAlert")
+            .WithSummary("Create a new fare alert for current user")
+            .Produces(201)
+            .Produces(400)
+            .Produces(401);
+
+        // PATCH /api/fare-alerts/{id:guid} — Update target price or active status
+        fareAlertsGroup.MapPatch("/{id:guid}", async (
+                Guid id,
+                [FromBody] AirlineTicket.Modules.Promotions.Application.Contracts.UpdateFareAlertRequest request,
+                HttpContext httpContext,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userIdClaim = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? httpContext.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                    return Results.Unauthorized();
+
+                var command = new UpdateFareAlertCommand(id, userId, request.TargetPrice, request.IsActive);
+                var result = await sender.Send(command, ct);
+
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(new { Success = true });
+            })
+            .WithName("UpdateFareAlert")
+            .WithSummary("Update target price or toggle active status of a fare alert")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401);
+
+        // DELETE /api/fare-alerts/{id:guid} — Delete a fare alert
+        fareAlertsGroup.MapDelete("/{id:guid}", async (
+                Guid id,
+                HttpContext httpContext,
+                [FromServices] ISender sender,
+                CancellationToken ct) =>
+            {
+                var userIdClaim = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? httpContext.User.FindFirst("sub")?.Value;
+
+                if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                    return Results.Unauthorized();
+
+                var command = new DeleteFareAlertCommand(id, userId);
+                var result = await sender.Send(command, ct);
+
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(new { Success = true });
+            })
+            .WithName("DeleteFareAlert")
+            .WithSummary("Delete a fare alert for current user")
+            .Produces(200)
+            .Produces(400)
+            .Produces(401);
     }
 }
 

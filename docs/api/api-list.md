@@ -28,6 +28,7 @@ APIs that do not require authentication, serving public-facing functionalities.
 | **GET** | `/api/airports` | List/search airports |
 | **GET** | `/api/airlines` | List airlines |
 | **GET** | `/api/routes` | List routes |
+| **GET** | `/api/flights/price-forecast` | Get route price forecast & recommendation (ML) |
 
 ### 1.3. Booking & Payment
 | Method | Endpoint | Description |
@@ -73,6 +74,10 @@ APIs requiring a valid JWT token, regardless of user role.
 | **PUT** | `/api/notifications/{id}/read` | Mark a specific notification as read |
 | **PUT** | `/api/notifications/read-all` | Mark all notifications as read |
 | **DELETE** | `/api/notifications/{id}` | Soft delete a notification |
+| **POST** | `/api/fare-alerts` | Create route fare tracking alert |
+| **GET** | `/api/fare-alerts` | Get user active fare alerts & trend points |
+| **PATCH** | `/api/fare-alerts/{id}` | Update target price or toggle alert status |
+| **DELETE** | `/api/fare-alerts/{id}` | Delete user fare alert |
 
 ---
 

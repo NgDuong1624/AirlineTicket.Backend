@@ -124,6 +124,15 @@ Represents a specific seat on a scheduled `Flight`. This is the bookable unit.
 - `IsAvailable` (bool): Whether the seat is available for booking.
 - `IsExtraLegroom` (bool): Whether the seat has extra legroom.
 
+### FlightPriceHistory
+Captures periodic price snapshots for trend evaluation and predictive analytics.
+- `Id` (Guid): Unique identifier.
+- `FlightId` (Guid): FK to `Flight`.
+- `RouteId` (Guid): FK to `Route`.
+- `Price` (decimal): Snapshot price.
+- `SeatClass` (string): Cabin/seat class (e.g. `Economy`).
+- `RecordedAt` (DateTime): UTC timestamp recorded.
+
 ---
 
 ## API Reference
@@ -162,6 +171,7 @@ Represents a specific seat on a scheduled `Flight`. This is the bookable unit.
 | **GET** | `/api/flights/{id:guid}` | Get detailed information for a specific flight. | None | `FlightResponse` |
 | **GET** | `/api/flights/trending` | Get a list of trending (e.g., cheapest) flights. | None | `FlightResponse[]` |
 | **GET** | `/api/flights/{id:guid}/seats` | Get the seat map and availability for a specific flight. | None | `FlightSeat[] { id: string, flightId: string, seatNumber: string, seatClass: number, priceOverride?: number, isAvailable: boolean, isExtraLegroom: boolean }` |
+| **GET** | `/api/flights/price-forecast` | Get ML price trend direction and buy recommendation. | None (Query params `originAirportId, destinationAirportId, departureDate`) | `PriceForecastDto { trend: number, recommendation: number, confidenceScore: number }` |
 
 #### Staff Endpoints (`PartnerOrStaff` Role)
 | Method | Path | Description | Input Type | Output Type |

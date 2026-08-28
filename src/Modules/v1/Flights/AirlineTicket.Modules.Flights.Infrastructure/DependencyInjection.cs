@@ -31,6 +31,7 @@ public static class DependencyInjection
 
         // Register cross-module shared services
         services.AddScoped<ISharedFlightSearchService, SharedFlightSearchService>();
+        services.AddScoped<ISharedFareEvaluationService, SharedFareEvaluationService>();
         services.AddScoped<ISeatGenerationService, SeatGenerationService>();
 
         // Register flight generator (scoped, consumed by the background worker)
