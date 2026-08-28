@@ -11,6 +11,7 @@ public class PromotionDbContext : DbContext
 
     public DbSet<Campaign> Campaigns => Set<Campaign>();
     public DbSet<Coupon> Coupons => Set<Coupon>();
+    public DbSet<FareAlert> FareAlerts => Set<FareAlert>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

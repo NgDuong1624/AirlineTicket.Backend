@@ -47,6 +47,22 @@ Represents a discount coupon.
 - `IsDeleted` (bool): Soft delete flag.
 - `AirlineId` (Guid?): FK to the airline, if the coupon is airline-specific. Null for global coupons.
 
+### FareAlert
+Represents a user fare tracking alert for a route.
+- `Id` (Guid): Unique identifier.
+- `UserId` (Guid): FK to `users.users`.
+- `OriginAirportId` (Guid): FK to `flights.airports`.
+- `DestinationAirportId` (Guid): FK to `flights.airports`.
+- `DepartureDate` (DateTime): Scheduled departure date.
+- `ReturnDate` (DateTime?): Optional return date.
+- `TargetPrice` (decimal): Desired notification price.
+- `CurrentLowestPrice` (decimal): Current lowest tracked fare.
+- `LastNotifiedPrice` (decimal?): Fare price at last notification.
+- `Currency` (string): Currency code (default: `VND`).
+- `IsActive` (bool): Active tracking status.
+- `LastCheckedAt` (DateTime): Timestamp of last worker evaluation.
+- `LastNotifiedAt` (DateTime?): Timestamp of last notification (24h cooldown).
+
 ---
 
 ## API Reference
@@ -62,6 +78,14 @@ Represents a discount coupon.
 |--------|------|------|-------------|------------|-------------|
 | **GET** | `/api/promotions` | None | Get all available promotion coupons. | None | `{ coupons: Coupon[] { id: string, code: string, description?: string, discountType: number, discountValue: number, minOrderValue?: number, maxDiscountAmount?: number, startDate: string, endDate: string, usageLimit?: number, usageCount: number, isActive: boolean } }` |
 | **GET** | `/api/promotions/campaigns` | None | Get all active promotional campaigns. | None | `{ campaigns: Campaign[] { id: string, title: string, bannerUrl?: string, content?: string, startDate: string, endDate: string, isFeatured: boolean, airlineId?: string \| null } }` |
+
+#### Customer Fare Alert Endpoints (Authenticated)
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **POST** | `/api/fare-alerts` | User | Create route fare tracking alert. | `{ originAirportId: string, destinationAirportId: string, departureDate: string, returnDate?: string, targetPrice: number, currency?: string }` | `FareAlertDto` |
+| **GET** | `/api/fare-alerts` | User | Get user fare alerts with price history trends. | None | `FareAlertDto[]` |
+| **PATCH** | `/api/fare-alerts/{id}` | User | Update target price or toggle status. | `{ targetPrice?: number, isActive?: boolean }` | `FareAlertDto` |
+| **DELETE** | `/api/fare-alerts/{id}` | User | Delete/cancel user fare alert. | None | `void` |
 
 #### Partner Endpoints (`PartnerOnly` Role)
 | Method | Path | Auth | Description | Input Type | Output Type |

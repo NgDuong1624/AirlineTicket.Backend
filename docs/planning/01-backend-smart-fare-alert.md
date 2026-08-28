@@ -20,12 +20,14 @@ CREATE TABLE promotions.fare_alerts (
     return_date DATE NULL,
     target_price DECIMAL(18, 2) NOT NULL,
     current_lowest_price DECIMAL(18, 2) NOT NULL,
+    last_notified_price DECIMAL(18, 2) NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'VND',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     last_checked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_notified_at TIMESTAMPTZ NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_fare_alerts_user_route UNIQUE (user_id, origin_airport_id, destination_airport_id, departure_date)
 );
 
 CREATE INDEX idx_fare_alerts_active_eval 
@@ -59,8 +61,8 @@ ON flights.flight_price_histories(route_id, recorded_at DESC);
 
 ### 3.1 Entities & Enums
 - **`FareAlert`** (Aggregate Root in Promotions Module):
-  - Properties: `Id`, `UserId`, `OriginAirportId`, `DestinationAirportId`, `DepartureDate`, `ReturnDate`, `TargetPrice`, `CurrentLowestPrice`, `Currency`, `IsActive`, `LastCheckedAt`, `LastNotifiedAt`.
-  - Methods: `UpdateCurrentPrice(decimal newPrice)`, `Deactivate()`, `Activate()`, `RecordNotificationSent()`.
+  - Properties: `Id`, `UserId`, `OriginAirportId`, `DestinationAirportId`, `DepartureDate`, `ReturnDate`, `TargetPrice`, `CurrentLowestPrice`, `LastNotifiedPrice`, `Currency`, `IsActive`, `LastCheckedAt`, `LastNotifiedAt`.
+  - Methods: `UpdateCurrentPrice(decimal newPrice)`, `Deactivate()`, `Activate()`, `RecordNotificationSent(decimal notifiedPrice)`.
 - **`FlightPriceHistory`** (Entity in Flights Module):
   - Properties: `Id`, `FlightId`, `RouteId`, `Price`, `SeatClass`, `RecordedAt`.
 - **Enums**:
@@ -81,13 +83,13 @@ ON flights.flight_price_histories(route_id, recorded_at DESC);
 | `CreateFareAlertCommand` | `CreateFareAlertCommandHandler` | Validates target price, checks duplicate alerts, saves to DB. |
 | `UpdateFareAlertCommand` | `UpdateFareAlertCommandHandler` | Updates target price or toggle active status. |
 | `DeleteFareAlertCommand` | `DeleteFareAlertCommandHandler` | Soft/hard deletes user fare alert. |
-| `EvaluateFareAlertsCommand` | `EvaluateFareAlertsCommandHandler` | Scans all active alerts, detects price drops, and fires notifications. |
+| `EvaluateFareAlertsCommand` | `EvaluateFareAlertsCommandHandler` | Batches active routes, evaluates price drops with 24h cooldown, records price history snapshots, and fires notifications. |
 
 ### 4.2 Queries
 | Query | Handler | Return Type |
 | :--- | :--- | :--- |
 | `GetUserFareAlertsQuery` | `GetUserFareAlertsQueryHandler` | `List<FareAlertDto>` (includes 14-day lowest price trend points). |
-| `GetRoutePriceForecastQuery` | `GetRoutePriceForecastQueryHandler` | `PriceForecastDto` (trend direction, buy recommendation, min/avg/max 14d prices). |
+| `GetRoutePriceForecastQuery` | `GetRoutePriceForecastQueryHandler` | `PriceForecastDto` (calls External ML Service for trend direction, buy recommendation, confidence score). |
 
 ### 4.3 FluentValidation Rules
 - `CreateFareAlertCommandValidator`:
@@ -105,12 +107,20 @@ ON flights.flight_price_histories(route_id, recorded_at DESC);
 - Triggers on periodic cron/timer interval (configurable: default 15 minutes).
 - **Execution Flow**:
   1. Creates scoped service provider.
-  2. Queries active `fare_alerts` from `promotions.fare_alerts`.
+  2. Queries distinct active route-date pairs from `promotions.fare_alerts`.
   3. Finds matching flight departures and calculates current lowest seat fare.
-  4. Records price point in `flights.flight_price_histories`.
-  5. Compares `CurrentLowestPrice` with `TargetPrice`:
-     - If price <= `TargetPrice` OR dropped > 5%: dispatches `FarePriceDroppedDomainEvent`.
-  6. Dispatches SignalR payload via `IFareAlertHubService`.
+  4. Records price snapshot checkpoints into `flights.flight_price_histories`.
+  5. Evaluates matching active `fare_alerts`:
+     - Compares `CurrentLowestPrice` with `TargetPrice`.
+     - Checks notification condition: `CurrentLowestPrice <= TargetPrice` AND (`LastNotifiedAt == null` OR `LastNotifiedAt < DateTime.UtcNow.AddHours(-24)` OR `CurrentLowestPrice < LastNotifiedPrice`).
+  6. If condition met:
+     - Updates `LastNotifiedPrice = CurrentLowestPrice` and `LastNotifiedAt = DateTime.UtcNow`.
+     - Dispatches `FarePriceDroppedDomainEvent`.
+     - Dispatches SignalR payload via `IFareAlertHubService`.
+
+### 5.2 External ML Client: `IFarePredictionServiceClient`
+- Calls external ML prediction service with historical route data.
+- Returns `PriceForecastDto` containing `BuyRecommendation`, `PriceTrendDirection`, and `ConfidenceScore`.
 
 ### 5.2 SignalR Hub: `FareAlertHub`
 - **Route**: `/hubs/fare-alerts` (requires JWT authentication).

@@ -18,6 +18,7 @@ public class FlightDbContext : DbContext
     public DbSet<Route> Routes => Set<Route>();
     public DbSet<Flight> Flights => Set<Flight>();
     public DbSet<FlightSeat> FlightSeats => Set<FlightSeat>();
+    public DbSet<FlightPriceHistory> FlightPriceHistories => Set<FlightPriceHistory>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

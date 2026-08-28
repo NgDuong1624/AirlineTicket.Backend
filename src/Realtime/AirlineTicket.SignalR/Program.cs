@@ -100,8 +100,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && 
-                    (path.StartsWithSegments("/hubs/seats") || path.StartsWithSegments("/hubs/support") || path.StartsWithSegments("/hubs/notifications")))
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    (path.StartsWithSegments("/hubs/seats") || path.StartsWithSegments("/hubs/support") || path.StartsWithSegments("/hubs/notifications") || path.StartsWithSegments("/hubs/fare-alerts")))
                 {
                     context.Token = accessToken;
                 }
@@ -143,5 +143,6 @@ app.UseAuthorization();
 app.MapHub<SeatHub>("/hubs/seats");
 app.MapHub<SupportChatHub>("/hubs/support");
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<FareAlertHub>("/hubs/fare-alerts");
 
 app.Run();

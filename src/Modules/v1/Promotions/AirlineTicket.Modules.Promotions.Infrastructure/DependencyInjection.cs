@@ -20,6 +20,7 @@ public static class DependencyInjection
         
         // Register repositories
         services.AddScoped<IPromotionRepository, PromotionRepository>();
+        services.AddScoped<IFareAlertRepository, FareAlertRepository>();
 
         return services;
     }
@@ -27,6 +28,7 @@ public static class DependencyInjection
     public static IServiceCollection AddPromotionsBackgroundJobs(this IServiceCollection services)
     {
         services.AddHostedService<PromotionStatusUpdaterJob>();
+        services.AddHostedService<FareWatchBackgroundService>();
 
         return services;
     }
