@@ -5353,6 +5353,229 @@
               ]
             }
           ]
+        },
+        {
+          "name": "4.4 Smart Fare Alerts",
+          "item": [
+            {
+              "name": "Create Fare Alert",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{User_AccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"originAirportId\": \"{{Default_OriginAirportId}}\",\n  \"destinationAirportId\": \"{{Default_DestinationAirportId}}\",\n  \"departureDate\": \"2026-09-15\",\n  \"returnDate\": \"2026-09-20\",\n  \"targetPrice\": 1500000,\n  \"currentLowestPrice\": 2000000,\n  \"currency\": \"VND\"\n}"
+                },
+                "url": {
+                  "raw": "{{Backend_API}}/api/fare-alerts",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "fare-alerts"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 201 Created\", function () {",
+                      "    pm.response.to.have.status(201);",
+                      "});",
+                      "var jsonData = pm.response.json();",
+                      "if (jsonData && jsonData.id) {",
+                      "    pm.environment.set(\"FareAlertId\", jsonData.id);",
+                      "}",
+                      "pm.test(\"Response time is acceptable\", function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Get User Fare Alerts",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{User_AccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/fare-alerts",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "fare-alerts"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200 OK\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response is an array of fare alerts\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(Array.isArray(jsonData)).to.be.true;",
+                      "});",
+                      "pm.test(\"Response time is acceptable\", function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update Fare Alert",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{User_AccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"targetPrice\": 1400000,\n  \"isActive\": true\n}"
+                },
+                "url": {
+                  "raw": "{{Backend_API}}/api/fare-alerts/{{FareAlertId}}",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "fare-alerts",
+                    "{{FareAlertId}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200 OK\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response indicates success\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.success).to.be.true;",
+                      "});",
+                      "pm.test(\"Response time is acceptable\", function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete Fare Alert",
+              "request": {
+                "auth": {
+                  "type": "bearer",
+                  "bearer": [
+                    {
+                      "key": "token",
+                      "value": "{{User_AccessToken}}",
+                      "type": "string"
+                    }
+                  ]
+                },
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/fare-alerts/{{FareAlertId}}",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "fare-alerts",
+                    "{{FareAlertId}}"
+                  ]
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test(\"Status code is 200 OK\", function () {",
+                      "    pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"Response indicates success\", function () {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.expect(jsonData.success).to.be.true;",
+                      "});",
+                      "pm.test(\"Response time is acceptable\", function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     },
