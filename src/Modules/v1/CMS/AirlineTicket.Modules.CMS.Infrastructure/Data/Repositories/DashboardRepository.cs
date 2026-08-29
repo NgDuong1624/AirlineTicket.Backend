@@ -110,7 +110,7 @@ public class DashboardRepository : IDashboardRepository
             new(activeAircraft.ToString()),
             new(totalStaff.ToString()),
             new(todayBookings.ToString()),
-            new($"${monthlyRevenue:N0}")
+            new(monthlyRevenue.ToString())
         };
     }
 
@@ -123,7 +123,7 @@ public class DashboardRepository : IDashboardRepository
             .Select(f => new PartnerRecentFlightDto(
                 f.FlightNumber,
                 f.Route.OriginAirport.IataCode + "-" + f.Route.DestinationAirport.IataCode,
-                f.DepartureTime.ToString("HH:mm:ss"),
+                f.DepartureTime,
                 f.Status == FlightStatus.Scheduled ? "Scheduled" :
                 f.Status == FlightStatus.Delayed ? "Delayed" :
                 f.Status == FlightStatus.Boarding ? "Boarding" :
@@ -160,6 +160,7 @@ public class DashboardRepository : IDashboardRepository
                                       .FirstOrDefault() ?? string.Empty,
                                   f.FlightNumber,
                                   fs.SeatNumber,
+                                  fs.SeatClass,
                                   b.TotalPrice,
                                   b.CreatedAt
                               })
@@ -171,11 +172,9 @@ public class DashboardRepository : IDashboardRepository
             b.PassengerName,
             b.FlightNumber,
             b.SeatNumber,
-            "Economy",
-            "$" + b.TotalPrice.ToString(),
-            (DateTime.UtcNow - b.CreatedAt).TotalMinutes < 60
-                ? Math.Floor((DateTime.UtcNow - b.CreatedAt).TotalMinutes).ToString() + " mins ago"
-                : b.CreatedAt.ToString("dd/MM/yyyy")
+            b.SeatClass.ToString(),
+            b.TotalPrice,
+            b.CreatedAt
         )).ToList();
     }
 }

@@ -22,16 +22,14 @@ public class UpdateFareAlertCommandValidator : AbstractValidator<UpdateFareAlert
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.UserId).NotEmpty();
 
-        When(x => x.TargetPrice.HasValue, () =>
-        {
-            RuleFor(x => x.TargetPrice!.Value)
-                .GreaterThan(0)
-                .WithMessage("Target price must be greater than zero.");
-        });
+        RuleFor(x => x.TargetPrice)
+            .GreaterThan(0)
+            .When(x => x.TargetPrice.HasValue)
+            .WithMessage("Target price must be greater than zero.");
     }
 }
 
-internal sealed class UpdateFareAlertCommandHandler : ICommandHandler<UpdateFareAlertCommand, Result<bool>>
+public sealed class UpdateFareAlertCommandHandler : ICommandHandler<UpdateFareAlertCommand, Result<bool>>
 {
     private readonly IFareAlertRepository _repository;
 
