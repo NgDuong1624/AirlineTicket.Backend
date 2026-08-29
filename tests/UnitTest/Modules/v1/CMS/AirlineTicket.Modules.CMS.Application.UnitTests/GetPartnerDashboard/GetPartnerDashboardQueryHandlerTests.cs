@@ -27,8 +27,8 @@ public class GetPartnerDashboardQueryHandlerTests
         // Arrange
         var airlineId = Guid.NewGuid();
         var stats = new List<PartnerStatDto> { new PartnerStatDto("100") };
-        var recentFlights = new List<PartnerRecentFlightDto> { new PartnerRecentFlightDto("1", "SGN-HAN", "10:00", "Scheduled", "green") };
-        var recentBookings = new List<PartnerRecentBookingDto> { new PartnerRecentBookingDto("1", "John Doe", "VN123", "1A", "Economy", "100", "2023-01-01") };
+        var recentFlights = new List<PartnerRecentFlightDto> { new PartnerRecentFlightDto("1", "SGN-HAN", DateTime.UtcNow, "Scheduled", "green") };
+        var recentBookings = new List<PartnerRecentBookingDto> { new PartnerRecentBookingDto("1", "John Doe", "VN123", "1A", "Economy", 100m, DateTime.UtcNow) };
 
         _dashboardRepositoryMock.Setup(r => r.GetPartnerStatsAsync(airlineId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(stats);

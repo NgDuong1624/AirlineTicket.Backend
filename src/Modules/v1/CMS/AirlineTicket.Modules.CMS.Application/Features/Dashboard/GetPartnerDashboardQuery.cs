@@ -16,8 +16,8 @@ public record PartnerDashboardResponse(
     List<PartnerRecentBookingDto> RecentBookings);
 
 public record PartnerStatDto(string Value);
-public record PartnerRecentFlightDto(string Id, string Route, string Time, string Status, string Color);
-public record PartnerRecentBookingDto(string Id, string Passenger, string Flight, string Seat, string Class, string Amount, string Date);
+public record PartnerRecentFlightDto(string Id, string Route, DateTime Time, string Status, string Color);
+public record PartnerRecentBookingDto(string Id, string Passenger, string Flight, string Seat, string Class, decimal Amount, DateTime Date);
 
 public class GetPartnerDashboardQueryHandler : IQueryHandler<GetPartnerDashboardQuery, Result<PartnerDashboardResponse>>
 {
