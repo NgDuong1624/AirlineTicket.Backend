@@ -19,7 +19,7 @@ public class DeleteFareAlertCommandValidator : AbstractValidator<DeleteFareAlert
     }
 }
 
-internal sealed class DeleteFareAlertCommandHandler : ICommandHandler<DeleteFareAlertCommand, Result<bool>>
+public sealed class DeleteFareAlertCommandHandler : ICommandHandler<DeleteFareAlertCommand, Result<bool>>
 {
     private readonly IFareAlertRepository _repository;
 

@@ -11,7 +11,7 @@ namespace AirlineTicket.Modules.Promotions.Application.Features.Public;
 
 public record GetUserFareAlertsQuery(Guid UserId) : IQuery<Result<List<FareAlertDto>>>;
 
-internal sealed class GetUserFareAlertsQueryHandler : IQueryHandler<GetUserFareAlertsQuery, Result<List<FareAlertDto>>>
+public sealed class GetUserFareAlertsQueryHandler : IQueryHandler<GetUserFareAlertsQuery, Result<List<FareAlertDto>>>
 {
     private readonly IFareAlertRepository _repository;
 

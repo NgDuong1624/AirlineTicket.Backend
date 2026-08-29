@@ -35,12 +35,9 @@ public class CreateFareAlertCommandValidator : AbstractValidator<CreateFareAlert
             .GreaterThanOrEqualTo(DateOnly.FromDateTime(DateTime.UtcNow))
             .WithMessage("Departure date cannot be in the past.");
 
-        When(x => x.ReturnDate.HasValue, () =>
-        {
-            RuleFor(x => x.ReturnDate!.Value)
-                .GreaterThanOrEqualTo(x => x.DepartureDate)
-                .WithMessage("Return date cannot be earlier than departure date.");
-        });
+        RuleFor(x => x.ReturnDate)
+            .Must((cmd, returnDate) => !returnDate.HasValue || returnDate.Value >= cmd.DepartureDate)
+            .WithMessage("Return date cannot be earlier than departure date.");
 
         RuleFor(x => x.TargetPrice)
             .GreaterThan(0)
@@ -48,7 +45,7 @@ public class CreateFareAlertCommandValidator : AbstractValidator<CreateFareAlert
     }
 }
 
-internal sealed class CreateFareAlertCommandHandler : ICommandHandler<CreateFareAlertCommand, Result<Guid>>
+public sealed class CreateFareAlertCommandHandler : ICommandHandler<CreateFareAlertCommand, Result<Guid>>
 {
     private const int MaxActiveAlertsPerUser = 10;
     private readonly IFareAlertRepository _repository;
