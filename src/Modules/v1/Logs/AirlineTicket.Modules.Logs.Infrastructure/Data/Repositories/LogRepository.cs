@@ -50,17 +50,19 @@ public class LogRepository : ILogRepository
             query = query.Where(x => x.IsSystemLog == isSystemLog.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(level))
+        if (!string.IsNullOrWhiteSpace(level) && !string.Equals(level, "all", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(x => x.Level == level);
+            var trimmedLevel = level.Trim();
+            query = query.Where(x => EF.Functions.ILike(x.Level, trimmedLevel));
         }
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(x => x.Message.Contains(search) 
-                                  || (x.Source != null && x.Source.Contains(search))
-                                  || (x.Exception != null && x.Exception.Contains(search))
-                                  || (x.IpAddress != null && x.IpAddress.Contains(search)));
+            var trimmedSearch = search.Trim();
+            query = query.Where(x => EF.Functions.ILike(x.Message, $"%{trimmedSearch}%")
+                                  || (x.Source != null && EF.Functions.ILike(x.Source, $"%{trimmedSearch}%"))
+                                  || (x.Exception != null && EF.Functions.ILike(x.Exception, $"%{trimmedSearch}%"))
+                                  || (x.IpAddress != null && EF.Functions.ILike(x.IpAddress, $"%{trimmedSearch}%")));
         }
 
         if (date.HasValue)
@@ -113,17 +115,19 @@ public class LogRepository : ILogRepository
             query = query.Where(x => x.AirlineId == airlineId.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(level))
+        if (!string.IsNullOrWhiteSpace(level) && !string.Equals(level, "all", StringComparison.OrdinalIgnoreCase))
         {
-            query = query.Where(x => x.Level == level);
+            var trimmedLevel = level.Trim();
+            query = query.Where(x => EF.Functions.ILike(x.Level, trimmedLevel));
         }
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(x => x.Message.Contains(search) 
-                                  || (x.Source != null && x.Source.Contains(search))
-                                  || (x.Exception != null && x.Exception.Contains(search))
-                                  || (x.IpAddress != null && x.IpAddress.Contains(search)));
+            var trimmedSearch = search.Trim();
+            query = query.Where(x => EF.Functions.ILike(x.Message, $"%{trimmedSearch}%")
+                                  || (x.Source != null && EF.Functions.ILike(x.Source, $"%{trimmedSearch}%"))
+                                  || (x.Exception != null && EF.Functions.ILike(x.Exception, $"%{trimmedSearch}%"))
+                                  || (x.IpAddress != null && EF.Functions.ILike(x.IpAddress, $"%{trimmedSearch}%")));
         }
 
         if (date.HasValue)
