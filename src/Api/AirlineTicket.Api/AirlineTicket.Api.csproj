@@ -10,7 +10,7 @@
     <Content Include="..\..\appsettings.shared.json" Link="appsettings.shared.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\appsettings.shared.Development.json" Link="appsettings.shared.Development.json">
+    <Content Include="..\..\appsettings.shared.Development.json" Link="appsettings.shared.Development.json" Condition="Exists('..\..\appsettings.shared.Development.json')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
