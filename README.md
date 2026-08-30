@@ -122,38 +122,64 @@ Full interactive API documentation available at `/scalar/v1` when running.
 
 ### Configuration
 
-```bash
-# Required secrets
-dotnet user-secrets init
-dotnet user-secrets set "Jwt:Secret" "your-secret-key-minimum-32-characters"
-dotnet user-secrets set "LuckyPenny:MediatR:LicenseKey" "your-mediatr-license-key"
-dotnet user-secrets set "AiService:ModelStore:ApiKey" "your-ai-api-key"
-dotnet user-secrets set "Google:ClientId" "your-google-client-id"
+The backend uses a shared configuration pattern (`appsettings.shared.json` and `appsettings.shared.Development.json` at `src/`) linked into the 3 runnable hosts (`Api`, `SignalR`, `Worker`).
+
+1. Copy or update `src/appsettings.shared.Development.json` with your secrets and development configurations:
+```json
+{
+  "Jwt": {
+    "Secret": "your-secret-key-minimum-32-characters"
+  },
+  "LuckyPenny": {
+    "MediatR": {
+      "LicenseKey": "your-mediatr-license-key"
+    }
+  },
+  "AiService": {
+    "ModelStore": {
+      "ApiKey": "your-ai-api-key"
+    }
+  },
+  "Google": {
+    "ClientId": "your-google-client-id"
+  }
+}
 ```
 
-Update `src/Api/AirlineTicket.Api/appsettings.json` with your Postgre connection string.
+2. Update database and Redis connection strings in `src/appsettings.shared.json` (or override per project in `appsettings.json`).
 
-### Run
+### Run (Local .NET)
 
 ```bash
-# Create database if it does not exist
+# 1. Create database if it does not exist
 ./database/scripts/create_db.sh "postgres://postgres:Admin@123@localhost:5432/AirlineTicketDb"
 
-# Apply database migrations
+# 2. Apply database migrations
 ./run_ef.sh "postgres://postgres:Admin@123@localhost:5432/AirlineTicketDb"
 
-#  Apply seed core data
+# 3. Apply seed core data
 dotnet run --project src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj --migrate --seed-core
 
-# Start the API
+# 4. Start the 3 backend host services (in separate terminals):
+
+# Terminal 1: API Host (Port 5179)
 dotnet run --project src/Api/AirlineTicket.Api/AirlineTicket.Api.csproj
+
+# Terminal 2: SignalR Realtime Hubs (Port 5084)
+dotnet run --project src/Realtime/AirlineTicket.SignalR/AirlineTicket.SignalR.csproj
+
+# Terminal 3: Background Worker Jobs
+dotnet run --project src/Workers/AirlineTicket.Worker/AirlineTicket.Worker.csproj
 ```
 
-API available at `http://localhost:5179`. Scalar docs at `/scalar/v1`.
+- API Gateway & REST endpoints: `http://localhost:5179` (Scalar docs at `/scalar/v1`)
+- Realtime SignalR Hubs: `http://localhost:5084` (`/hubs/seats`, `/hubs/support`, `/hubs/notifications`, `/hubs/fare-alerts`)
+- Background Workers: Runs automated jobs (refunds, cancellations, delay notifier, dynamic pricing, log retention)
 
 ### Docker
 
-The Docker container automatically applies database migrations and seeds core data on startup. If `ASPNETCORE_ENVIRONMENT` is set to `Development`, it also seeds development sample data.
+The Docker setup builds all 3 services (`airlineticket-api`, `airlineticket-signalr`, `airlineticket-worker`) in a multi-container stack.
+The API container automatically applies database migrations and seeds core data on startup (and seeds development demo data when `ASPNETCORE_ENVIRONMENT=Development`).
 
 You have two options for running the application with Docker:
 
@@ -172,16 +198,16 @@ docker compose --env-file deploy/docker/.env.prod -f deploy/docker/docker-compos
 ```
 
 **Option B: Create a local PostgreSQL database container**
-Combines the base compose file with the `docker-compose.db.yml` override to spin up a PostgreSQL container alongside the API.
+Combines the base compose file with the `docker-compose.db.yml` override to spin up a PostgreSQL container alongside all 3 backend services.
 
 ```bash
-# Local (API + Postgres)
+# Local (API + SignalR + Worker + Postgres)
 docker compose --env-file deploy/docker/.env.local -f deploy/docker/docker-compose.local.yml -f deploy/docker/docker-compose.db.yml up -d --build
 
-# Development (API + Postgres)
+# Development (API + SignalR + Worker + Postgres)
 docker compose --env-file deploy/docker/.env.dev -f deploy/docker/docker-compose.dev.yml -f deploy/docker/docker-compose.db.yml up -d --build
 
-# Production (API + Postgres)
+# Production (API + SignalR + Worker + Postgres)
 docker compose --env-file deploy/docker/.env.prod -f deploy/docker/docker-compose.prod.yml -f deploy/docker/docker-compose.db.yml up -d --build
 ```
 
