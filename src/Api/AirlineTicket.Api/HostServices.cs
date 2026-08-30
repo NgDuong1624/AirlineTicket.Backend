@@ -9,6 +9,8 @@ using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Domain.Entities;
 using AirlineTicket.Modules.Notifications.Application.Features.Commands;
+using AirlineTicket.Modules.Users.Application.Repositories;
+using AirlineTicket.Modules.Users.Domain.Enums;
 using MediatR;
 
 namespace AirlineTicket.Api.Services;
@@ -224,5 +226,120 @@ public class BookingConfirmedEventHandler : INotificationHandler<BookingConfirme
             ReferenceId: notification.BookingId,
             ReferenceType: "Booking"
         ), cancellationToken);
+    }
+}
+
+public class FlightCreatedEventHandler : INotificationHandler<FlightCreatedEvent>
+{
+    private readonly IUserRepository _userRepository;
+    private readonly IRouteRepository _routeRepository;
+    private readonly IMediator _mediator;
+    private readonly INotificationPusher _notificationPusher;
+    private readonly ILogger<FlightCreatedEventHandler> _logger;
+
+    public FlightCreatedEventHandler(
+        IUserRepository userRepository,
+        IRouteRepository routeRepository,
+        IMediator mediator,
+        INotificationPusher notificationPusher,
+        ILogger<FlightCreatedEventHandler> logger)
+    {
+        _userRepository = userRepository;
+        _routeRepository = routeRepository;
+        _mediator = mediator;
+        _notificationPusher = notificationPusher;
+        _logger = logger;
+    }
+
+    public async Task Handle(FlightCreatedEvent notification, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("FlightCreatedEventHandler received FlightCreatedEvent for FlightNumber={FlightNumber}, AirlineId={AirlineId}",
+            notification.FlightNumber, notification.AirlineId);
+
+        try
+        {
+            var route = await _routeRepository.GetByIdAsync(notification.RouteId, cancellationToken);
+            var originIata = route?.OriginAirport?.IataCode ?? "N/A";
+            var destinationIata = route?.DestinationAirport?.IataCode ?? "N/A";
+            var airlineId = notification.AirlineId ?? route?.AirlineId;
+
+            var templateParameters = new Dictionary<string, string>
+            {
+                { "FlightNumber", notification.FlightNumber },
+                { "Origin", originIata },
+                { "Destination", destinationIata },
+                { "DepartureTime", notification.DepartureTime.ToString("yyyy-MM-dd HH:mm:ss") },
+                { "BasePrice", notification.BasePrice.ToString("F2") }
+            };
+
+            var targetUsers = new List<AirlineTicket.Modules.Users.Domain.Entities.User>();
+
+            // 1. Fetch Airline Staff & Partner users if airlineId is known
+            if (airlineId.HasValue)
+            {
+                var (staffUsers, _) = await _userRepository.GetAllAsync(
+                    search: null,
+                    airlineId: airlineId.Value,
+                    roleId: null,
+                    pageIndex: 1,
+                    pageSize: 1000,
+                    cancellationToken: cancellationToken);
+
+                targetUsers.AddRange(staffUsers.Where(u => u.Role == (int)UserRole.Staff || u.Role == (int)UserRole.Partner));
+            }
+
+            // 2. Fetch System Admins
+            var (adminUsers, _) = await _userRepository.GetAllAsync(
+                search: null,
+                airlineId: null,
+                roleId: (int)UserRole.Admin,
+                pageIndex: 1,
+                pageSize: 1000,
+                cancellationToken: cancellationToken);
+
+            targetUsers.AddRange(adminUsers);
+
+            // Deduplicate recipient users
+            var distinctUsers = targetUsers
+                .GroupBy(u => u.Id)
+                .Select(g => g.First())
+                .ToList();
+
+            _logger.LogInformation("Creating notifications for {Count} users for flight {FlightNumber}",
+                distinctUsers.Count, notification.FlightNumber);
+
+            // 3. Create persistent notification in database per user
+            foreach (var user in distinctUsers)
+            {
+                await _mediator.Send(new CreateNotificationCommand(
+                    UserId: user.Id,
+                    TemplateCode: "FLIGHT_CREATED",
+                    TemplateParameters: templateParameters,
+                    Severity: 0,
+                    ActionUrl: $"/staff/flights/{notification.FlightId}/seats",
+                    ReferenceId: notification.FlightId,
+                    ReferenceType: "Flight",
+                    Language: user.LanguagePreference ?? "en"
+                ), cancellationToken);
+            }
+
+            // 4. Real-time push to airline staff group if available
+            if (airlineId.HasValue)
+            {
+                var staffNotificationDto = new AirlineTicket.Modules.Notifications.Application.DTOs.NotificationDto(
+                    Guid.NewGuid(),
+                    null,
+                    $"New Flight Created: {notification.FlightNumber}",
+                    $"Flight {notification.FlightNumber} from {originIata} to {destinationIata} departs at {notification.DepartureTime:yyyy-MM-dd HH:mm:ss}.",
+                    DateTime.UtcNow);
+
+                await _notificationPusher.PushToAirlineStaffAsync(airlineId.Value, staffNotificationDto, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to handle FlightCreatedEvent for FlightNumber={FlightNumber}", notification.FlightNumber);
+            throw;
+        }
     }
 }

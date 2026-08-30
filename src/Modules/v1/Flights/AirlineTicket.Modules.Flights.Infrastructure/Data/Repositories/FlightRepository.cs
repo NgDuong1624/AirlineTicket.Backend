@@ -445,6 +445,9 @@ public class RouteRepository : IRouteRepository
     public async Task<Route?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _context.Routes
+            .Include(r => r.Airline)
+            .Include(r => r.OriginAirport)
+            .Include(r => r.DestinationAirport)
             .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted, cancellationToken);
     }
 

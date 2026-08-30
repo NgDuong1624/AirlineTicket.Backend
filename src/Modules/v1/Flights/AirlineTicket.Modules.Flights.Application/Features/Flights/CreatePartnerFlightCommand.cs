@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.BuildingBlocks.Application.Events;
 using AirlineTicket.BuildingBlocks.CQRS;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Flights.Application.Contracts;
-using AirlineTicket.Modules.Notifications.Application.Features.Commands;
 using MediatR;
 
 namespace AirlineTicket.Modules.Flights.Application.Features.Flights;
@@ -23,18 +22,18 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
     private readonly IFlightRepository _flightRepository;
     private readonly IRouteRepository _routeRepository;
     private readonly IAirplaneRepository _airplaneRepository;
-    private readonly IMediator _mediator;
+    private readonly IPublisher _publisher;
 
     public CreatePartnerFlightCommandHandler(
         IFlightRepository flightRepository,
         IRouteRepository routeRepository,
         IAirplaneRepository airplaneRepository,
-        IMediator mediator)
+        IPublisher publisher)
     {
         _flightRepository = flightRepository;
         _routeRepository = routeRepository;
         _airplaneRepository = airplaneRepository;
-        _mediator = mediator;
+        _publisher = publisher;
     }
 
     public async Task<Result<Guid>> Handle(CreatePartnerFlightCommand request, CancellationToken cancellationToken)
@@ -60,6 +59,7 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
         }
 
         // 3. Create the flight
+        var arrivalTime = request.DepartureTime.AddMinutes(route.EstimatedDurationMinutes.Value);
         var flight = new FlightDto
         {
             Id = Guid.NewGuid(),
@@ -68,27 +68,21 @@ internal sealed class CreatePartnerFlightCommandHandler : ICommandHandler<Create
             FlightNumber = request.FlightNumber,
             BasePrice = request.BasePrice,
             DepartureTime = request.DepartureTime,
-            ArrivalTime = request.DepartureTime.AddMinutes(route.EstimatedDurationMinutes.Value)
+            ArrivalTime = arrivalTime
         };
 
         var id = await _flightRepository.CreateAsync(flight, cancellationToken);
 
-        // 4. Notify staff about the new flight
-        await _mediator.Send(new CreateNotificationCommand(
-            UserId: null,
-            TemplateCode: "FLIGHT_CREATED",
-            TemplateParameters: new Dictionary<string, string>
-            {
-                { "FlightNumber", request.FlightNumber },
-                { "Origin", route.OriginAirport.IataCode },
-                { "Destination", route.DestinationAirport.IataCode },
-                { "DepartureTime", request.DepartureTime.ToString("yyyy-MM-dd HH:mm:ss") },
-                { "BasePrice", request.BasePrice.ToString("F2") }
-            },
-            Severity: 0, // Info
-            ActionUrl: $"/staff/flights/{id}/seats",
-            ReferenceId: id,
-            ReferenceType: "Flight"
+        // 4. Publish event for cross-module handling (notifications & real-time broadcast)
+        await _publisher.Publish(new FlightCreatedEvent(
+            id,
+            request.RouteId,
+            request.AirplaneId,
+            request.FlightNumber,
+            request.BasePrice,
+            request.DepartureTime,
+            arrivalTime,
+            request.AirlineId
         ), cancellationToken);
 
         return Result.Success(id);
