@@ -63,6 +63,13 @@ Log.Logger = new LoggerConfiguration()
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.shared.json"), optional: false, reloadOnChange: true)
+    .AddJsonFile(Path.Combine(AppContext.BaseDirectory, $"appsettings.shared.{builder.Environment.EnvironmentName}.json"), optional: true, reloadOnChange: true)
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 // Configure Serilog
 builder.Host.UseSerilog((context, services, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
@@ -216,6 +223,7 @@ var runtimeAssemblies = AppDomain.CurrentDomain.GetAssemblies()
 // Assemblies containing application handlers
 var applicationAssemblies = new Assembly[]
 {
+    typeof(FlightSeatReservation).Assembly,
     typeof(BookingsApplicationMarker).Assembly,
     typeof(FlightsApplicationMarker).Assembly,
     typeof(PromotionsApplicationMarker).Assembly,

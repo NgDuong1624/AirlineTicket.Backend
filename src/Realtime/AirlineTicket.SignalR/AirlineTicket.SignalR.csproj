@@ -4,8 +4,16 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>6b018550-d204-42c4-a485-072e557cfa69</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\appsettings.shared.json" Link="appsettings.shared.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\appsettings.shared.Development.json" Link="appsettings.shared.Development.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MediatR" Version="14.1.0" />
