@@ -4,8 +4,16 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>a3734bd6-247d-4ef6-903e-b4397c23b44d</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\appsettings.shared.json" Link="appsettings.shared.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\appsettings.shared.Development.json" Link="appsettings.shared.Development.json" Condition="Exists('..\..\appsettings.shared.Development.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />

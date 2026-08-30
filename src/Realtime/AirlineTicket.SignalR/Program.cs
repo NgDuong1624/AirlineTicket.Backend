@@ -14,6 +14,13 @@ using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.shared.json"), optional: false, reloadOnChange: true)
+    .AddJsonFile(Path.Combine(AppContext.BaseDirectory, $"appsettings.shared.{builder.Environment.EnvironmentName}.json"), optional: true, reloadOnChange: true)
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -130,7 +137,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(corsOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials());
+              .AllowCredentials()
+              .SetPreflightMaxAge(TimeSpan.FromHours(24)));
 });
 
 var app = builder.Build();

@@ -37,6 +37,7 @@ appsettings.Development.json
 appsettings.Production.json
 appsettings.*.json
 !appsettings.json
+!appsettings.shared.json
 
 # IDE
 .idea/

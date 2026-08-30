@@ -4,24 +4,45 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-AirlineTicket.Worker-2ff71892-de11-4824-96f2-edeb2d101cae</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\appsettings.shared.json" Link="appsettings.shared.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\appsettings.shared.Development.json" Link="appsettings.shared.Development.json" Condition="Exists('..\..\appsettings.shared.Development.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.8" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Application\AirlineTicket.BuildingBlocks.Application.csproj" />
+    <ProjectReference Include="..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Api\AirlineTicket.BuildingBlocks.Api.csproj" />
+    <ProjectReference Include="..\..\Realtime\AirlineTicket.SignalR\AirlineTicket.SignalR.csproj" />
+    <ProjectReference Include="..\..\Api\AirlineTicket.Api\AirlineTicket.Api.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Application\AirlineTicket.Modules.Bookings.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Infrastructure\AirlineTicket.Modules.Bookings.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Application\AirlineTicket.Modules.Flights.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Infrastructure\AirlineTicket.Modules.Flights.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Notifications\AirlineTicket.Modules.Notifications.Application\AirlineTicket.Modules.Notifications.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Notifications\AirlineTicket.Modules.Notifications.Infrastructure\AirlineTicket.Modules.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Promotions\AirlineTicket.Modules.Promotions.Application\AirlineTicket.Modules.Promotions.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Promotions\AirlineTicket.Modules.Promotions.Infrastructure\AirlineTicket.Modules.Promotions.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Application\AirlineTicket.Modules.Users.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Infrastructure\AirlineTicket.Modules.Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Interactions\AirlineTicket.Modules.Interactions.Application\AirlineTicket.Modules.Interactions.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Interactions\AirlineTicket.Modules.Interactions.Infrastructure\AirlineTicket.Modules.Interactions.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Application\AirlineTicket.Modules.Logs.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Logs\AirlineTicket.Modules.Logs.Infrastructure\AirlineTicket.Modules.Logs.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\v1\CMS\AirlineTicket.Modules.CMS.Application\AirlineTicket.Modules.CMS.Application.csproj" />
     <ProjectReference Include="..\..\Modules\v1\CMS\AirlineTicket.Modules.CMS.Infrastructure\AirlineTicket.Modules.CMS.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

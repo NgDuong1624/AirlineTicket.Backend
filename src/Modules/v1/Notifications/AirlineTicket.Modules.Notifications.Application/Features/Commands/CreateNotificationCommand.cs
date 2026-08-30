@@ -2,6 +2,7 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using AirlineTicket.Modules.Notifications.Application.DTOs;
 using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Domain.Entities;
 using MediatR;
@@ -17,7 +18,8 @@ public record CreateNotificationCommand(
     string? ActionUrl,
     Guid? ReferenceId,
     string? ReferenceType,
-    string? Language = "en") : IRequest<Guid>;
+    string? Language = "en",
+    Guid? TargetAirlineId = null) : IRequest<Guid>;
 
 public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificationCommand, Guid>
 {
@@ -48,7 +50,7 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
         {
             Id = Guid.NewGuid(),
             UserId = request.UserId,
-            Type = request.TemplateCode, // Use template code as notification type
+            Type = request.TemplateCode,
             Severity = request.Severity,
             Title = title,
             Content = content,
@@ -67,13 +69,23 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
 
         if (request.UserId.HasValue)
         {
-            var notificationDto = new AirlineTicket.Modules.Notifications.Application.DTOs.NotificationDto(
+            var notificationDto = new NotificationDto(
                 notification.Id,
                 request.UserId.Value,
                 notification.Title,
                 notification.Content,
                 notification.CreatedAt);
             await _notificationPusher.PushNotificationAsync(request.UserId.Value, notificationDto, cancellationToken);
+        }
+        else if (request.TargetAirlineId.HasValue)
+        {
+            var notificationDto = new NotificationDto(
+                notification.Id,
+                null,
+                notification.Title,
+                notification.Content,
+                notification.CreatedAt);
+            await _notificationPusher.PushToAirlineStaffAsync(request.TargetAirlineId.Value, notificationDto, cancellationToken);
         }
 
         return notification.Id;

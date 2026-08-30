@@ -1,7 +1,9 @@
+using AirlineTicket.BuildingBlocks.Application.Events;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Features.Flights;
 using AirlineTicket.Modules.Flights.Domain.Entities;
 using FluentAssertions;
+using MediatR;
 using Moq;
 using System;
 using System.Threading;
@@ -14,17 +16,19 @@ public class CreateFlightCommandHandlerTests
 {
     private readonly Mock<IFlightRepository> _flightRepoMock;
     private readonly Mock<IRouteRepository> _routeRepoMock;
+    private readonly Mock<IPublisher> _publisherMock;
 
     public CreateFlightCommandHandlerTests()
     {
         _flightRepoMock = new Mock<IFlightRepository>();
         _routeRepoMock = new Mock<IRouteRepository>();
+        _publisherMock = new Mock<IPublisher>();
     }
 
     [Fact]
     public async Task CreateFlightCommandHandler_ShouldReturnNewFlightId()
     {
-        var handler = new CreateFlightCommandHandler(_flightRepoMock.Object, _routeRepoMock.Object);
+        var handler = new CreateFlightCommandHandler(_flightRepoMock.Object, _routeRepoMock.Object, _publisherMock.Object);
         var routeId = Guid.NewGuid();
         var airplaneId = Guid.NewGuid();
         var command = new CreateFlightCommand(routeId, airplaneId, "VJ123", 1000m, DateTime.UtcNow, DateTime.UtcNow.AddHours(2));
@@ -51,6 +55,10 @@ public class CreateFlightCommandHandlerTests
         result.Value.Should().Be(expectedId);
         _flightRepoMock.Verify(x => x.CreateAsync(
             It.Is<FlightDto>(f => f.FlightNumber == "VJ123" && f.BasePrice == 1000m),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        _publisherMock.Verify(x => x.Publish(
+            It.Is<FlightCreatedEvent>(e => e.FlightId == expectedId && e.FlightNumber == "VJ123"),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }
