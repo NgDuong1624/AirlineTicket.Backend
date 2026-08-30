@@ -21,4 +21,9 @@ public class NotificationPusher : INotificationPusher
     {
         await _hubContext.Clients.Group(userId.ToString()).ReceiveNotification(notification);
     }
+
+    public async Task PushToAirlineStaffAsync(Guid airlineId, NotificationDto notification, CancellationToken cancellationToken = default)
+    {
+        await _hubContext.Clients.Group($"airline-staff-{airlineId}").ReceiveNotification(notification);
+    }
 }
