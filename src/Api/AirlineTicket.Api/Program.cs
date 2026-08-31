@@ -55,6 +55,7 @@ using AirlineTicket.Modules.Promotions.Infrastructure;
 using AirlineTicket.Modules.Promotions.Infrastructure.Data;
 using AirlineTicket.Modules.Users.Infrastructure;
 using AirlineTicket.Modules.Users.Infrastructure.Data;
+using AirlineTicket.Modules.Notifications.Infrastructure.Services;
 
 // Set up Serilog Bootstrap Logger
 Log.Logger = new LoggerConfiguration()
@@ -201,7 +202,15 @@ builder.Services.AddBuildingBlocksAuth();
 // Cross-module service implementations (reside in API host to avoid circular refs between modules)
 builder.Services.AddScoped<IFlightSeatReservation, AirlineTicket.Api.Services.FlightSeatReservation>();
 builder.Services.AddScoped<IStaffSalesReader, AirlineTicket.Api.Services.StaffSalesReader>();
-builder.Services.AddScoped<INotificationPusher, NotificationPusher>();
+
+if (!string.IsNullOrEmpty(redisConn))
+{
+    builder.Services.AddScoped<INotificationPusher, RedisNotificationPusher>();
+}
+else
+{
+    builder.Services.AddScoped<INotificationPusher, NotificationPusher>();
+}
 
 builder.Services.AddSignalR();
 
@@ -223,7 +232,7 @@ var runtimeAssemblies = AppDomain.CurrentDomain.GetAssemblies()
 // Assemblies containing application handlers
 var applicationAssemblies = new Assembly[]
 {
-    typeof(FlightSeatReservation).Assembly,
+    typeof(AirlineTicket.Api.Services.FlightSeatReservation).Assembly,
     typeof(BookingsApplicationMarker).Assembly,
     typeof(FlightsApplicationMarker).Assembly,
     typeof(PromotionsApplicationMarker).Assembly,

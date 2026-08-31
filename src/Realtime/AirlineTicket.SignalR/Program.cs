@@ -126,6 +126,8 @@ if (!string.IsNullOrEmpty(redisConn) && multiplexer != null)
         options.ConnectionFactory = writer => Task.FromResult<IConnectionMultiplexer>(multiplexer);
         options.Configuration.ChannelPrefix = RedisChannel.Literal("AirlineTicketSignalR");
     });
+
+    builder.Services.AddHostedService<AirlineTicket.SignalR.Services.NotificationRedisSubscriber>();
 }
 
 builder.Services.AddScoped<IFlightSeatReservation, FlightSeatReservation>();
