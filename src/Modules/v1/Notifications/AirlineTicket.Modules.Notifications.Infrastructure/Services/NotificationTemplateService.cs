@@ -18,8 +18,18 @@ public class NotificationTemplateService : INotificationTemplateService
 
     public async Task<NotificationTemplate?> GetTemplateAsync(string code, string language)
     {
-        return await _context.NotificationTemplates
-            .FirstOrDefaultAsync(t => t.Code == code && t.Language == language);
+        var targetLang = string.IsNullOrWhiteSpace(language) ? "en" : language.Trim().ToLowerInvariant();
+
+        var template = await _context.NotificationTemplates
+            .FirstOrDefaultAsync(t => t.Code == code && t.Language == targetLang);
+
+        if (template == null && targetLang != "en")
+        {
+            template = await _context.NotificationTemplates
+                .FirstOrDefaultAsync(t => t.Code == code && t.Language == "en");
+        }
+
+        return template;
     }
 
     public string RenderTemplate(string template, Dictionary<string, string> parameters)

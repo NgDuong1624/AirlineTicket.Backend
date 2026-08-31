@@ -58,6 +58,8 @@ public class UserRepository : IUserRepository
                 UpdatedAt = u.UpdatedAt,
                 AirlineId = u.AirlineId,
                 Role = u.Role,
+                AvatarUrl = u.AvatarUrl,
+                LanguagePreference = u.LanguagePreference,
                 AirlineName = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
                 AirlineLogoUrl = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
             })
@@ -71,9 +73,9 @@ public class UserRepository : IUserRepository
         var query = _context.Users
             .AsNoTracking()
             .Where(u => u.AirlineId == airlineId && !u.IsDeleted);
-            
+
         var totalCount = await query.CountAsync(cancellationToken);
-        
+
         var items = await query
             .OrderByDescending(u => u.CreatedAt)
             .Skip((pageIndex - 1) * pageSize)
@@ -90,6 +92,8 @@ public class UserRepository : IUserRepository
                 UpdatedAt = u.UpdatedAt,
                 AirlineId = u.AirlineId,
                 Role = u.Role,
+                AvatarUrl = u.AvatarUrl,
+                LanguagePreference = u.LanguagePreference,
                 AirlineName = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.Name).FirstOrDefault() : null,
                 AirlineLogoUrl = u.AirlineId.HasValue ? _context.Airlines.Where(a => a.Id == u.AirlineId).Select(a => a.LogoUrl).FirstOrDefault() : null
             })

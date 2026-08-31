@@ -36,7 +36,8 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
 
     public async Task<Guid> Handle(CreateNotificationCommand request, CancellationToken cancellationToken)
     {
-        var template = await _templateService.GetTemplateAsync(request.TemplateCode, request.Language ?? "en");
+        var targetLang = string.IsNullOrWhiteSpace(request.Language) ? "en" : request.Language.Trim();
+        var template = await _templateService.GetTemplateAsync(request.TemplateCode, targetLang);
 
         if (template == null)
         {
@@ -70,21 +71,39 @@ public class CreateNotificationCommandHandler : IRequestHandler<CreateNotificati
         if (request.UserId.HasValue)
         {
             var notificationDto = new NotificationDto(
-                notification.Id,
-                request.UserId.Value,
-                notification.Title,
-                notification.Content,
-                notification.CreatedAt);
+                Id: notification.Id,
+                UserId: request.UserId.Value,
+                Type: notification.Type,
+                Severity: notification.Severity,
+                Title: notification.Title,
+                Content: notification.Content,
+                TemplateCode: notification.TemplateCode,
+                TemplateParameters: notification.TemplateParameters,
+                ActionUrl: notification.ActionUrl,
+                ReferenceId: notification.ReferenceId,
+                ReferenceType: notification.ReferenceType,
+                IsRead: notification.IsRead,
+                IsDeleted: notification.IsDeleted,
+                CreatedAt: notification.CreatedAt);
             await _notificationPusher.PushNotificationAsync(request.UserId.Value, notificationDto, cancellationToken);
         }
         else if (request.TargetAirlineId.HasValue)
         {
             var notificationDto = new NotificationDto(
-                notification.Id,
-                null,
-                notification.Title,
-                notification.Content,
-                notification.CreatedAt);
+                Id: notification.Id,
+                UserId: null,
+                Type: notification.Type,
+                Severity: notification.Severity,
+                Title: notification.Title,
+                Content: notification.Content,
+                TemplateCode: notification.TemplateCode,
+                TemplateParameters: notification.TemplateParameters,
+                ActionUrl: notification.ActionUrl,
+                ReferenceId: notification.ReferenceId,
+                ReferenceType: notification.ReferenceType,
+                IsRead: notification.IsRead,
+                IsDeleted: notification.IsDeleted,
+                CreatedAt: notification.CreatedAt);
             await _notificationPusher.PushToAirlineStaffAsync(request.TargetAirlineId.Value, notificationDto, cancellationToken);
         }
 

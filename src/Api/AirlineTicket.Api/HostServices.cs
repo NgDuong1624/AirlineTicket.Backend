@@ -274,7 +274,7 @@ public class FlightCreatedEventHandler : INotificationHandler<FlightCreatedEvent
 
             var targetUsers = new List<AirlineTicket.Modules.Users.Domain.Entities.User>();
 
-            // 1. Fetch Airline Staff & Partner users if airlineId is known
+            // 1. Fetch Airline Staff & Partner users for this airline
             if (airlineId.HasValue)
             {
                 var (staffUsers, _) = await _userRepository.GetAllAsync(
@@ -288,17 +288,6 @@ public class FlightCreatedEventHandler : INotificationHandler<FlightCreatedEvent
                 targetUsers.AddRange(staffUsers.Where(u => u.Role == (int)UserRole.Staff || u.Role == (int)UserRole.Partner));
             }
 
-            // 2. Fetch System Admins
-            var (adminUsers, _) = await _userRepository.GetAllAsync(
-                search: null,
-                airlineId: null,
-                roleId: (int)UserRole.Admin,
-                pageIndex: 1,
-                pageSize: 1000,
-                cancellationToken: cancellationToken);
-
-            targetUsers.AddRange(adminUsers);
-
             // Deduplicate recipient users
             var distinctUsers = targetUsers
                 .GroupBy(u => u.Id)
@@ -308,32 +297,26 @@ public class FlightCreatedEventHandler : INotificationHandler<FlightCreatedEvent
             _logger.LogInformation("Creating notifications for {Count} users for flight {FlightNumber}",
                 distinctUsers.Count, notification.FlightNumber);
 
-            // 3. Create persistent notification in database per user
+            // 2. Create persistent notification in database per user
+            // Note: CreateNotificationCommand automatically pushes real-time notification per user
             foreach (var user in distinctUsers)
             {
+                var actionUrl = user.Role == (int)UserRole.Partner
+                    ? "/partner/flights"
+                    : $"/staff/flights/{notification.FlightId}";
+
+                var userLanguage = string.IsNullOrWhiteSpace(user.LanguagePreference) ? "en" : user.LanguagePreference.Trim();
+
                 await _mediator.Send(new CreateNotificationCommand(
                     UserId: user.Id,
                     TemplateCode: "FLIGHT_CREATED",
                     TemplateParameters: templateParameters,
                     Severity: 0,
-                    ActionUrl: $"/staff/flights/{notification.FlightId}/seats",
+                    ActionUrl: actionUrl,
                     ReferenceId: notification.FlightId,
                     ReferenceType: "Flight",
-                    Language: user.LanguagePreference ?? "en"
+                    Language: userLanguage
                 ), cancellationToken);
-            }
-
-            // 4. Real-time push to airline staff group if available
-            if (airlineId.HasValue)
-            {
-                var staffNotificationDto = new AirlineTicket.Modules.Notifications.Application.DTOs.NotificationDto(
-                    Guid.NewGuid(),
-                    null,
-                    $"New Flight Created: {notification.FlightNumber}",
-                    $"Flight {notification.FlightNumber} from {originIata} to {destinationIata} departs at {notification.DepartureTime:yyyy-MM-dd HH:mm:ss}.",
-                    DateTime.UtcNow);
-
-                await _notificationPusher.PushToAirlineStaffAsync(airlineId.Value, staffNotificationDto, cancellationToken);
             }
         }
         catch (Exception ex)
