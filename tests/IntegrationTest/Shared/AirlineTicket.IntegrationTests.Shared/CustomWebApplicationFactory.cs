@@ -19,10 +19,12 @@ public class CustomWebApplicationFactory : WebApplicationFactory<AirlineTicket.A
         .WithDatabase("AirlineTicketTestDb")
         .WithUsername("postgres")
         .WithPassword("Admin@123")
+        .WithReuse(true)
         .Build();
 
     private readonly RedisContainer _redisContainer = new RedisBuilder()
         .WithImage("redis:7-alpine")
+        .WithReuse(true)
         .Build();
 
     public async Task InitializeAsync()
