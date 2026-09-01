@@ -221,11 +221,38 @@ public class FlightRepository : IFlightRepository
         return (items, totalCount);
     }
 
-    public async Task<(List<FlightDto> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default)
+    public async Task<(List<FlightDto> Items, int TotalCount)> GetByAirlineAsync(
+        Guid airlineId,
+        int pageIndex,
+        int pageSize,
+        string? search = null,
+        int? status = null,
+        DateTime? departureDate = null,
+        CancellationToken cancellationToken = default)
     {
         var query = _context.Flights
             .AsNoTracking()
             .Where(f => f.Route.AirlineId == airlineId && !f.IsDeleted && !f.Route.IsDeleted);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var searchLower = search.Trim().ToLower();
+            query = query.Where(f => f.FlightNumber.ToLower().Contains(searchLower) ||
+                                     f.Route.OriginAirport.IataCode.ToLower().Contains(searchLower) ||
+                                     f.Route.DestinationAirport.IataCode.ToLower().Contains(searchLower));
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(f => (int)f.Status == status.Value);
+        }
+
+        if (departureDate.HasValue)
+        {
+            var startDate = DateTime.SpecifyKind(departureDate.Value.Date, DateTimeKind.Utc);
+            var endDate = startDate.AddDays(1);
+            query = query.Where(f => f.DepartureTime >= startDate && f.DepartureTime < endDate);
+        }
 
         var totalCount = await query.CountAsync(cancellationToken);
         var items = await query
