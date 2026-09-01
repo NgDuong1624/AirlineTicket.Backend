@@ -58,7 +58,14 @@ public interface IFlightRepository
     Task<Guid> CreateAsync(FlightDto flight, CancellationToken cancellationToken = default);
     Task<List<FlightDto>> GetTrendingAsync(CancellationToken cancellationToken = default);
     Task<(List<StaffFlightListItemDto> Items, int TotalCount)> GetStaffFlightsAsync(string? search, Guid? airlineId = null, int pageIndex = 1, int pageSize = 10, CancellationToken cancellationToken = default);
-    Task<(List<FlightDto> Items, int TotalCount)> GetByAirlineAsync(Guid airlineId, int pageIndex, int pageSize, CancellationToken cancellationToken = default);
+    Task<(List<FlightDto> Items, int TotalCount)> GetByAirlineAsync(
+        Guid airlineId,
+        int pageIndex,
+        int pageSize,
+        string? search = null,
+        int? status = null,
+        DateTime? departureDate = null,
+        CancellationToken cancellationToken = default);
     Task<(List<FlightDto> Items, int TotalCount)> GetAllAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<bool> UpdateAsync(FlightDto flight, Guid? airlineId = null, CancellationToken cancellationToken = default);
     Task<bool> DeleteAsync(Guid id, Guid? airlineId = null, CancellationToken cancellationToken = default);

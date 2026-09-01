@@ -183,6 +183,9 @@ public class FlightPartnerEndpoints : IEndpoint
         partnerFlights.MapGet("/", async (
                 ClaimsPrincipal principal,
                 [FromServices] ISender sender,
+                [FromQuery] string? search,
+                [FromQuery] int? status,
+                [FromQuery] DateTime? departureDate,
                 [FromQuery] int? pageNumber,
                 [FromQuery] int pageIndex = 1,
                 [FromQuery] int pageSize = 10,
@@ -190,7 +193,7 @@ public class FlightPartnerEndpoints : IEndpoint
             {
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
                 var page = pageNumber ?? pageIndex;
-                var result = await sender.Send(new GetPartnerFlightsQuery(airlineId, page, pageSize), ct);
+                var result = await sender.Send(new GetPartnerFlightsQuery(airlineId, page, pageSize, search, status, departureDate), ct);
                 return result.IsSuccess ? Results.Ok(new { Items = result.Items, TotalCount = result.TotalCount }) : Results.BadRequest(result.Error);
             });
 
