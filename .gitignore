@@ -59,7 +59,7 @@ build/
 *.log
 logs/
 !src/Modules/v1/Logs/
-!tests/*/Modules/v1/Logs/
+!tests/*/Logs/
 
 # IDE specific files
 .vscode/
