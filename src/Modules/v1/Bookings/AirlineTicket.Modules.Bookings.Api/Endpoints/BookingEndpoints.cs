@@ -7,7 +7,6 @@ using AirlineTicket.BuildingBlocks.Api.Extensions;
 using AirlineTicket.BuildingBlocks.Domain.Constants;
 using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Features.Bookings;
-using AirlineTicket.Modules.Bookings.Application.Features.Payments;
 using AirlineTicket.Modules.Bookings.Application.Features.Tickets;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -199,51 +198,7 @@ public class BookingEndpoints : IEndpoint
             .Produces(404)
             .AllowAnonymous();
 
-        // ——————————————————————— Payments & Tickets ————————————————————————————————
-        // POST /api/bookings/{id:guid}/pay — Process payment
-        group.MapPost("/{id:guid}/pay", async (
-                Guid id,
-                [FromBody] PayBookingRequest request,
-                [FromServices] ISender sender,
-                HttpContext httpContext,
-                CancellationToken ct) =>
-            {
-                var origin = httpContext.Request.Headers["Origin"].ToString();
-                if (string.IsNullOrEmpty(origin))
-                {
-                    origin = httpContext.Request.Headers["Referer"].ToString();
-                    if (!string.IsNullOrEmpty(origin))
-                    {
-                        // Referer might contain path, extract origin
-                        try
-                        {
-                            var uri = new Uri(origin);
-                            origin = $"{uri.Scheme}://{uri.Authority}";
-                        }
-                        catch
-                        {
-                            // fallback
-                        }
-                    }
-                }
-                if (string.IsNullOrEmpty(origin))
-                {
-                    origin = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
-                }
-
-                var command = new PayBookingCommand(id, request.PaymentMethod, request.Amount, origin);
-                var result = await sender.Send(command, ct);
-
-                return result.IsSuccess
-                    ? Results.Ok(new { Status = "Payment Completed", TransactionId = result.Value })
-                    : result.ToErrorResult();
-            })
-            .WithName("PayBooking")
-            .WithSummary("Process payment")
-            .Produces(200)
-            .Produces(400)
-            .AllowAnonymous();
-
+        // ——————————————————————— Tickets ————————————————————————————————
         // GET /api/tickets/{id:guid} — Get e-ticket information
         app.MapGet("/api/tickets/{id:guid}", async (
                 Guid id,
@@ -267,4 +222,3 @@ public class BookingEndpoints : IEndpoint
 public record CreateBookingRequest(Guid FlightId, string ContactEmail, string ContactPhone, List<PassengerDto> Passengers);
 public record PassengerDto(string FirstName, string LastName, string IdentityCard, string SeatNumber);
 public record UpdateBookingRequest(List<PassengerDto>? Passengers, string? ContactEmail, string? ContactPhone);
-public record PayBookingRequest(string PaymentMethod, decimal Amount);
