@@ -2,6 +2,8 @@ using AirlineTicket.Modules.Bookings.Application.Contracts;
 using AirlineTicket.Modules.Bookings.Infrastructure.BackgroundServices;
 using AirlineTicket.Modules.Bookings.Infrastructure.Data;
 using AirlineTicket.Modules.Bookings.Infrastructure.Data.Repositories;
+using AirlineTicket.Modules.Bookings.Infrastructure.Gateways;
+using AirlineTicket.Modules.Bookings.Infrastructure.Gateways.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,14 +19,30 @@ public static class DependencyInjection
                 configuration.GetConnectionString("DefaultConnection"),
                 sqlOptions => sqlOptions.EnableRetryOnFailure())
                 .UseSnakeCaseNamingConvention());
-        
+
+        // Configure Payment options
+        services.Configure<PaymentGatewayOptions>(configuration.GetSection(PaymentGatewayOptions.SectionName));
+
         // Register repositories
         services.AddScoped<IBookingRepository, BookingRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<IRevenueRepository, RevenueRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IWebhookEventRepository, WebhookEventRepository>();
-        
+
+        // Register HTTP clients and gateways
+        services.AddHttpClient<StripePaymentGateway>();
+        services.AddHttpClient<PayPalPaymentGateway>();
+        services.AddHttpClient<VNPayPaymentGateway>();
+        services.AddHttpClient<MoMoPaymentGateway>();
+
+        services.AddScoped<IPaymentGateway, StripePaymentGateway>();
+        services.AddScoped<IPaymentGateway, PayPalPaymentGateway>();
+        services.AddScoped<IPaymentGateway, VNPayPaymentGateway>();
+        services.AddScoped<IPaymentGateway, MoMoPaymentGateway>();
+
+        services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
+
         return services;
     }
 
