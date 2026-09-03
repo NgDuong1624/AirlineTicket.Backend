@@ -29,15 +29,15 @@ public class BookingRefundProcessor : BackgroundService
                     var dbContext = scope.ServiceProvider.GetRequiredService<BookingDbContext>();
                     var cancelledBookings = await dbContext.Bookings
                         .Include(b => b.Payments)
-                        .Where(b => b.Status == BookingStatus.Cancelled && b.Payments.Any(p => p.IsSuccessful && p.ProviderStatus != "Refunded"))
+                        .Where(b => b.Status == BookingStatus.Cancelled && b.Payments.Any(p => p.Status == PaymentTransactionStatus.Succeeded))
                         .ToListAsync(stoppingToken);
 
                     foreach (var booking in cancelledBookings)
                     {
-                        foreach (var payment in booking.Payments.Where(p => p.IsSuccessful && p.ProviderStatus != "Refunded"))
+                        foreach (var payment in booking.Payments.Where(p => p.Status == PaymentTransactionStatus.Succeeded))
                         {
-                            // TODO: refund logic
-                            payment.ProviderStatus = "Refunded";
+                            // Transition status to Refunded via domain state machine
+                            payment.TransitionTo(PaymentTransactionStatus.Refunded);
                         }
                     }
 

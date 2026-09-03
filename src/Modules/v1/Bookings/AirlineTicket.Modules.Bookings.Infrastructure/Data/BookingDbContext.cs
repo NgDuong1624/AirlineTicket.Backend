@@ -3,21 +3,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicket.Modules.Bookings.Infrastructure.Data;
 
-public class BookingDbContext : DbContext
+public class BookingDbContext(DbContextOptions<BookingDbContext> options) : DbContext(options)
 {
-    public BookingDbContext(DbContextOptions<BookingDbContext> options) : base(options)
-    {
-    }
-
     public DbSet<Booking> Bookings => Set<Booking>();
     public DbSet<Passenger> Passengers => Set<Passenger>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<WebhookEvent> WebhookEvents => Set<WebhookEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        
+
         // Separate schema for Bookings
         modelBuilder.HasDefaultSchema("bookings");
 
