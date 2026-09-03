@@ -38,7 +38,12 @@ APIs that do not require authentication, serving public-facing functionalities.
 | **PUT** | `/api/bookings/{id}` | Update booking information |
 | **DELETE** | `/api/bookings/{id}` | Cancel booking |
 | **GET** | `/api/bookings/search` | Search booking (by PNR) |
-| **POST** | `/api/bookings/{id}/pay` | Process booking payment |
+| **POST** | `/api/payments/checkout` | Initiate multi-gateway checkout session (Stripe, PayPal, VNPay, MoMo) |
+| **GET** | `/api/payments/{bookingId}/status` | Get booking payment transaction status |
+| **POST** | `/api/payments/webhooks/stripe` | Stripe asynchronous webhook callback |
+| **POST** | `/api/payments/webhooks/paypal` | PayPal asynchronous webhook callback |
+| **POST** | `/api/payments/webhooks/vnpay` | VNPay IPN webhook callback |
+| **POST** | `/api/payments/webhooks/momo` | MoMo IPN webhook callback |
 | **GET** | `/api/tickets/{id}` | Get e-ticket information |
 
 ### 1.4. Promotions
