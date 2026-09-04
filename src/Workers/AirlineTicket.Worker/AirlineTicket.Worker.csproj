@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Aspire\AirlineTicket.ServiceDefaults\AirlineTicket.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Application\AirlineTicket.BuildingBlocks.Application.csproj" />
     <ProjectReference Include="..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Api\AirlineTicket.BuildingBlocks.Api.csproj" />
     <ProjectReference Include="..\..\Realtime\AirlineTicket.SignalR\AirlineTicket.SignalR.csproj" />

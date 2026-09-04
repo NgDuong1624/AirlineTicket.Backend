@@ -13,6 +13,7 @@ using Serilog;
 using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 builder.Configuration
     .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.shared.json"), optional: false, reloadOnChange: true)
@@ -155,4 +156,5 @@ app.MapHub<SupportChatHub>("/hubs/support");
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapHub<FareAlertHub>("/hubs/fare-alerts");
 
+app.MapDefaultEndpoints();
 app.Run();

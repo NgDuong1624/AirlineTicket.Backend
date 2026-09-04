@@ -2,6 +2,7 @@ using AirlineTicket.Worker;
 using Serilog;
 
 var builder = Host.CreateApplicationBuilder(args);
+builder.AddServiceDefaults();
 
 builder.Configuration
     .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.shared.json"), optional: false, reloadOnChange: true)

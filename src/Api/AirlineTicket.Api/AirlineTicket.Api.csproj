@@ -39,6 +39,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\BuildingBlock\AirlineTicket.BuildingBlocks.Api\AirlineTicket.BuildingBlocks.Api.csproj" />
+    <ProjectReference Include="..\..\Aspire\AirlineTicket.ServiceDefaults\AirlineTicket.ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Flights\AirlineTicket.Modules.Flights.Api\AirlineTicket.Modules.Flights.Api.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Bookings\AirlineTicket.Modules.Bookings.Api\AirlineTicket.Modules.Bookings.Api.csproj" />
     <ProjectReference Include="..\..\Modules\v1\Users\AirlineTicket.Modules.Users.Api\AirlineTicket.Modules.Users.Api.csproj" />

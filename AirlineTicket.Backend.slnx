@@ -1,5 +1,9 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/Aspire/">
+    <Project Path="src/Aspire/AirlineTicket.AppHost/AirlineTicket.AppHost.csproj" />
+    <Project Path="src/Aspire/AirlineTicket.ServiceDefaults/AirlineTicket.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/src/BuildingBlock/">
     <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks.Api/AirlineTicket.BuildingBlocks.Api.csproj" />
     <Project Path="src/BuildingBlock/AirlineTicket.BuildingBlocks.Application/AirlineTicket.BuildingBlocks.Application.csproj" />
