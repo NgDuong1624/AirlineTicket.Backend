@@ -148,7 +148,21 @@ The backend uses a shared configuration pattern (`appsettings.shared.json` and `
 
 2. Update database and Redis connection strings in `src/appsettings.shared.json` (or override per project in `appsettings.json`).
 
-### Run (Local .NET)
+### Run with .NET Aspire (Recommended)
+
+Orchestrate all 3 backend hosts (`Api`, `SignalR`, `Worker`) and local containerized infrastructure (PostgreSQL, Redis, RabbitMQ, pgAdmin, Redis Commander) simultaneously with a unified dashboard:
+
+```bash
+dotnet run --project src/Aspire/AirlineTicket.AppHost/AirlineTicket.AppHost.csproj
+```
+
+- **Aspire Dashboard**: `http://localhost:15180` (or `https://localhost:17180`)
+- **API Service**: `api` resource (Scalar docs at `/scalar/v1`)
+- **SignalR Realtime Hubs**: `signalr` resource (`/hubs/seats`, `/hubs/support`, `/hubs/notifications`, `/hubs/fare-alerts`)
+- **Background Worker**: `worker` resource
+- **Infrastructure Containers**: PostgreSQL (with pgAdmin), Redis (with Redis Commander), RabbitMQ (with Management UI)
+
+### Run (Local .NET Manual)
 
 ```bash
 # 1. Create database if it does not exist
@@ -292,6 +306,9 @@ AirlineTicket.Backend/
 │   │   ├── Program.cs                   # Bootstrap, middleware, DI
 │   │   ├── ModuleRegistration.cs        # Module assembly registration
 │   │   └── DatabaseInitializer.cs       # Migrations & seeding entry
+│   ├── Aspire/                          # .NET Aspire Orchestration & Defaults
+│   │   ├── AirlineTicket.AppHost/       # Distributed application orchestrator
+│   │   └── AirlineTicket.ServiceDefaults/# OpenTelemetry, Health checks, Service discovery
 │   ├── BuildingBlock/                   # Shared infrastructure (4 projects)
 │   ├── Modules/v1/                      # 8 Business modules (4 layers each)
 │   │   ├── Bookings/

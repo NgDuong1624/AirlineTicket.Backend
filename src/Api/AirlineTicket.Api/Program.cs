@@ -63,6 +63,7 @@ Log.Logger = new LoggerConfiguration()
     .CreateBootstrapLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 
 builder.Configuration
     .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "appsettings.shared.json"), optional: false, reloadOnChange: true)
@@ -344,6 +345,7 @@ app.MapGet("/api/health", async (IFlightRepository flightRepository) =>
 .WithName("GetHealth")
 .WithTags("Health");
 
+app.MapDefaultEndpoints();
 app.Run();
 
 namespace AirlineTicket.Api
