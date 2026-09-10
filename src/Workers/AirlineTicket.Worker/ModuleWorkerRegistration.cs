@@ -33,6 +33,21 @@ public static class ModuleWorkerRegistration
         // Distributed cache fallback
         services.AddDistributedMemoryCache();
 
+        // Redis Connection Multiplexer for Pub/Sub if configured
+        var redisConn = configuration.GetConnectionString("Redis") ?? configuration["Redis:ConnectionString"];
+        if (!string.IsNullOrWhiteSpace(redisConn))
+        {
+            try
+            {
+                var multiplexer = StackExchange.Redis.ConnectionMultiplexer.Connect(redisConn);
+                services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(multiplexer);
+            }
+            catch
+            {
+                // Fallback gracefully to in-memory if Redis is offline during worker startup
+            }
+        }
+
         // Building blocks (Logging, Caching, Correlation)
         services.AddBuildingBlocksInfrastructure();
         services.AddBuildingBlocksAuth();
