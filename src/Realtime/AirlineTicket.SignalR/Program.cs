@@ -109,7 +109,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
                 if (!string.IsNullOrEmpty(accessToken) &&
-                    (path.StartsWithSegments("/hubs/seats") || path.StartsWithSegments("/hubs/support") || path.StartsWithSegments("/hubs/notifications") || path.StartsWithSegments("/hubs/fare-alerts")))
+                    (path.StartsWithSegments("/hubs/seats") || path.StartsWithSegments("/hubs/support") || path.StartsWithSegments("/hubs/notifications") || path.StartsWithSegments("/hubs/fare-alerts") || path.StartsWithSegments("/hubs/flight-tracker")))
                 {
                     context.Token = accessToken;
                 }
@@ -129,6 +129,7 @@ if (!string.IsNullOrEmpty(redisConn) && multiplexer != null)
     });
 
     builder.Services.AddHostedService<AirlineTicket.SignalR.Services.NotificationRedisSubscriber>();
+    builder.Services.AddHostedService<AirlineTicket.SignalR.Services.FlightRadarRedisSubscriber>();
 }
 
 builder.Services.AddScoped<IFlightSeatReservation, FlightSeatReservation>();
@@ -155,6 +156,7 @@ app.MapHub<SeatHub>("/hubs/seats");
 app.MapHub<SupportChatHub>("/hubs/support");
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapHub<FareAlertHub>("/hubs/fare-alerts");
+app.MapHub<FlightTrackerHub>("/hubs/flight-tracker");
 
 app.MapDefaultEndpoints();
 app.Run();

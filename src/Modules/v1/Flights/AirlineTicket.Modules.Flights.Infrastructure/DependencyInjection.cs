@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<IFlightSeatRepository, FlightSeatRepository>();
         services.AddScoped<IAirlineRepository, AirlineRepository>();
         services.AddScoped<IAircraftModelRepository, AircraftModelRepository>();
+        services.AddScoped<IFlightRadarRepository, FlightRadarRepository>();
 
         // Register cross-module shared services
         services.AddScoped<ISharedFlightSearchService, SharedFlightSearchService>();
@@ -37,6 +38,11 @@ public static class DependencyInjection
         // Register flight generator (scoped, consumed by the background worker)
         services.AddScoped<IFlightGenerator, FlightGenerator>();
         services.AddScoped<IFlightCleaner, FlightCleaner>();
+
+        // Register Live Flight Radar & ADS-B services
+        services.AddSingleton<IMockAdsbFeedService, MockAdsbFeedService>();
+        services.AddSingleton<IFlightTelemetryCache, RedisFlightTelemetryCache>();
+        services.AddSingleton<IFlightRadarPublisher, RedisFlightRadarPublisher>();
 
         return services;
     }
@@ -50,6 +56,7 @@ public static class DependencyInjection
         services.AddHostedService<DynamicPricingJob>();
         services.AddHostedService<FlightCleanupBackgroundService>();
         services.AddHostedService<FlightGenerationBackgroundService>();
+        services.AddHostedService<FlightSimulationTelemetryWorker>();
 
         return services;
     }

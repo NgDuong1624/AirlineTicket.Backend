@@ -19,5 +19,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\..\src\Modules\v1\Flights\AirlineTicket.Modules.Flights.Application\AirlineTicket.Modules.Flights.Application.csproj" />
+    <ProjectReference Include="..\..\..\..\..\..\src\Modules\v1\Flights\AirlineTicket.Modules.Flights.Infrastructure\AirlineTicket.Modules.Flights.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

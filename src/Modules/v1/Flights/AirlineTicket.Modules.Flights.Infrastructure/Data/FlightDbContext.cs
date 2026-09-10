@@ -3,12 +3,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AirlineTicket.Modules.Flights.Infrastructure.Data;
 
-public class FlightDbContext : DbContext
+public class FlightDbContext(DbContextOptions<FlightDbContext> options) : DbContext(options)
 {
-    public FlightDbContext(DbContextOptions<FlightDbContext> options) : base(options)
-    {
-    }
-
     public DbSet<Airport> Airports => Set<Airport>();
     public DbSet<Airline> Airlines => Set<Airline>();
     public DbSet<AircraftModel> AircraftModels => Set<AircraftModel>();
@@ -19,6 +15,7 @@ public class FlightDbContext : DbContext
     public DbSet<Flight> Flights => Set<Flight>();
     public DbSet<FlightSeat> FlightSeats => Set<FlightSeat>();
     public DbSet<FlightPriceHistory> FlightPriceHistories => Set<FlightPriceHistory>();
+    public DbSet<FlightTelemetry> FlightTelemetries => Set<FlightTelemetry>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
