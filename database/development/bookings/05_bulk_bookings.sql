@@ -35,8 +35,8 @@ BEGIN
             INSERT INTO bookings.tickets (id, booking_id, passenger_id, flight_id, seat_id, ticket_number, gate, boarding_time, status)
             VALUES (gen_random_uuid(), _bookingId, _passengerId, _flightId, _seatId, 'TK' || (1000 + _bookingCount)::TEXT, 'Gate A', DATE_TRUNC('hour', NOW()) + INTERVAL '-1 hour', 0);
 
-            INSERT INTO bookings.payments (id, booking_id, transaction_id, amount, payment_method, provider_status, is_successful, raw_response, created_at)
-            VALUES (gen_random_uuid(), _bookingId, 'TXN' || (1000 + _bookingCount)::TEXT, 100.00, 'CreditCard', 'Success', TRUE, NULL, NOW());
+            INSERT INTO bookings.payments (id, booking_id, provider, provider_transaction_id, amount, currency, status, concurrency_version, raw_response, created_at)
+            VALUES (gen_random_uuid(), _bookingId, 1, 'TXN' || (1000 + _bookingCount)::TEXT, 100.00, 1, 3, 0, NULL, NOW());
 
             UPDATE flights.flight_seats SET is_available = FALSE WHERE id = _seatId;
         END IF;
