@@ -13,6 +13,18 @@ public class FlightConfiguration : IEntityTypeConfiguration<Flight>
         builder.Property(x => x.BasePrice)
             .HasPrecision(18, 2);
 
+        builder.Property(x => x.DepartureGate)
+            .HasMaxLength(10);
+
+        builder.Property(x => x.ArrivalGate)
+            .HasMaxLength(10);
+
+        builder.Property(x => x.BaggageCarousel)
+            .HasMaxLength(10);
+
+        builder.Property(x => x.DelayMinutes)
+            .HasDefaultValue(0);
+
         builder.HasOne(x => x.Route)
             .WithMany(r => r.Flights)
             .HasForeignKey(x => x.RouteId)
