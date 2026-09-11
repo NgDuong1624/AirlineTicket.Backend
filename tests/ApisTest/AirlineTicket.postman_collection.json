@@ -165,6 +165,46 @@
       "key": "notification_id",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "flight_number",
+      "value": "VN-123",
+      "type": "string"
+    },
+    {
+      "key": "aircraft_id",
+      "value": "81F3E2D4-BCDE-4F01-2345-6789ABCDEF01",
+      "type": "string"
+    },
+    {
+      "key": "campaign_id",
+      "value": "D1F3E2D4-BCDE-4F01-2345-6789ABCDEF01",
+      "type": "string"
+    },
+    {
+      "key": "fare_alert_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "FareAlertId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "User_AccessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "Default_OriginAirportId",
+      "value": "E5F3E2D4-BCDE-4F01-2345-6789ABCDEF05",
+      "type": "string"
+    },
+    {
+      "key": "Default_DestinationAirportId",
+      "value": "F6F3E2D4-BCDE-4F01-2345-6789ABCDEF06",
+      "type": "string"
     }
   ],
   "item": [
@@ -923,6 +963,56 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "PUT Update Language Preference",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 204', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});",
+                      "pm.test('Language updated successfully', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/auth/language",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "language"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"language\": \"vi\"\n}"
+                }
+              }
             }
           ]
         },
@@ -1908,6 +1998,143 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "GET Get Active Airborne Flights (Radar)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});",
+                      "var jsonData = pm.response.json();",
+                      "pm.test('Returns list of active airborne flights', function () {",
+                      "    pm.expect(jsonData).to.be.an('array');",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/flights/radar/active",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "flights",
+                    "radar",
+                    "active"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Get Flight Live Telemetry",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 404', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});",
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.test('Telemetry has coordinates and altitude', function () {",
+                      "        pm.expect(jsonData).to.have.property('latitude');",
+                      "        pm.expect(jsonData).to.have.property('longitude');",
+                      "    });",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/flights/{{flight_id}}/telemetry",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "flights",
+                    "{{flight_id}}",
+                    "telemetry"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Get Flight Status By Number",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 404', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});",
+                      "if (pm.response.code === 200) {",
+                      "    var jsonData = pm.response.json();",
+                      "    pm.test('Flight status returns flight details', function () {",
+                      "        pm.expect(jsonData).to.have.property('flightNumber');",
+                      "    });",
+                      "}"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/flights/status/{{flight_number}}",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "flights",
+                    "status",
+                    "{{flight_number}}"
+                  ]
+                }
+              }
             }
           ]
         },
@@ -2054,6 +2281,54 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "PATCH Update Flight Status and Gate (Staff/Partner)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 400, 404', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/flights/{{flight_id}}/status-gate",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "flights",
+                    "{{flight_id}}",
+                    "status-gate"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"status\": 1,\n  \"departureGate\": \"G12\",\n  \"arrivalGate\": \"A04\",\n  \"baggageCarousel\": \"C3\",\n  \"delayMinutes\": 15,\n  \"reason\": \"Late incoming aircraft\"\n}"
+                }
+              }
             }
           ]
         },
@@ -2779,6 +3054,198 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "GET List Partner Aircraft Configurations",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 400', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{partner_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/partner/aircraft?pageIndex=1&pageSize=10",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "aircraft"
+                  ],
+                  "query": [
+                    {
+                      "key": "pageIndex",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Create Partner Aircraft Configuration",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 201, 400', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 201, 400]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{partner_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/partner/aircraft",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "aircraft"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                }
+              }
+            },
+            {
+              "name": "PUT Update Partner Aircraft Configuration",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 400, 404', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{partner_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/partner/aircraft/{{aircraft_id}}",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "aircraft",
+                    "{{aircraft_id}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}"
+                }
+              }
+            },
+            {
+              "name": "DELETE Delete Partner Aircraft Configuration",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 204, 400, 404', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400, 404]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{partner_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/partner/aircraft/{{aircraft_id}}",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "partner",
+                    "aircraft",
+                    "{{aircraft_id}}"
+                  ]
+                }
+              }
             }
           ]
         },
@@ -3869,6 +4336,476 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "PUT Update Booking Information",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 400, 404', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 400, 404]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/bookings/{{booking_id}}",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "{{booking_id}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"contactEmail\": \"updated.client@gmail.com\",\n  \"contactPhone\": \"+84988776655\",\n  \"passengers\": [\n    {\n      \"firstName\": \"Nguyen\",\n      \"lastName\": \"Van A\",\n      \"identityCard\": \"001200000001\",\n      \"seatNumber\": \"12A\"\n    }\n  ]\n}"
+                }
+              }
+            },
+            {
+              "name": "DELETE Cancel Booking (Customer)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 204, 400, 404', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400, 404]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/bookings/{{booking_id}}",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "{{booking_id}}"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Get User Bookings History By ID",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 401, 403', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/bookings/user/{{user_id}}?pageNumber=1&pageSize=10",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "user",
+                    "{{user_id}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "pageNumber",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "GET Get User Booking Statistics",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 401, 403', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/bookings/user/{{user_id}}/stats",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings",
+                    "user",
+                    "{{user_id}}",
+                    "stats"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Initiate Multi-Gateway Checkout Session",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 400', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/payments/checkout",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "payments",
+                    "checkout"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"bookingId\": \"{{booking_id}}\",\n  \"provider\": 0,\n  \"currency\": 1,\n  \"returnUrl\": \"https://airlineticket.com/checkout/success\",\n  \"cancelUrl\": \"https://airlineticket.com/checkout/cancel\"\n}"
+                }
+              }
+            },
+            {
+              "name": "GET Query Payment Transaction Status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 404', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/payments/{{booking_id}}/status",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "payments",
+                    "{{booking_id}}",
+                    "status"
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST Stripe Webhook Callback",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 400', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Stripe-Signature",
+                    "value": "t=1614555555,v1=test_sig"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/payments/webhooks/stripe",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "payments",
+                    "webhooks",
+                    "stripe"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"type\": \"payment_intent.succeeded\"\n}"
+                }
+              }
+            },
+            {
+              "name": "POST PayPal Webhook Callback",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 400', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "PAYPAL-TRANSMISSION-SIG",
+                    "value": "test_sig"
+                  },
+                  {
+                    "key": "PAYPAL-EVENT-TYPE",
+                    "value": "PAYMENT.CAPTURE.COMPLETED"
+                  },
+                  {
+                    "key": "PAYPAL-TRANSMISSION-TIME",
+                    "value": "2026-09-11T12:00:00Z"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/payments/webhooks/paypal",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "payments",
+                    "webhooks",
+                    "paypal"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"event_type\": \"PAYMENT.CAPTURE.COMPLETED\"\n}"
+                }
+              }
+            },
+            {
+              "name": "POST VNPay Webhook Callback (IPN)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/payments/webhooks/vnpay?vnp_ResponseCode=00&vnp_TxnRef={{booking_id}}",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "payments",
+                    "webhooks",
+                    "vnpay"
+                  ],
+                  "query": [
+                    {
+                      "key": "vnp_ResponseCode",
+                      "value": "00"
+                    },
+                    {
+                      "key": "vnp_TxnRef",
+                      "value": "{{booking_id}}"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "POST MoMo Webhook Callback (IPN)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 204, 400', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 204, 400]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/payments/webhooks/momo",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "payments",
+                    "webhooks",
+                    "momo"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"resultCode\": 0,\n  \"orderId\": \"{{booking_id}}\"\n}"
+                }
+              }
             }
           ]
         },
@@ -3974,6 +4911,58 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "GET List All Bookings (Staff/Partner View)",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 401, 403', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 401, 403]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{staff_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/bookings?pageNumber=1&pageSize=10",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "bookings"
+                  ],
+                  "query": [
+                    {
+                      "key": "pageNumber",
+                      "value": "1"
+                    },
+                    {
+                      "key": "pageSize",
+                      "value": "10"
+                    }
+                  ]
+                }
+              }
             }
           ]
         },
@@ -4573,6 +5562,49 @@
                   }
                 }
               ]
+            },
+            {
+              "name": "POST Validate and Apply Promotion Code",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "exec": [
+                      "pm.test('Status code is 200, 400', function () {",
+                      "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
+                      "});",
+                      "pm.test('Response time is acceptable', function () {",
+                      "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                      "});"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{Backend_API}}/api/promotions/apply",
+                  "host": [
+                    "{{Backend_API}}"
+                  ],
+                  "path": [
+                    "api",
+                    "promotions",
+                    "apply"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"promoCode\": \"SUMMER2026\",\n  \"flightId\": \"{{flight_id}}\",\n  \"originalAmount\": 2500000\n}"
+                }
+              }
             }
           ]
         },
@@ -5375,11 +6407,15 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
                   }
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"originAirportId\": \"{{Default_OriginAirportId}}\",\n  \"destinationAirportId\": \"{{Default_DestinationAirportId}}\",\n  \"departureDate\": \"2026-09-15\",\n  \"returnDate\": \"2026-09-20\",\n  \"targetPrice\": 1500000,\n  \"currentLowestPrice\": 2000000,\n  \"currency\": \"VND\"\n}"
+                  "raw": "{\n  \"originAirportId\": \"{{airport_origin_id}}\",\n  \"destinationAirportId\": \"{{airport_dest_id}}\",\n  \"departureDate\": \"2026-09-15\",\n  \"returnDate\": \"2026-09-20\",\n  \"targetPrice\": 1500000,\n  \"currentLowestPrice\": 2000000,\n  \"currency\": \"VND\"\n}"
                 },
                 "url": {
                   "raw": "{{Backend_API}}/api/fare-alerts",
@@ -5403,6 +6439,7 @@
                       "var jsonData = pm.response.json();",
                       "if (jsonData && jsonData.id) {",
                       "    pm.environment.set(\"FareAlertId\", jsonData.id);",
+                      "    pm.environment.set(\"fare_alert_id\", jsonData.id);",
                       "}",
                       "pm.test(\"Response time is acceptable\", function () {",
                       "    pm.expect(pm.response.responseTime).to.be.below(5000);",
@@ -5431,6 +6468,10 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
                   }
                 ],
                 "url": {
@@ -5483,6 +6524,10 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
                   }
                 ],
                 "body": {
@@ -5540,6 +6585,10 @@
                   {
                     "key": "Content-Type",
                     "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{customer_token}}"
                   }
                 ],
                 "url": {
@@ -6127,6 +7176,45 @@
               }
             }
           ]
+        },
+        {
+          "name": "GET Get Notification Module Health Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{Backend_API}}/api/notifications/status",
+              "host": [
+                "{{Backend_API}}"
+              ],
+              "path": [
+                "api",
+                "notifications",
+                "status"
+              ]
+            }
+          }
         }
       ]
     },
@@ -6261,12 +7349,13 @@
               }
             ],
             "url": {
-              "raw": "{{Backend_API}}/api/interactions",
+              "raw": "{{Backend_API}}/api/v1/interactions",
               "host": [
                 "{{Backend_API}}"
               ],
               "path": [
                 "api",
+                "v1",
                 "interactions"
               ]
             }
@@ -6299,12 +7388,13 @@
               }
             ],
             "url": {
-              "raw": "{{Backend_API}}/api/qa/ask",
+              "raw": "{{Backend_API}}/api/v1/qa/ask",
               "host": [
                 "{{Backend_API}}"
               ],
               "path": [
                 "api",
+                "v1",
                 "qa",
                 "ask"
               ]
@@ -6334,12 +7424,89 @@
               }
             }
           ]
+        },
+        {
+          "name": "GET System Health Check (Liveness)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{Backend_API}}/api/health/live",
+              "host": [
+                "{{Backend_API}}"
+              ],
+              "path": [
+                "api",
+                "health",
+                "live"
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET System Health Check (Readiness)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{Backend_API}}/api/health",
+              "host": [
+                "{{Backend_API}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            }
+          }
         }
       ]
     },
     {
-      "name": "09. Support Chat (SignalR Hub Protocol)",
-      "description": "SignalR WebSocket Hub endpoints and client-server communication reference at /hubs/support.",
+      "name": "09. Realtime SignalR Hubs",
+      "description": "SignalR WebSocket Hub endpoints and handshake negotiate endpoints for Seats, Notifications, Fare Alerts, Flight Radar, and Support Chat.",
       "item": [
         {
           "name": "SignalR Hub Negotiate Handshake",
@@ -6427,6 +7594,190 @@
               }
             }
           ]
+        },
+        {
+          "name": "POST SeatHub Negotiate Handshake",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{SignalR_API}}/hubs/seats/negotiate?negotiateVersion=1",
+              "host": [
+                "{{SignalR_API}}"
+              ],
+              "path": [
+                "hubs",
+                "seats",
+                "negotiate"
+              ],
+              "query": [
+                {
+                  "key": "negotiateVersion",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST NotificationHub Negotiate Handshake",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{customer_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{SignalR_API}}/hubs/notifications/negotiate?negotiateVersion=1",
+              "host": [
+                "{{SignalR_API}}"
+              ],
+              "path": [
+                "hubs",
+                "notifications",
+                "negotiate"
+              ],
+              "query": [
+                {
+                  "key": "negotiateVersion",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST FareAlertHub Negotiate Handshake",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{SignalR_API}}/hubs/fare-alerts/negotiate?negotiateVersion=1",
+              "host": [
+                "{{SignalR_API}}"
+              ],
+              "path": [
+                "hubs",
+                "fare-alerts",
+                "negotiate"
+              ],
+              "query": [
+                {
+                  "key": "negotiateVersion",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST FlightTrackerHub Negotiate Handshake",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200]);",
+                  "});",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{SignalR_API}}/hubs/flight-tracker/negotiate?negotiateVersion=1",
+              "host": [
+                "{{SignalR_API}}"
+              ],
+              "path": [
+                "hubs",
+                "flight-tracker",
+                "negotiate"
+              ],
+              "query": [
+                {
+                  "key": "negotiateVersion",
+                  "value": "1"
+                }
+              ]
+            }
+          }
         }
       ]
     }

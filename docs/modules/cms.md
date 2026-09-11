@@ -1,39 +1,37 @@
 # CMS Module
 
 ## Overview
-The **CMS (Content Management System) Module** handles the management of articles, categories, and system-wide dashboard statistics. It provides aggregated data views for both System Administrators and Airline Partners, pulling data across multiple modules (Bookings, Flights, Users, etc.) to generate comprehensive dashboards.
+The **CMS (Content Management System) Module** aggregates high-level analytics and manages global system configurations. It compiles system-wide statistics for System Administrators and airline-specific performance metrics for Airline Partners, consolidating data across multiple modules (Bookings, Flights, Users, and Logs).
 
 ---
 
 ## How It Works (For End Users & Clients)
-1. **Dashboards**: The module exposes high-level statistics. 
-   - **Admin Dashboard**: Shows total revenue, total bookings, new users, total flights, recent partner activity, and critical system logs.
-   - **Partner Dashboard**: Shows airline-specific metrics like active aircraft, total staff, today's bookings, monthly revenue, recent flights, and recent bookings.
-2. **Settings**: Manages global system settings like service fees, default currency, and maintenance mode.
-3. **Content Management**: While the database schema supports `Articles` and `Categories` for a blog or news section, the current API implementation focuses primarily on dashboards and settings.
+1. **Admin Dashboard**: Aggregates cross-module metrics, including gross revenue, completed bookings, new customer registrations, total scheduled flights, active airline partners, and recent critical system logs.
+2. **Partner Dashboard**: Provides an airline-scoped performance view, including active aircraft fleet count, total registered staff, daily bookings, monthly revenue, and recent flight dispatches.
+3. **Settings Management**: Manages system-wide platform settings such as commission fees, default currency, booking limits, and maintenance mode status.
 
 ---
 
 ## Domain Entities & Data Model
 
 ### Article
-Represents a news post, travel guide, or promotional article.
+Represents travel guides, news posts, and promotional content.
 - `Id` (Guid): Unique identifier.
 - `CategoryId` (Guid): FK to the associated `Category`.
-- `AuthorId` (Guid): FK to the user who wrote the article.
+- `AuthorId` (Guid): FK to author in `users.users`.
 - `Title` (string): Article title.
 - `Slug` (string): URL-friendly identifier (unique).
-- `Summary` (string?): Short description.
-- `Content` (string): Full HTML/Markdown content.
-- `ThumbnailUrl` (string?): URL to the cover image.
-- `PublishedAt` (DateTime?): Timestamp of publication.
+- `Summary` (string?): Short summary.
+- `Content` (string): Markdown or HTML content.
+- `ThumbnailUrl` (string?): URL to cover image.
+- `PublishedAt` (DateTime?): Publication timestamp.
 - `Status` (int): `0` = Draft, `1` = Published, `2` = Archived.
-- `ViewCount` (int): Number of times the article was viewed.
+- `ViewCount` (int): View counter.
 - `IsDeleted` (bool): Soft delete flag.
 - `CreatedAt` (DateTime): UTC timestamp of creation.
 
 ### Category
-Represents a grouping for articles.
+Represents an article category or taxonomy.
 - `Id` (Guid): Unique identifier.
 - `Name` (string): Category name.
 - `Slug` (string): URL-friendly identifier (unique).
@@ -44,25 +42,24 @@ Represents a grouping for articles.
 ## API Reference
 
 ### Authentication Roles
-- **AdminOnly**: Requires authentication as a System Admin.
-- **PartnerOnly**: Requires authentication as an Airline Admin.
+- **AdminOnly**: System Administrator role (`Role = 0`).
+- **PartnerOnly**: Airline Partner role (`Role = 1`).
 
 ### Endpoints
 
 #### Admin Endpoints
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **GET** | `/api/admin/dashboard` | AdminOnly | Retrieves system-wide statistics, recent partners, and critical logs. | None | `unknown (Admin Dashboard metrics)` |
-| **GET** | `/api/admin/settings` | AdminOnly | Retrieves global system settings (e.g., Service Fee, Currency). | None | `AdminSettings { siteName: string, maintenanceMode: boolean, maxBookingPerUser: string, holdLimit: string, commissionFee: string }` |
-| **PUT** | `/api/admin/settings` | AdminOnly | Updates global system settings. | `AdminSettings { siteName: string, maintenanceMode: boolean, maxBookingPerUser: string, holdLimit: string, commissionFee: string }` | `AdminSettings` |
+| **GET** | `/api/admin/dashboard` | AdminOnly | Retrieves system-wide overview statistics, partner activity, and recent critical logs. | None | `AdminDashboardDto` |
+| **GET** | `/api/admin/settings` | PartnerOnly / Admin | Retrieves global system settings (e.g. commission fee, maintenance mode, booking limits). | None | `AdminSettingsDto` |
+| **PUT** | `/api/admin/settings` | PartnerOnly / Admin | Updates global system settings. | `AdminSettingsDto` | `AdminSettingsDto` |
 
 #### Partner Endpoints
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **GET** | `/api/partner/dashboard` | PartnerOnly | Retrieves airline-specific statistics, recent flights, and recent bookings. | None | `unknown (Partner Dashboard metrics)` |
+| **GET** | `/api/partner/dashboard` | PartnerOnly | Retrieves airline-specific dashboard statistics, recent flights, and booking summaries. | None | `PartnerDashboardDto` |
 
 ---
 
 ## Cross-Module Data Aggregation
-The CMS module utilizes raw SQL queries (via Dapper) to aggregate data efficiently across multiple schemas without relying on complex Entity Framework joins. 
-- The `DashboardRepository` queries tables from the `bookings`, `flights`, `identity`, and `logs` schemas to compile the dashboard responses.
+The CMS module executes optimized direct SQL queries (via Dapper and raw SQL projections) to aggregate data across database schemas (`bookings`, `flights`, `identity`, `logs`) without requiring circular module dependencies.

@@ -53,6 +53,7 @@ public class CMSDbContext : DbContext
             entity.ToTable("flights", "flights", t => t.ExcludeFromMigrations());
             entity.Ignore(e => e.Airplane);
             entity.Ignore(e => e.FlightSeats);
+            entity.Ignore(e => e.Telemetries);
         });
 
         modelBuilder.Entity<Airline>(entity =>

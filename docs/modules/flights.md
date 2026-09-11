@@ -1,7 +1,7 @@
 # Flights Module
 
 ## Overview
-The **Flights Module** is the core of the airline ticket system, managing all aspects related to flights, including airlines, airports, aircraft, routes, and flight schedules. It provides functionalities for searching flights, managing airline operations, and handling seat inventory.
+The **Flights Module** is the core of the airline ticket system, managing all aspects related to flights, including airlines, airports, aircraft models, physical airplanes, routes, flight schedules, and real-time flight radar tracking. It provides capabilities for searching flights, managing airline operations, handling seat inventory, and broadcasting live flight radar telemetry.
 
 ---
 
@@ -10,8 +10,9 @@ The **Flights Module** is the core of the airline ticket system, managing all as
 2. **Flight Creation**: Airline partners create `Flights` based on defined `Routes` and available `Airplanes`. When a flight is created, `FlightSeats` are automatically generated based on the assigned `Airplane`'s seat configuration.
 3. **Automated Status Updates**: Background jobs (`FlightStatusAutomatorJob`, `FlightDelayDetectorJob`) automatically update flight statuses (e.g., `Scheduled` -> `Boarding` -> `InAir` -> `Landed` -> `Delayed`) based on departure/arrival times.
 4. **Search & Booking**: Customers search for flights using various criteria. The module provides APIs for searching one-way and round-trip flights, retrieving flight details, and viewing seat maps. Seat reservation is handled by `IFlightSeatRepository` which is consumed by the Bookings module.
-5. **Dynamic Pricing (Future)**: A `DynamicPricingJob` is a placeholder for future implementation of dynamic pricing based on factors like load factor and demand.
-6. **Cleanup**: `FlightCleanupBackgroundService` ensures that flights are correctly marked as `Landed` or `Cancelled` and performs other maintenance tasks.
+5. **Live Flight Radar & Telemetry**: Airborne flights stream GPS coordinates, altitude, speed, and heading. Users can view active flights on the global sky radar map (`GET /api/flights/radar/active`), inspect live telemetry (`GET /api/flights/{id}/telemetry`), or subscribe to WebSocket updates via `FlightTrackerHub` (`/hubs/flight-tracker`).
+6. **Gate & Status Operations**: Airline staff and partners can update gate assignments, baggage carousels, delays, and flight statuses in real time via `PATCH /api/flights/{id}/status-gate`.
+7. **Cleanup**: `FlightCleanupBackgroundService` ensures that flights are correctly marked as `Landed` or `Cancelled` and performs other maintenance tasks.
 
 ---
 
@@ -39,8 +40,6 @@ Represents an airline operating flights.
 - `Name` (string): Airline name.
 - `LogoUrl` (string?): URL to the airline's logo.
 - `BaseCountry` (string?): Country of origin.
-- `ApiEndpoint` (string?): B2B integration endpoint.
-- `ApiKey` (string?): API key for B2B integration.
 - `Address` (string?): Airline's physical address.
 - `SupportEmail` (string?): Support email.
 - `SupportPhone` (string?): Support phone number.
@@ -71,7 +70,7 @@ Defines a seat within an `AircraftModel` for generating `AirplaneSeats`.
 Represents a specific physical aircraft owned by an `Airline`.
 - `Id` (Guid): Unique identifier.
 - `AirlineId` (Guid): FK to the owning `Airline`.
-- `AircraftModelId` (Guid?): FK to the `AircraftModel` it's based on.
+- `AircraftModelId` (Guid?): FK to the `AircraftModel` it is based on.
 - `Model` (string): Specific model name.
 - `RegistrationNumber` (string): Unique registration number (e.g., `VN-A861`).
 - `TotalCapacity` (int): Total passenger capacity.
@@ -107,9 +106,13 @@ Represents a scheduled flight instance.
 - `DepartureTime` (DateTime): Scheduled departure time.
 - `ArrivalTime` (DateTime): Scheduled arrival time.
 - `BasePrice` (decimal): Base price for the flight.
-- `Currency` (string): Currency code (default: `USD`).
+- `Currency` (string): Currency code (default: `VND`).
 - `Status` (FlightStatus): `0` = Scheduled, `1` = Delayed, `2` = Boarding, `3` = InAir, `4` = Landed, `5` = Cancelled.
-- `ExternalId` (string?): External system ID.
+- `DepartureGate` (string?): Assigned departure gate.
+- `ArrivalGate` (string?): Assigned arrival gate.
+- `BaggageCarousel` (string?): Baggage claim carousel.
+- `DelayMinutes` (int): Flight delay in minutes.
+- `DelayReason` (string?): Reason for delay.
 - `IsDeleted` (bool): Soft delete flag.
 - `CreatedAt` (DateTime): UTC timestamp of creation.
 - `UpdatedAt` (DateTime): UTC timestamp of last update.
@@ -138,8 +141,8 @@ Captures periodic price snapshots for trend evaluation and predictive analytics.
 ## API Reference
 
 ### Authentication Roles
-- **PartnerOrStaff**: Requires authentication as an Airline Admin, Airline Staff, or System Admin.
-- **PartnerOnly**: Requires authentication as an Airline Admin.
+- **PartnerOrStaff**: Requires authentication as an Airline Partner, Airline Staff, or System Admin.
+- **PartnerOnly**: Requires authentication as an Airline Partner.
 - **AdminOnly**: Requires authentication as a System Admin.
 
 ### Enums
@@ -163,77 +166,94 @@ Captures periodic price snapshots for trend evaluation and predictive analytics.
 #### Public Endpoints (No Authentication Required)
 | Method | Path | Description | Input Type | Output Type |
 |--------|------|-------------|------------|-------------|
-| **GET** | `/api/airports` | Search and list airports. | None (Query param `search?: string`) | `Airport[] { id: string, iataCode: string, nameEn: string, nameVi: string, cityEn: string, cityVi: string, countryCode: string, timezone: string, latitude?: number, longitude?: number, isActive: boolean }` |
-| **GET** | `/api/airlines` | List all registered airlines. | None | `{ items: Airline[] { id: string, name: string, iataCode?: string, logoUrl?: string, baseCountry?: string } }` |
-| **GET** | `/api/routes` | List all flight routes. | None | `Route[] { id: string, originAirportId: string, destinationAirportId: string, originAirport: Airport, destinationAirport: Airport, distanceKm?: number, estimatedDurationMinutes?: number }` |
-| **POST** | `/api/flights` | Search for one-way flights based on origin, destination, date, etc. | `SearchFlightsBody { from: string, to: string, departDate: string, returnDate?: string, passengers: number, cabinClass: string, airlines?: string[], priceRange?: number, stops?: string, sortBy?: string, currency?: string }` | `{ flights: FlightResponse[] { id: string, routeId: string, airplaneId: string, flightNumber: string, departureTime: string, arrivalTime: string, basePrice: number, currency: string, status: number, originCode?: string, destinationCode?: string, airlineName?: string, externalId?: string } }` |
-| **POST** | `/api/flights/round-trip` | Search for round-trip flights. | `SearchFlightsBody` | `{ outbound: FlightResponse[], inbound: FlightResponse[] }` |
-| **GET** | `/api/flights/{id:guid}` | Get detailed information for a specific flight. | None | `FlightResponse` |
-| **GET** | `/api/flights/trending` | Get a list of trending (e.g., cheapest) flights. | None | `FlightResponse[]` |
-| **GET** | `/api/flights/{id:guid}/seats` | Get the seat map and availability for a specific flight. | None | `FlightSeat[] { id: string, flightId: string, seatNumber: string, seatClass: number, priceOverride?: number, isAvailable: boolean, isExtraLegroom: boolean }` |
-| **GET** | `/api/flights/price-forecast` | Get ML price trend direction and buy recommendation. | None (Query params `originAirportId, destinationAirportId, departureDate`) | `PriceForecastDto { trend: number, recommendation: number, confidenceScore: number }` |
+| **GET** | `/api/airports` | Search and list airports. | Query params `search?: string, pageIndex?: number, pageSize?: number` | `PagedResult<AirportDto>` |
+| **GET** | `/api/airlines` | List all registered airlines. | None | `AirlineDto[]` |
+| **GET** | `/api/routes` | List all flight routes. | Query params `pageIndex?: number, pageSize?: number` | `PagedResult<RouteDto>` |
+| **POST** | `/api/flights` | Search for one-way flights by route, date, and filters. | `FlightSearchRequest { originCode: string, destinationCode: string, departDate: string, cabinClass?: string, airlines?: string[], priceRangeMin?: number, priceRangeMax?: number, maxStops?: number, sortBy?: string, currency?: string, pageIndex?: number, pageSize?: number }` | `PagedResult<FlightSearchResponseDto>` |
+| **POST** | `/api/flights/round-trip` | Search for round-trip flights. | `RoundTripFlightSearchRequest { originCode: string, destinationCode: string, outboundDate: string, returnDate: string, cabinClass?: string, airlines?: string[], priceRangeMin?: number, priceRangeMax?: number, maxStops?: number, sortBy?: string, currency?: string }` | `RoundTripFlightSearchResponseDto` |
+| **GET** | `/api/flights/{id}` | Get detailed information for a specific flight. | Route param `id: Guid` | `FlightDetailDto` |
+| **GET** | `/api/flights/trending` | Get list of trending flights/routes. | Query params `pageIndex?: number, pageSize?: number` | `List<TrendingFlightDto>` |
+| **GET** | `/api/flights/{id}/seats` | Get seat map and availability for a flight. | Route param `id: Guid` | `List<FlightSeatDto>` |
+| **GET** | `/api/flights/radar/active` | Get active airborne flights for live sky radar map. | None | `List<AircraftMapPinDto>` |
+| **GET** | `/api/flights/{id}/telemetry` | Get live flight telemetry and GPS coordinates. | Route param `id: Guid` | `FlightTelemetryDto` |
+| **GET** | `/api/flights/status/{flightNumber}` | Get flight status, timeline, gates, carousel, delay by flight number. | Route param `flightNumber: string`, Query param `date?: DateTime` | `FlightStatusDetailDto` |
 
-#### Staff Endpoints (`PartnerOrStaff` Role)
-| Method | Path | Description | Input Type | Output Type |
-|--------|------|-------------|------------|-------------|
-| **POST** | `/api/flights/admin` | Create a new flight. | `FlightAdminPayload { routeId: string, airplaneId: string, flightNumber: string, departureTime: string, arrivalTime?: string, basePrice: number, currency: string, status: number }` | `SystemFlight { id: string, routeId: string, airplaneId: string, flightNumber: string, departureTime: string, arrivalTime: string, basePrice: number, currency: string, status: number }` |
-| **GET** | `/api/staff/flights` | List flights with seat availability for staff. | None (Query param `search?: string`) | `StaffFlightListItem[] { id: string, flightNumber: string, originCode: string, destinationCode: string, departureTime: string, arrivalTime: string, basePrice: number, currency: string, status: string, totalSeats: number, availableSeats: number }` |
-| **GET** | `/api/staff/flights/{id:guid}/seats` | Get seat map for a specific flight (staff view). | None | `FlightSeat[]` |
+#### Staff Endpoints (`PartnerOrStaff` / `StaffOnly` Role)
+| Method | Path | Role | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/staff/flights` | PartnerOrStaff | List flights with seat summary for staff portal. | Query params `search?: string, pageNumber?: number, pageIndex?: number, pageSize?: number` | `PagedResult<StaffFlightDto>` |
+| **GET** | `/api/staff/flights/{id}/seats` | PartnerOrStaff | Get seat map for flight (staff view). | Route param `id: Guid` | `List<FlightSeatDto>` |
+| **PATCH** | `/api/flights/{id}/status-gate` | PartnerOrStaff | Update flight status, gates, carousel, delay minutes. | `UpdateFlightStatusAndGateRequest { status?: FlightStatus, departureGate?: string, arrivalGate?: string, baggageCarousel?: string, delayMinutes?: int, reason?: string }` | `FlightStatusDetailDto` |
 
 #### Partner Endpoints (`PartnerOnly` Role)
 | Method | Path | Description | Input Type | Output Type |
 |--------|------|-------------|------------|-------------|
-| **GET** | `/api/partner/routes` | List routes managed by the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Route> { items: Route[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **POST** | `/api/partner/routes` | Create a new route for the partner's airline. | `Partial<Route> { originAirportId: string, destinationAirportId: string, distanceKm?: number, estimatedDurationMinutes?: number }` | `Route` |
-| **PUT** | `/api/partner/routes/{id:guid}` | Update an existing route. | `Partial<Route>` | `Route` |
-| **DELETE** | `/api/partner/routes/{id:guid}` | Delete a route. | None | `void` |
-| **GET** | `/api/partner/airplanes` | List airplanes owned by the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Airplane> { items: Airplane[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **GET** | `/api/partner/airplanes/models` | List available aircraft models for creating airplanes. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<AircraftModel> { items: AircraftModel[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **POST** | `/api/partner/airplanes` | Create a new airplane. | `Partial<Airplane> { model: string, registrationNumber: string, totalCapacity: number }` | `Airplane` |
-| **PUT** | `/api/partner/airplanes/{id:guid}` | Update an airplane. | `Partial<Airplane>` | `Airplane` |
-| **DELETE** | `/api/partner/airplanes/{id:guid}` | Delete an airplane. | None | `void` |
-| **GET** | `/api/partner/flights` | List flights operated by the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<SystemFlight>` |
-| **POST** | `/api/partner/flights` | Create a new flight for the partner's airline. | `FlightAdminPayload` | `SystemFlight` |
-| **PUT** | `/api/partner/flights/{id:guid}` | Update an existing flight. | `Partial<FlightAdminPayload>` | `SystemFlight` |
-| **DELETE** | `/api/partner/flights/{id:guid}` | Delete a flight. | None | `void` |
-| **GET** | `/api/partner/aircraft` | Alias for listing partner's airplanes. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Airplane>` |
-| **POST** | `/api/partner/aircraft` | Create an aircraft (airplane). | `Partial<Airplane>` | `Airplane` |
-| **PUT** | `/api/partner/aircraft/{id:guid}` | Update an aircraft. | `Partial<Airplane>` | `Airplane` |
-| **DELETE** | `/api/partner/aircraft/{id:guid}` | Delete an aircraft. | None | `void` |
-| **GET** | `/api/partner/settings` | Get the partner airline's profile information. | None | `PartnerSettings { companyName?: string, contactEmail?: string, address?: string, airlineName?: string, supportEmail?: string, supportPhone?: string }` |
-| **PUT** | `/api/partner/settings` | Update the partner airline's profile information. | `PartnerSettings` | `PartnerSettings` |
+| **GET** | `/api/partner/routes` | List routes managed by the partner's airline. | Query params `pageNumber?: number, pageIndex?: number, pageSize?: number` | `{ items: RouteDto[], totalCount: number }` |
+| **POST** | `/api/partner/routes` | Create a new route for the partner's airline. | `PartnerRouteRequest { originAirportId: Guid, destinationAirportId: Guid, distanceKm?: decimal, estimatedDurationMinutes?: int }` | `{ id: Guid }` |
+| **PUT** | `/api/partner/routes/{id}` | Update an existing route. | Route param `id: Guid`, `PartnerRouteRequest` | `200 OK` |
+| **DELETE** | `/api/partner/routes/{id}` | Delete a route. | Route param `id: Guid` | `204 NoContent` |
+| **GET** | `/api/partner/airplanes` | List airplanes owned by the partner's airline. | Query params `pageNumber?: number, pageIndex?: number, pageSize?: number` | `{ items: AirplaneDto[], totalCount: number }` |
+| **GET** | `/api/partner/airplanes/models` | List available aircraft models. | Query params `pageNumber?: number, pageIndex?: number, pageSize?: number` | `PagedResult<AircraftModelDto>` |
+| **POST** | `/api/partner/airplanes` | Create a new airplane. | `PartnerAirplaneRequest { aircraftModelId?: Guid, model: string, registrationNumber: string, totalCapacity: int }` | `{ id: Guid }` |
+| **PUT** | `/api/partner/airplanes/{id}` | Update an airplane. | Route param `id: Guid`, `PartnerAirplaneRequest` | `200 OK` |
+| **DELETE** | `/api/partner/airplanes/{id}` | Delete an airplane. | Route param `id: Guid` | `204 NoContent` |
+| **GET** | `/api/partner/flights` | List flights operated by the partner's airline. | Query params `search?: string, status?: int, departureDate?: DateTime, pageNumber?: number, pageIndex?: number, pageSize?: number` | `{ items: FlightDto[], totalCount: number }` |
+| **POST** | `/api/partner/flights` | Create a new flight for the partner's airline. | `PartnerFlightRequest { routeId: Guid, airplaneId: Guid, flightNumber: string, basePrice: decimal, departureTime: DateTime }` | `{ id: Guid }` |
+| **PUT** | `/api/partner/flights/{id}` | Update an existing flight departure time. | Route param `id: Guid`, `PartnerFlightRequest` | `200 OK` |
+| **DELETE** | `/api/partner/flights/{id}` | Delete a flight. | Route param `id: Guid` | `204 NoContent` |
+| **GET** | `/api/partner/aircraft` | List aircraft configurations (partner). | Query params `pageNumber?: number, pageIndex?: number, pageSize?: number` | `{ items: AircraftDto[], totalCount: number }` |
+| **POST** | `/api/partner/aircraft` | Create aircraft configuration. | None (Uses partner airline context) | `{ id: Guid }` |
+| **PUT** | `/api/partner/aircraft/{id}` | Update aircraft configuration. | Route param `id: Guid` | `200 OK` |
+| **DELETE** | `/api/partner/aircraft/{id}` | Delete aircraft configuration. | Route param `id: Guid` | `204 NoContent` |
+| **GET** | `/api/partner/settings` | Get partner airline profile settings. | None | `{ airlineName?: string, address?: string, supportEmail?: string, supportPhone?: string }` |
+| **PUT** | `/api/partner/settings` | Update partner airline profile settings. | `PartnerSettingsRequest { airlineName?: string, address?: string, supportEmail?: string, supportPhone?: string }` | `200 OK` |
+| **POST** | `/api/flights/admin` | Create a new flight (legacy partner endpoint). | `CreateFlightRequest { routeId: Guid, airplaneId: Guid, flightNumber: string, basePrice: decimal, scheduledDeparture: DateTime, scheduledArrival: DateTime }` | `{ id: Guid }` |
 
 #### Admin Endpoints (`AdminOnly` Role)
 | Method | Path | Description | Input Type | Output Type |
 |--------|------|-------------|------------|-------------|
-| **GET** | `/api/admin/airports` | Paginated list of all airports with search capabilities. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Airport>` |
-| **POST** | `/api/admin/airports` | Create a new airport. | `Partial<Airport> { iataCode: string, nameEn: string, nameVi: string, cityEn: string, cityVi: string, countryCode: string, timezone: string, latitude?: number, longitude?: number, isActive: boolean }` | `Airport` |
-| **PUT** | `/api/admin/airports/{id:guid}` | Update an airport. | `Partial<Airport>` | `Airport` |
-| **DELETE** | `/api/admin/airports/{id:guid}` | Soft-delete an airport. | None | `void` |
-| **GET** | `/api/admin/airlines` | Paginated list of all airlines. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Airline>` |
-| **POST** | `/api/admin/airlines` | Create a new airline. | `Partial<Airline> { iataCode: string, name: string, logoUrl?: string, baseCountry?: string, apiEndpoint?: string, apiKey?: string, address?: string, supportEmail?: string, supportPhone?: string, isActive: boolean }` | `Airline` |
-| **PUT** | `/api/admin/airlines/{id:guid}` | Update an airline. | `Partial<Airline>` | `Airline` |
-| **DELETE** | `/api/admin/airlines/{id:guid}` | Soft-delete an airline. | None | `void` |
-| **GET** | `/api/admin/flights` | Paginated list of all flights. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<FlightLog> { items: FlightLog[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **POST** | `/api/admin/flights` | Create a new flight (with seat seeding). | `FlightAdminPayload` | `SystemFlight` |
-| **PUT** | `/api/admin/flights/{id:guid}` | Update a flight. | `Partial<FlightAdminPayload>` | `SystemFlight` |
-| **DELETE** | `/api/admin/flights/{id:guid}` | Soft-delete a flight. | None | `void` |
-| **GET** | `/api/admin/aircraft-models` | List all aircraft models. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<AircraftModel> { items: AircraftModel[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **GET** | `/api/admin/aircraft-models/{id:guid}` | Get details of a specific aircraft model. | None | `AircraftModel { id: string, name: string, manufacturer: string, totalSeats: number }` |
-| **POST** | `/api/admin/aircraft-models` | Create a new aircraft model (with seat templates). | `Partial<AircraftModel> { name: string, manufacturer: string, totalSeats: number }` | `AircraftModel` |
-| **PUT** | `/api/admin/aircraft-models/{id:guid}` | Update an aircraft model (replaces seat templates). | `Partial<AircraftModel>` | `AircraftModel` |
-| **DELETE** | `/api/admin/aircraft-models/{id:guid}` | Soft-delete an aircraft model. | None | `void` |
+| **GET** | `/api/admin/airports` | Paginated list of all airports. | Query params `search?: string, pageIndex?: number, pageSize?: number` | `PagedResult<AirportDto>` |
+| **POST** | `/api/admin/airports` | Create a new airport. | `AdminAirportRequest { iataCode: string, nameEn: string, nameVi: string, cityEn: string, cityVi: string, countryCode: string, timezone: string, isActive?: bool }` | `{ id: Guid }` |
+| **PUT** | `/api/admin/airports/{id}` | Update an airport. | Route param `id: Guid`, `AdminAirportRequest` | `200 OK` |
+| **DELETE** | `/api/admin/airports/{id}` | Delete an airport. | Route param `id: Guid` | `204 NoContent` |
+| **GET** | `/api/admin/airlines` | Paginated list of all airlines. | Query params `pageIndex?: number, pageSize?: number` | `PagedResult<AirlineDto>` |
+| **POST** | `/api/admin/airlines` | Create a new airline. | `AdminAirlineRequest { iataCode: string, name: string, logoUrl?: string, baseCountry?: string, isActive?: bool }` | `{ id: Guid }` |
+| **PUT** | `/api/admin/airlines/{id}` | Update an airline. | Route param `id: Guid`, `AdminAirlineRequest` | `200 OK` |
+| **DELETE** | `/api/admin/airlines/{id}` | Delete an airline. | Route param `id: Guid` | `204 NoContent` |
+| **GET** | `/api/admin/aircraft-models` | List all aircraft models. | Query params `pageIndex?: number, pageSize?: number` | `PagedResult<AircraftModelDto>` |
+| **GET** | `/api/admin/aircraft-models/{id}` | Get details of a specific aircraft model. | Route param `id: Guid` | `AircraftModelDto` |
+| **POST** | `/api/admin/aircraft-models` | Create a new aircraft model with seat templates. | `AdminAircraftModelRequest { name: string, manufacturer: string, totalSeats: int, seatTemplates: SeatTemplateDto[] }` | `{ id: Guid }` |
+| **PUT** | `/api/admin/aircraft-models/{id}` | Update an aircraft model and its seat templates. | Route param `id: Guid`, `AdminAircraftModelRequest` | `200 OK` |
+| **DELETE** | `/api/admin/aircraft-models/{id}` | Delete an aircraft model. | Route param `id: Guid` | `204 NoContent` |
+| **GET** | `/api/admin/flights` | Paginated list of all flights. | Query params `pageIndex?: number, pageSize?: number` | `PagedResult<FlightDto>` |
+| **POST** | `/api/admin/flights` | Create a new flight with automated seat generation. | `CreateFlightRequest { routeId: Guid, airplaneId: Guid, flightNumber: string, basePrice: decimal, scheduledDeparture: DateTime, scheduledArrival: DateTime }` | `{ id: Guid }` |
+| **PUT** | `/api/admin/flights/{id}` | Update a flight. | Route param `id: Guid` | `200 OK` |
+| **DELETE** | `/api/admin/flights/{id}` | Delete a flight. | Route param `id: Guid` | `204 NoContent` |
+
+---
+
+## Real-Time Flight Tracking (SignalR)
+
+### Hub Endpoint
+- **URL**: `/hubs/flight-tracker`
+- **Authentication**: Anonymous
+
+### Client → Server Methods
+- `JoinFlightTracking(Guid flightId)`: Subscribe to real-time telemetry updates for a specific flight.
+- `LeaveFlightTracking(Guid flightId)`: Unsubscribe from specific flight tracking.
+- `JoinGlobalRadar()`: Subscribe to live global sky radar ticks.
+- `LeaveGlobalRadar()`: Unsubscribe from global radar ticks.
+
+### Server → Client Events
+- `TelemetryUpdated(FlightTelemetryDto telemetry)`: Emitted when GPS coordinates, altitude, speed, or heading are updated.
+- `GlobalRadarTick(List<AircraftMapPinDto> activePlanes)`: Emitted every 2 seconds with positions of all active airborne flights.
+- `FlightStatusChanged(FlightStatusChangedDto statusUpdate)`: Emitted on flight status transitions (e.g. Delayed, Boarding, InAir, Landed).
 
 ---
 
 ## Background Services
 
-The Flights module includes several background services to automate flight operations:
-
-- **`FlightStatusAutomatorJob`**: Updates flight statuses (e.g., from `Scheduled` to `Boarding`, `InAir`, `Landed`) based on real-time clock and scheduled times.
-- **`FlightDelayDetectorJob`**: Identifies flights that have passed their scheduled departure time but are still marked as `Scheduled` or `Boarding`, and automatically sets their status to `Delayed`.
-- **`CloseFlightSalesJob`**: (Stub) Intended to identify flights nearing departure to close ticket sales.
-- **`CheckInReminderJob`**: (Stub) Intended to send check-in reminders to passengers for upcoming flights.
-- **`DynamicPricingJob`**: (Stub) Placeholder for implementing dynamic pricing algorithms based on factors like demand and load factor.
-- **`FlightCleanupBackgroundService`**: Periodically cleans up flight data, ensuring flights past their arrival time are marked as `Landed`.
-- **`FlightGenerationBackgroundService`**: Automatically generates new flights for upcoming days based on existing routes and aircraft, ensuring a continuous supply of flight data.
+- **`FlightStatusAutomatorJob`**: Updates flight statuses (`Scheduled` -> `Boarding` -> `InAir` -> `Landed`) based on departure and arrival times.
+- **`FlightDelayDetectorJob`**: Detects flights past their scheduled departure that haven't boarded, automatically setting status to `Delayed`.
+- **`FlightCleanupBackgroundService`**: Maintenance job ensuring flights past arrival time are marked as `Landed`.
+- **`FlightRadarWorker`**: Periodically updates airborne aircraft positions and publishes telemetry events to Redis.

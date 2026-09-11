@@ -1,17 +1,17 @@
 # Bookings Module
 
 ## Overview
-The **Bookings Module** manages the transactional lifecycle of flight reservations, passenger details, ticket issuance, and payment processing. It coordinates seat reservations with the Flights module and handles automated ticket generation and payment confirmation.
+The **Bookings Module** manages the transactional lifecycle of flight reservations, passenger details, ticket issuance, and multi-gateway payment processing (Stripe, PayPal, VNPay, MoMo). It coordinates seat reservations with the Flights module, provides staff and partner sales portals, and handles automated ticket generation and cancellation policies.
 
 ---
 
 ## How It Works (Booking Lifecycle)
-1. **Reservation**: The user selects a flight and seat. The system calls `CreateBookingCommand`, which invokes `IFlightSeatReservation.ReserveSeatsAsync` (cross-module call to the Flights module) to lock the seats.
+1. **Reservation**: The user selects a flight and seat. The system calls `CreateBookingCommand` (`POST /api/bookings`), which invokes `IFlightSeatReservation.ReserveSeatsAsync` (cross-module call to the Flights module) to lock the seats.
 2. **Persistence**: If seats are successfully reserved, the booking, passenger details, and tickets are saved in the database with a `Pending` status.
-3. **Payment**: The user initiates payment via `CreateCheckoutSessionCommand` (`POST /api/payments/checkout`). Payment gateways invoke asynchronous webhook callbacks (`POST /api/payments/webhooks/{provider}`) which update the payment transaction and transition the booking status to `Confirmed`, publishing a `BookingConfirmedEvent`.
-4. **Ticket Issuance**: The `BookingConfirmedEventHandler` consumes the event, updates the ticket status to `Issued`, and triggers a notification (Email) containing the e-ticket details.
-5. **Auto-Cancellation**: A background job (`CancelExpiredBookingsJob`) runs periodically to cancel any `Pending` bookings that are not paid within 15 minutes, releasing the reserved seats back to the inventory.
-6. **Refunds**: If a booking is cancelled, the `BookingRefundProcessor` background job handles processing refunds.
+3. **Payment**: The user initiates checkout via `CreateCheckoutSessionCommand` (`POST /api/payments/checkout`). Supported gateways include Stripe, PayPal, VNPay, and MoMo. Payment gateways invoke asynchronous webhook callbacks (`POST /api/payments/webhooks/{provider}`), which update the payment transaction and transition the booking status to `Confirmed`, publishing a `BookingConfirmedEvent`.
+4. **Ticket Issuance**: The `BookingConfirmedEventHandler` consumes the event, updates the ticket status to `Issued`, and triggers an email notification containing the e-ticket details.
+5. **Auto-Cancellation**: A background job (`CancelExpiredBookingsJob`) runs periodically to cancel any `Pending` bookings not completed within 15 minutes, releasing reserved seats back to inventory.
+6. **Refunds & Cancellation**: Customers and administrators can cancel bookings (`DELETE /api/bookings/{id}`), transitioning tickets to `Cancelled` and restoring seat availability.
 
 ---
 
@@ -20,10 +20,10 @@ The **Bookings Module** manages the transactional lifecycle of flight reservatio
 ### Booking
 Represents the overall reservation transaction.
 - `Id` (Guid): Unique identifier.
-- `UserId` (Guid): The user who made the booking.
+- `UserId` (Guid?): The user who made the booking (nullable for guest bookings).
 - `PnrCode` (string): Unique 6-character Passenger Name Record code.
 - `TotalPrice` (decimal): Total cost of the booking.
-- `Currency` (string): Currency code (default: `USD`).
+- `Currency` (string): Currency code (default: `VND`).
 - `Status` (BookingStatus): `0` = Pending, `1` = Paid, `2` = Confirmed, `3` = Cancelled, `4` = Refunded.
 - `ContactEmail` (string): Contact email address.
 - `ContactPhone` (string): Contact phone number.
@@ -38,11 +38,10 @@ Represents a passenger associated with a booking.
 - `BookingId` (Guid): FK to the associated `Booking`.
 - `FirstName` (string): Passenger's first name.
 - `LastName` (string): Passenger's last name.
+- `IdentityCard` (string): National ID or passport number.
 - `Gender` (int): `0` = Male, `1` = Female, `2` = Other.
-- `DateOfBirth` (Date): Date of birth.
-- `Nationality` (string): Nationality.
-- `PassportNumber` (string): Passport number.
-- `PassportExpiryDate` (Date): Passport expiration date.
+- `DateOfBirth` (Date?): Date of birth.
+- `Nationality` (string?): Nationality.
 
 ### Ticket
 Represents an individual flight ticket issued to a passenger.
@@ -50,7 +49,7 @@ Represents an individual flight ticket issued to a passenger.
 - `BookingId` (Guid): FK to the associated `Booking`.
 - `PassengerId` (Guid): FK to the associated `Passenger`.
 - `FlightId` (Guid): FK to the flight in the Flights module.
-- `SeatId` (Guid): FK to the flight seat in the Flights module.
+- `SeatNumber` (string): Assigned seat number.
 - `TicketNumber` (string): Unique ticket number.
 - `Gate` (string?): Boarding gate.
 - `BoardingTime` (DateTime?): Scheduled boarding time.
@@ -62,10 +61,10 @@ Represents the payment transaction details.
 - `BookingId` (Guid): FK to the associated `Booking`.
 - `TransactionId` (string): Unique transaction ID from the payment provider.
 - `Amount` (decimal): Paid amount.
-- `PaymentMethod` (string): Payment method (e.g., `Stripe`, `CreditCard`).
-- `ProviderStatus` (string?): Status returned by the payment provider.
+- `PaymentMethod` (string): Payment method/provider (e.g., `Stripe`, `PayPal`, `VNPay`, `MoMo`).
+- `ProviderStatus` (string?): Status returned by payment provider.
 - `IsSuccessful` (bool): Whether the payment succeeded.
-- `RawResponse` (string?): Raw JSON response from the payment gateway.
+- `RawResponse` (string?): Raw response or webhook payload from gateway.
 - `CreatedAt` (DateTime): UTC timestamp of payment.
 
 ---
@@ -73,46 +72,72 @@ Represents the payment transaction details.
 ## API Reference
 
 ### Authentication Roles
-- **PartnerOrStaff**: Requires authentication as an Airline Admin, Airline Staff, or System Admin.
-- **PartnerOnly**: Requires authentication as an Airline Admin.
+- **PartnerOrStaff**: Requires authentication as an Airline Partner, Airline Staff, or System Admin.
+- **StaffOnly**: Requires authentication as Airline Staff.
+- **PartnerOnly**: Requires authentication as an Airline Partner.
 - **AdminOnly**: Requires authentication as a System Admin.
-- **User**: Requires authentication as a Customer.
+- **Authenticated**: Requires a valid JWT token (Customer or privileged role).
 
 ### Endpoints
 
 #### Public / Customer Endpoints
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **POST** | `/api/bookings` | None | Create a new booking (reserves seats and saves details). | `CreateBookingPayload { flightId: string, contactEmail: string, contactPhone?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }> }` | `Booking { id: string, userId: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, SpecialRequests?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }>, tickets: Array<{ id: string, ticketNumber: string, seatNumber: string, status: number }> }` |
-| **GET** | `/api/bookings/{id}` | None | Get booking details by ID. | None | `Booking { id: string, userId: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, SpecialRequests?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }>, tickets: Array<{ id: string, ticketNumber: string, seatNumber: string, status: number }> }` |
-| **GET** | `/api/bookings/search?pnr={pnr}` | None | Search for a booking using PNR code. | None (Query param `pnrCode: string`) | `Booking { id: string, userId: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, SpecialRequests?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }>, tickets: Array<{ id: string, ticketNumber: string, seatNumber: string, status: number }> }` |
-| **POST** | `/api/payments/checkout` | None | Initiate multi-gateway checkout session. | `CheckoutRequest { bookingId: string, provider: number, currency: number, returnUrl: string, cancelUrl: string }` | `CreatePaymentResult { providerTransactionId: string, provider: number, paymentUrl?: string, clientSecret?: string, orderId?: string }` |
-| **GET** | `/api/payments/{bookingId}/status` | None | Query payment transaction status for booking. | None | `PaymentStatusDto { bookingId: string, paymentId: string, status: number, provider: number, amount: number, currency: number, updatedAt?: string }` |
-| **POST** | `/api/payments/webhooks/{provider}` | None | Provider webhook callbacks (Stripe, PayPal, VNPay, MoMo). | Raw webhook payload & headers | Status response / 200 OK |
-| **GET** | `/api/tickets/{id}` | None | Retrieve e-ticket details. | None | `Ticket { id: string, bookingId: string, passengerId: string, flightId: string, seatId: string, ticketNumber: string, gate?: string, boardingTime?: string, status: number }` |
-| **GET** | `/api/bookings/user/{id}` | User | Retrieve booking history for a user (owner or privileged). | None (Query params `pageNumber: number, pageSize: number`) | `PagedResult<BookingDto> { items: BookingDto[], totalCount: number, pageNumber: number, pageSize: number }` |
-| **GET** | `/api/bookings/user/{id}/stats` | User | Retrieve booking statistics for a user (owner or privileged). | None | `UserBookingStatsDto { totalBookings: number, totalSpent: number, lastMonthSpent: number, lastYearSpent: number }` |
+| **POST** | `/api/bookings` | None | Create a new booking (reserves seats and saves passenger details). | `CreateBookingRequest { flightId: Guid, contactEmail: string, contactPhone: string, passengers: PassengerDto[] }` | `BookingResultDto` |
+| **GET** | `/api/bookings/{id}` | None | Get booking details by ID. | Route param `id: Guid` | `BookingDetailDto` |
+| **PUT** | `/api/bookings/{id}` | None | Update booking passenger and contact information. | Route param `id: Guid`, `UpdateBookingRequest { passengers?: PassengerDto[], contactEmail?: string, contactPhone?: string }` | `{ message: string }` |
+| **DELETE** | `/api/bookings/{id}` | None | Cancel booking and release reserved seats. | Route param `id: Guid` | `204 NoContent` |
+| **GET** | `/api/bookings/search` | None | Search for a booking using PNR code. | Query param `pnrCode: string` | `BookingDetailDto` |
+| **GET** | `/api/tickets/{id}` | None | Retrieve e-ticket details. | Route param `id: Guid` | `TicketDto` |
+| **POST** | `/api/payments/checkout` | None | Initiate multi-gateway checkout session. | `CheckoutRequest { bookingId: Guid, provider: PaymentProvider, currency: Currency, returnUrl: string, cancelUrl: string }` | `CreatePaymentResult { providerTransactionId: string, provider: PaymentProvider, paymentUrl?: string, clientSecret?: string, orderId?: string }` |
+| **GET** | `/api/payments/{bookingId}/status` | None | Query payment transaction status for a booking. | Route param `bookingId: Guid` | `PaymentStatusDto` |
+| **POST** | `/api/payments/webhooks/stripe` | None | Stripe asynchronous webhook callback. | Raw request body & `Stripe-Signature` header | `{ received: true }` |
+| **POST** | `/api/payments/webhooks/paypal` | None | PayPal asynchronous webhook callback. | Raw request body & `PAYPAL-*` headers | `{ received: true }` |
+| **POST** | `/api/payments/webhooks/vnpay` | None | VNPay IPN webhook callback. | Query string / URL-encoded parameters | `{ RspCode: "00", Message: "Confirm Success" }` |
+| **POST** | `/api/payments/webhooks/momo` | None | MoMo IPN webhook callback. | Raw request body | `204 NoContent` |
+
+#### User Authenticated Endpoints
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/bookings/user/{id}` | Authenticated | Retrieve booking history for a user (owner or privileged staff/admin). | Route param `id: Guid`, Query params `pageNumber?: number, pageSize?: number` | `PagedResult<BookingDto>` |
+| **GET** | `/api/bookings/user/{id}/stats` | Authenticated | Retrieve booking statistics for a user (owner or privileged staff/admin). | Route param `id: Guid` | `UserBookingStatsDto` |
 
 #### Staff Endpoints
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **POST** | `/api/staff/bookings` | PartnerOrStaff | Create a booking on behalf of a customer. | `StaffCreateBookingRequest { flightId: string, contactName: string, contactEmail: string, contactPhone?: string, passengers: Array<{ firstName: string, lastName: string, identityCard: string, seatNumber: string }> }` | `StaffBookingResult { bookingId: string, pnrCode: string, totalPrice: number, seatNumbers: string[] }` |
-| **GET** | `/api/staff/sales` | PartnerOrStaff | List ticket sales for the staff's airline. | None (Query params `pageIndex: number, pageSize: number, search?: string, status?: string`) | `PagedResult<StaffSale> { items: StaffSale[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` where `StaffSale` is `{ id: string, bookingId: string, passengerName: string, flightNumber: string, route: string, departureAt?: string, seatClass: string, amount: number, status: string, bookedAt: string }` |
+| **GET** | `/api/bookings` | PartnerOrStaff | List all bookings across the system with filtering. | Query params `pageNumber?: number, pageSize?: number, search?: string, status?: string, date?: DateTime` | `{ items: BookingDto[], totalCount: number }` |
+| **POST** | `/api/staff/bookings` | StaffOnly | Create a booking on behalf of a call-in customer. | `StaffCreateBookingRequest { flightId: Guid, contactName: string, contactEmail: string, contactPhone: string, passengers: StaffBookingPassenger[] }` | `StaffBookingResultDto` |
+| **GET** | `/api/staff/sales` | StaffOnly | List ticket sales for the staff portal sales board. | Query params `pageIndex?: number, pageSize?: number, search?: string, status?: string` | `StaffSalesResultDto` |
 
 #### Partner Endpoints
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **GET** | `/api/partner/bookings` | PartnerOnly | List bookings for the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<SystemBooking> { items: SystemBooking[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` where `SystemBooking` is `{ id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
-| **PUT** | `/api/partner/bookings/{id}` | PartnerOnly | Update booking status. | `BookingAdminPayload { flightId: string, passengerName: string, seatNumber: string, status: string }` | `SystemBooking { id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
-| **GET** | `/api/partner/dashboard/sales-summary` | PartnerOnly | Get sales summary statistics. | None (Query params `fromDate: string, toDate: string`) | `unknown (Sales summary data)` |
-| **GET** | `/api/partner/dashboard/occupancy-rates` | PartnerOnly | Get flight occupancy rates. | None (Query params `fromDate: string, toDate: string`) | `unknown (Occupancy rates data)` |
-| **GET** | `/api/partner/dashboard/revenue-trends` | PartnerOnly | Get revenue trends over time. | None (Query params `fromDate: string, toDate: string`) | `unknown (Revenue trends data)` |
+| **GET** | `/api/partner/bookings` | PartnerOnly | List partner airline bookings. | Query params `pageIndex?: number, pageSize?: number, search?: string, status?: string, date?: DateTime` | `{ items: BookingDto[], totalCount: number }` |
+| **PUT** | `/api/partner/bookings/{id}` | PartnerOnly | Update booking status. | Route param `id: Guid`, `PartnerBookingUpdateRequest { status: string }` | `200 OK` |
+| **GET** | `/api/partner/dashboard/sales-summary` | PartnerOnly | Get partner sales summary metrics. | Query params `fromDate?: DateTime, toDate?: DateTime` | `SalesSummaryDto` |
+| **GET** | `/api/partner/dashboard/occupancy-rates` | PartnerOnly | Get partner flight occupancy rates. | Query params `fromDate?: DateTime, toDate?: DateTime` | `OccupancyRatesDto` |
+| **GET** | `/api/partner/dashboard/revenue-trends` | PartnerOnly | Get partner revenue trends over time. | Query params `fromDate?: DateTime, toDate?: DateTime` | `RevenueTrendsDto` |
 
 #### Admin Endpoints
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **GET** | `/api/admin/bookings` | AdminOnly | List all bookings in the system. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<SystemBooking> { items: SystemBooking[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **GET** | `/api/admin/bookings/{id}` | AdminOnly | Get details of any booking. | None | `SystemBooking { id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
-| **PUT** | `/api/admin/bookings/{id}` | AdminOnly | Update booking details. | `BookingAdminPayload { flightId: string, passengerName: string, seatNumber: string, status: string }` | `SystemBooking { id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
-| **PUT** | `/api/admin/bookings/{id}/status` | AdminOnly | Update booking status. | `{ status: string }` | `SystemBooking { id: string, pnrCode: string, totalPrice: number, currency: string, status: number, contactEmail: string, contactPhone: string, createdAt: string, passengers: unknown[], tickets: unknown[] }` |
-| **DELETE** | `/api/admin/bookings/{id}` | AdminOnly | Cancel a booking. | None | `void` |
+| **GET** | `/api/admin/bookings` | AdminOnly | List all bookings across the system. | Query params `pageIndex?: number, pageSize?: number, search?: string, status?: string, date?: DateTime` | `{ items: BookingDto[], totalCount: number }` |
+| **GET** | `/api/admin/bookings/{id}` | AdminOnly | Get details of any booking. | Route param `id: Guid` | `BookingDetailDto` |
+| **PUT** | `/api/admin/bookings/{id}` | AdminOnly | Update booking passenger and contact details. | Route param `id: Guid`, `UpdateBookingRequest` | `200 OK` |
+| **PUT** | `/api/admin/bookings/{id}/status` | AdminOnly | Update booking status directly. | Route param `id: Guid`, `UpdateBookingStatusRequest { status: string }` | `200 OK` |
+| **DELETE** | `/api/admin/bookings/{id}` | AdminOnly | Cancel a booking. | Route param `id: Guid` | `204 NoContent` |
+
+---
+
+## Real-Time Seat Synchronization (SignalR)
+
+### Hub Endpoint
+- **URL**: `/hubs/seats`
+- **Authentication**: Anonymous / Optional
+
+### Client → Server Methods
+- `JoinFlight(Guid flightId)`: Join real-time updates for a specific flight's seat map.
+- `LeaveFlight(Guid flightId)`: Leave the flight seat group.
+
+### Server → Client Events
+- `SeatUpdated(Guid flightId, string seatNumber, bool isAvailable)`: Emitted when seat availability changes due to holds or cancellations.
