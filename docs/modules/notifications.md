@@ -1,81 +1,83 @@
 # Notifications Module
 
 ## Overview
-The **Notifications Module** manages real-time in-app communications for Staff, Partner, and Admin roles. Notifications are triggered by system events (e.g., flight creation, status changes, profile updates, system errors) and delivered instantly via SignalR, with persistent storage for offline users.
+The **Notifications Module** manages real-time and stored in-app communications for Customers, Staff, Partners, and System Administrators. Notifications are triggered by domain events (e.g., flight creation, schedule delays, booking confirmation, payment status, fare alerts) and delivered instantly via SignalR WebSockets with persistent storage in PostgreSQL for offline delivery.
 
 ---
 
 ## How It Works (For End Users & Clients)
-1. **Triggering a Notification**: When a domain event occurs (e.g., `FlightCreatedEvent`), the system creates a `Notification` record in the database.
-2. **Real-time Delivery**: The system immediately pushes the notification to the target user via `AirlineTicket.SignalR` (`NotificationHub`).
-3. **State Management**: The frontend client (React/Zustand) receives the SignalR event, updates the unread count, and displays a toast/bell indicator.
-4. **User Interaction**: When a user clicks a notification, it is marked as read via API, and the user is redirected to the relevant `ActionUrl`.
+1. **Triggering an Event**: When significant business events occur (e.g., `BookingConfirmedEvent`, `FlightStatusChangedEvent`, `PriceDroppedEvent`), event handlers invoke `CreateNotificationCommand`.
+2. **Persistence & Localization**: Notifications are stored in the database with reference metadata (`ReferenceId`, `ReferenceType`, `ActionUrl`). System messages utilize localized `NotificationTemplate` records based on the user's preferred language.
+3. **Real-Time Push**: `NotificationPusher` / `RedisNotificationPusher` broadcasts the notification payload across `AirlineTicket.SignalR` (`NotificationHub`) directly to the recipient's personal user group (`userId`) or airline staff group (`airline-staff-{airlineId}`).
+4. **User Interaction**: Users view unread badges (`GET /api/notifications/unread-count`), fetch paginated notifications (`GET /api/notifications`), mark notifications as read individually or in bulk (`PUT /api/notifications/{id}/read`, `PUT /api/notifications/read-all`), or soft-delete them (`DELETE /api/notifications/{id}`).
 
 ---
 
 ## Domain Entities & Data Model
 
 ### Notification
-Represents an individual in-app alert.
+Represents an individual in-app notification.
 - `Id` (Guid): Unique identifier.
-- `UserId` (Guid?): Recipient User ID.
-- `Type` (string): Notification category (e.g., `FlightCreated`, `FlightStatusChanged`, `SystemError`).
+- `UserId` (Guid?): Recipient User ID (null for broadcast alerts).
+- `Type` (string): Notification category (e.g., `FlightCreated`, `FlightStatusChanged`, `BookingConfirmed`, `PaymentSuccess`, `FareAlertPriceDrop`).
 - `Severity` (int): `0` = Info, `1` = Critical.
-- `Title` (string): Short title.
-- `Content` (string?): Detailed message.
-- `ActionUrl` (string?): Deep link to redirect on click (e.g., `/staff/flights/{id}/seats`).
-- `ReferenceId` (Guid?): Source entity ID (FlightId, AirlineId, etc.).
-- `ReferenceType` (string?): Source entity type (`Flight`, `Airline`, `Booking`).
+- `Title` (string): Notification title.
+- `Content` (string?): Detailed notification body.
+- `ActionUrl` (string?): Deep link URL for client navigation (e.g., `/staff/flights/{id}/seats`, `/booking/{pnr}`).
+- `ReferenceId` (Guid?): Source entity ID (FlightId, BookingId, AlertId, etc.).
+- `ReferenceType` (string?): Source entity type (`Flight`, `Booking`, `Payment`, `FareAlert`).
 - `IsRead` (bool): Read status.
 - `IsDeleted` (bool): Soft delete flag.
-- `CreatedAt` (DateTime): UTC timestamp.
+- `CreatedAt` (DateTime): UTC timestamp of creation.
 
----
-
-## Backend Architecture
-
-### 1. Domain Layer (`Modules/v1/Notifications`)
-- `Notification` entity.
-- `NotificationSeverity` enum.
-- `NotificationTemplate` entity.
-- `INotificationRepository`.
-- `ITemplateRepository`.
-
-### 2. Infrastructure Layer (`Modules/v1/Notifications`)
-- `NotificationRepository` (EF Core).
-- Entity Framework mapping for `Notification`.
-
-### 3. Application Layer (`Modules/v1/Notifications`)
-- **Commands**: `CreateNotificationCommand`, `MarkNotificationAsReadCommand`, `MarkAllNotificationsAsReadCommand`, `DeleteNotificationCommand`, `UpdateTemplateCommand`.
-- **Queries**: `GetUnreadNotificationCountQuery`, `GetNotificationsQuery` (Paginated), `GetTemplatesQuery`, `GetTemplateByIdQuery`.
-- **Event Handlers**: Listen to domain events to trigger `CreateNotificationCommand`.
-
-### 4. Real-time Layer (`AirlineTicket.SignalR`)
-- `NotificationHub`: Pushes notifications to specific users (`Clients.User(userId).SendAsync("ReceiveNotification", notification)`).
-
-### 5. API Layer (`AirlineTicket.Api`)
-- Minimal API Endpoints in `NotificationEndpoints.cs` for queries and commands.
+### NotificationTemplate
+Represents a localized template for automated notification generation.
+- `Id` (Guid): Unique identifier.
+- `Code` (string): Template identifier code (e.g., `BOOKING_CONFIRMED`, `FLIGHT_DELAYED`).
+- `Subject` (string): Localized title or subject template.
+- `BodyTemplate` (string): Localized message template with placeholder variables.
+- `Language` (string): ISO language code (`vi`, `en`, `zh`, `ja`, `ko`, `fr`).
+- `IsDeleted` (bool): Soft delete flag.
 
 ---
 
 ## API Reference
 
+### Authentication Roles
+- **AdminOnly**: Requires authentication as a System Admin.
+- **Authenticated**: Requires any valid JWT Bearer token.
+- **Anonymous**: Public status probe.
+
 ### Endpoints
 
+#### User Notifications & Status (`/api/notifications`)
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **GET** | `/api/notifications` | Authenticated | Retrieves paginated notifications for the current user. | None (Query params `pageNumber: number, pageSize: number, locale?: string`) | `Notification[] { id: string, userId?: string, type: string, severity: number, title: string, content?: string, actionUrl?: string, referenceId?: string, referenceType?: string, isRead: boolean, isDeleted: boolean, createdAt: string }` |
-| **GET** | `/api/notifications/unread-count` | Authenticated | Retrieves the unread notification count. | None | `number` |
-| **PUT** | `/api/notifications/{id}/read` | Authenticated | Marks a specific notification as read. | None | `void` |
-| **PUT** | `/api/notifications/read-all` | Authenticated | Marks all notifications as read for the current user. | None | `void` |
-| **DELETE** | `/api/notifications/{id}` | Authenticated | Soft deletes a notification. | None | `void` |
-| **GET** | `/api/admin/notifications/templates` | AdminOnly | Retrieves all notification templates. | None | `unknown[]` |
-| **GET** | `/api/admin/notifications/templates/{id}` | AdminOnly | Retrieves a notification template by ID. | None | `unknown` |
-| **PUT** | `/api/admin/notifications/templates/{id}` | AdminOnly | Updates an existing notification template. | `unknown` | `unknown` |
+| **GET** | `/api/notifications/status` | None | Get notification module health and configuration status. | None | `NotificationStatusDto` |
+| **GET** | `/api/notifications` | Authenticated | Get paginated notifications for current authenticated user. | Query params `pageNumber?: int, pageSize?: int, locale?: string` | `PagedResult<NotificationDto>` |
+| **GET** | `/api/notifications/unread-count` | Authenticated | Get total unread notifications count. | None | `{ count: int }` |
+| **PUT** | `/api/notifications/{id}/read` | Authenticated | Mark a specific notification as read. | Route param `id: Guid` | `204 NoContent` |
+| **PUT** | `/api/notifications/read-all` | Authenticated | Mark all notifications as read for the current user. | None | `204 NoContent` |
+| **DELETE** | `/api/notifications/{id}` | Authenticated | Soft delete a notification. | Route param `id: Guid` | `204 NoContent` |
+
+#### Admin Notification Templates (`/api/admin/notifications/templates`)
+| Method | Path | Auth | Description | Input Type | Output Type |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/admin/notifications/templates` | AdminOnly | Get all notification templates. | None | `List<NotificationTemplateDto>` |
+| **GET** | `/api/admin/notifications/templates/{id}` | AdminOnly | Get a notification template by ID. | Route param `id: Guid` | `NotificationTemplateDto` |
+| **PUT** | `/api/admin/notifications/templates/{id}` | AdminOnly | Update an existing notification template. | Route param `id: Guid`, `UpdateTemplateRequest { subject: string, bodyTemplate: string, language: string }` | `204 NoContent` |
 
 ---
 
-## Integration Points (Per Role)
-- **Staff**: Receives notification when Partner creates Flight. `ActionUrl` -> `/staff/flights/{flightId}/seats`.
-- **Partner**: Receives notification when Flight status changes or Admin updates their profile.
-- **Admin**: Receives notification when system error occurs.
+## Real-Time Notification Delivery (SignalR)
+
+### Hub Endpoint
+- **URL**: `/hubs/notifications` (also available at `/notificationHub`)
+- **Authentication**: Required (JWT Bearer via query string `?access_token=...`)
+
+### Group Subscriptions (Automatic on Connection)
+- `userId`: Every connected user automatically joins a group named after their `UserId`.
+- `airline-staff-{airlineId}`: Airline staff and partners automatically join an airline-scoped notification group.
+
+### Server → Client Events
+- `ReceiveNotification(NotificationDto notification)`: Pushed immediately when an in-app alert is generated for the user or their airline.

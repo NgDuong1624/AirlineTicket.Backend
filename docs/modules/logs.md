@@ -1,56 +1,55 @@
 # Logs Module
 
 ## Overview
-The **Logs Module** provides a centralized read-only view of system and partner activity logs. It captures diagnostic and audit information (info, warnings, errors, and critical events) and allows system administrators and airline partners to query these logs with filtering and pagination.
+The **Logs Module** provides centralized logging, audit trail tracking, and diagnostic querying across the system. It captures informational, warning, error, and critical security and operational events, allowing System Administrators and Airline Partners to inspect system events through paginated, filtered API endpoints.
 
 ---
 
 ## How It Works (For End Users & Clients)
-1. **Log Generation**: Various modules throughout the system write log entries to the `SystemLogs` table, capturing levels (Info, Warning, Error, Critical), messages, source modules, exceptions, and contextual data (User ID, Airline ID, IP address).
-2. **Log Retrieval**: 
-   - System Administrators can query all logs with optional filters (`Level`, `Search` text, `AirlineId`, `IsSystemLog`) and pagination.
-   - Airline Partners can query logs scoped to their airline with the same filtering and pagination.
+1. **Event Capture**: Modules across the backend write structured events to the `SystemLogs` table (via MediatR behaviors, Serilog sinks, and middleware), capturing severity levels, source modules, exceptions, correlation IDs, and actor identifiers.
+2. **Admin Querying**: System Administrators can query logs across the entire platform, filtering by log level, date, search keyword, or specific airline ID.
+3. **Partner Scoping**: Airline Partners can query logs strictly partitioned by their `AirlineId` claim.
 
 ---
 
 ## Domain Entities & Data Model
 
 ### SystemLog
-Represents a single log entry in the system.
+Represents an individual structured log entry.
 - `Id` (Guid): Unique identifier.
-- `Type` (LogType): Type of log entry (enum from BuildingBlocks).
-- `Metadata` (string?): JSON data (e.g., old/new values for audit purposes).
-- `Level` (string): Severity level (e.g., `Info`, `Warning`, `Error`, `Critical`).
-- `Message` (string): The log message.
-- `Source` (string?): The component or module that generated the log.
-- `Exception` (string?): Full exception details if an error occurred.
-- `UserId` (Guid?): FK to the user associated with the log entry.
-- `AirlineId` (Guid?): FK to the airline associated with the log entry.
-- `IpAddress` (string?): IP address of the user at the time the log was generated.
-- `IsSystemLog` (bool): Whether this is a system-level log (not associated with any specific airline).
-- `CreatedAt` (DateTime): UTC timestamp of when the log was created.
+- `Type` (LogType): Enum identifying log type (e.g., `Audit`, `System`, `Error`, `Security`).
+- `Metadata` (string?): Serialized JSON payload containing state before/after changes for audit tracking.
+- `Level` (string): Severity level (`"Info"`, `"Warning"`, `"Error"`, `"Critical"`).
+- `Message` (string): Human-readable log message.
+- `Source` (string?): Component, endpoint, or class name generating the log entry.
+- `Exception` (string?): Stack trace and exception details if an error occurred.
+- `UserId` (Guid?): FK to user performing the action.
+- `AirlineId` (Guid?): FK to associated airline.
+- `IpAddress` (string?): Client IP address.
+- `IsSystemLog` (bool): Whether this is a global system event vs an airline tenant event.
+- `CreatedAt` (DateTime): UTC timestamp of log creation.
 
 ---
 
 ## API Reference
 
 ### Authentication Roles
-- **AdminOnly**: Requires authentication as a System Admin.
-- **PartnerOnly**: Requires authentication as an Airline Admin.
+- **AdminOnly**: System Administrator role (`Role = 0`).
+- **PartnerOnly**: Airline Partner role (`Role = 1`).
 
 ### Endpoints
 
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **GET** | `/api/admin/logs` | AdminOnly | Retrieves all system logs. | None (Query params `level?: string, search?: string, airlineId?: string, pageIndex: number, pageSize: number`) | `PagedResult<SystemLog> { items: SystemLog[] { id: string, level: string, message: string, source?: string, exception?: string, userId?: string, airlineId?: string, airlineName?: string, ipAddress?: string, createdAt: string }, totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **GET** | `/api/partner/logs` | PartnerOnly | Retrieves logs scoped to the authenticated partner's airline. | None (Query params `level?: string, search?: string, pageIndex: number, pageSize: number`) | `PagedResult<SystemLog>` |
+| **GET** | `/api/admin/logs` | AdminOnly | Retrieves system-wide logs with multi-field filtering. | Query params `level?: string, search?: string, airlineId?: string, date?: DateTime, pageIndex?: int, pageNumber?: int, pageSize?: int` | `PagedResult<SystemLogDto>` |
+| **GET** | `/api/partner/logs` | PartnerOnly | Retrieves logs scoped to the authenticated partner's airline. | Query params `level?: string, search?: string, date?: DateTime, pageIndex?: int, pageNumber?: int, pageSize?: int` | `PagedResult<SystemLogDto>` |
 
 ### Query Parameters
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `level` | string? | Filter by log level (e.g., `Error`, `Warning`, `Info`, `Critical`). |
-| `search` | string? | Full-text search across message, source, exception, and IP address fields. |
-| `airlineId` | string? | (Admin only) Filter by a specific airline's ID. Use `"system"` to filter for system-level logs. |
-| `isSystemLog` | bool? | (Admin only) Filter to show only system logs or non-system logs. |
-| `pageIndex` | int | Page number for pagination (default: 1, minimum: 1). |
-| `pageSize` | int | Number of items per page (default: 10, minimum: 1, maximum: 100). |
+| Parameter | Type | Applicable Role | Description |
+|-----------|------|-----------------|-------------|
+| `level` | string? | Admin, Partner | Filter by log severity (`"Info"`, `"Warning"`, `"Error"`, `"Critical"`). |
+| `search` | string? | Admin, Partner | Text search matching message, source, exception, or IP address. |
+| `airlineId` | string? | Admin only | Filter by specific airline ID or pass `"system"` for platform logs. |
+| `date` | DateTime? | Admin, Partner | Filter by date of event. |
+| `pageIndex` / `pageNumber` | int | Admin, Partner | Page number for pagination (default: 1). |
+| `pageSize` | int | Admin, Partner | Number of items per page (default: 10, range: 1–100). |

@@ -1,16 +1,16 @@
 # Users Module
 
 ## Overview
-The **Users Module** manages authentication, authorization, and user administration. It handles user registration, login, profile management, role-based access control (RBAC), and Google OAuth integration.
+The **Users Module** manages authentication, authorization, user profiles, and administrative staff management. It handles user registration, local credential login, Google OAuth integration, token refreshing, role-based access control (RBAC), and airline staff scoping.
 
 ---
 
 ## How It Works (For End Users & Clients)
-1. **Registration & Login**: Users can register with an email and password. Upon login, the system validates credentials and returns an `accessToken` (JWT) and a `refreshToken`.
-2. **Google OAuth**: Users can log in using their Google accounts. The system validates the Google ID token, creates a user account if it doesn't exist, and returns access/refresh tokens.
-3. **Token Refresh**: When the access token expires, clients can request a new one using the refresh token.
-4. **Authorization**: The system uses JWT claims to enforce role-based and permission-based access control. Permissions are embedded directly in the JWT token.
-5. **User Management**: Administrators can manage users, update their roles, and toggle their active status. Airline partners can manage staff members scoped to their airline.
+1. **Registration & Login**: Users register with an email and password. Upon login (`POST /api/auth/login`), the system validates credentials using BCrypt password hashing and returns an `accessToken` (JWT) and a `refreshToken`.
+2. **Google OAuth**: Users can log in using their Google account (`POST /api/auth/google`). The system validates the Google ID token, provisions an account if not already existing, and returns JWT tokens.
+3. **Token Refresh & Revocation**: When the access token expires, clients call `POST /api/auth/refresh` with the refresh token. Calling `POST /api/auth/logout` invalidates the active refresh token session.
+4. **Authorization & RBAC**: The system uses JWT claims (`role`, `AirlineId`, `sub`) to enforce role-based access control policies (`AdminOnly`, `PartnerOnly`, `PartnerOrStaff`, `StaffOnly`).
+5. **Staff Management**: Airline partners manage staff members scoped strictly to their `AirlineId`. System administrators have global privileges to manage all users and query system permissions.
 
 ---
 
@@ -20,81 +20,78 @@ The **Users Module** manages authentication, authorization, and user administrat
 Represents a user account in the system.
 - `Id` (Guid): Unique identifier.
 - `Email` (string): Unique email address.
-- `EmailConfirmed` (bool): Whether the email has been verified.
-- `PasswordHash` (string): Hashed password (using BCrypt).
+- `EmailConfirmed` (bool): Whether email has been verified.
+- `PasswordHash` (string): BCrypt hashed password.
 - `FullName` (string): User's full name.
 - `Phone` (string?): Phone number.
 - `Role` (UserRole): User's role (`0` = Admin, `1` = Partner, `2` = Staff, `3` = Customer).
-- `AirlineId` (Guid?): FK to the airline, if the user is a partner or staff member.
-- `AvatarUrl` (string?): URL to the user's avatar.
-- `LanguagePreference` (string): Preferred language (default: `vi`).
-- `GoogleId` (string?): Google account ID for OAuth.
+- `AirlineId` (Guid?): FK to the airline if the user is an airline partner or staff member.
+- `AvatarUrl` (string?): URL to the user's avatar image.
+- `LanguagePreference` (string): Preferred language code (default: `vi`).
+- `GoogleId` (string?): Google account ID for OAuth logins.
 - `AuthProvider` (string?): Authentication provider (e.g., `Local`, `Google`).
-- `LastLoginAt` (DateTime?): UTC timestamp of the last login.
+- `LastLoginAt` (DateTime?): UTC timestamp of last login.
 - `IsActive` (bool): Whether the account is active.
 - `IsDeleted` (bool): Soft delete flag.
-- `RefreshToken` (string?): Current refresh token.
+- `RefreshToken` (string?): Active refresh token.
 - `RefreshTokenExpiryTime` (DateTime?): Expiration time of the refresh token.
 - `CreatedAt` (DateTime): UTC timestamp of creation.
 - `UpdatedAt` (DateTime): UTC timestamp of last update.
 
 ### Role
-Represents a user role.
+Represents a system role.
 - `Id` (int): Unique identifier.
-- `Name` (string): Role name (e.g., `role.system_admin.name`).
+- `Name` (string): Role name (e.g., `Admin`, `Partner`, `Staff`, `Customer`).
 - `Description` (string?): Role description.
 
 ### Permission
-Represents a specific permission in the system.
+Represents an action permission in the system.
 - `Id` (int): Unique identifier.
 - `Code` (string): Unique permission code (e.g., `CREATE_FLIGHT`, `SELL_TICKET`).
-- `Name` (string): Permission name.
+- `Name` (string): Permission display name.
 - `Description` (string?): Permission description.
-
-### RolePermission
-Intermediate table mapping roles to permissions.
-- `RoleId` (int): FK to `Role`.
-- `PermissionId` (int): FK to `Permission`.
 
 ---
 
 ## API Reference
 
-### Authentication Roles
-- **AdminOnly**: Requires authentication as a System Admin.
-- **PartnerOnly**: Requires authentication as an Airline Admin.
-- **PartnerOrStaff**: Requires authentication as an Airline Admin, Airline Staff, or System Admin.
+### Authentication Roles & Policies
+- **AdminOnly**: System Administrator role (`Role = 0`).
+- **PartnerOnly**: Airline Partner role (`Role = 1`).
+- **PartnerOrStaff**: Airline Partner (`Role = 1`) or Airline Staff (`Role = 2`) or System Admin (`Role = 0`).
+- **StaffOnly**: Airline Staff role (`Role = 2`).
+- **Authenticated**: Any valid JWT token.
 
 ### Endpoints
 
-#### Authentication Endpoints (`/api/auth`)
+#### Authentication & Profile (`/api/auth`)
 | Method | Path | Auth | Description | Input Type | Output Type |
 |--------|------|------|-------------|------------|-------------|
-| **POST** | `/login` | None | Authenticate with email and password. Returns access and refresh tokens. | `{ email: string, password?: string }` | `{ user: UserResponse { id: string, email: string, fullName: string, roleId: number, phone?: string, avatarUrl?: string, languagePreference?: string, lastLoginAt?: string, role?: string, status?: string, isActive?: boolean, airlineId?: string, airlineName?: string, createdAt: string, updatedAt: string }, accessToken: string, refreshToken: string }` |
-| **POST** | `/google` | None | Authenticate with Google ID token. Returns access and refresh tokens. | `{ idToken: string }` | `{ user: UserResponse, accessToken: string, refreshToken: string }` |
-| **POST** | `/register` | None | Register a new customer account. | `Record<string, unknown>` | `{ user: UserResponse, accessToken: string, refreshToken: string }` |
-| **GET** | `/me` | Authenticated | Get the profile of the currently logged-in user. | None | `User { id: string, email: string, emailConfirmed: boolean, fullName: string, phone?: string, avatarUrl?: string, languagePreference?: string, lastLoginAt?: string, role?: string, roleId: number, status?: string, isActive?: boolean, airlineId?: string, airlineName?: string, createdAt: string, updatedAt: string }` |
-| **PUT** | `/language` | Authenticated | Update the preferred language for the authenticated user. | `{ language: string }` | `void` |
-| **POST** | `/refresh` | None | Refresh an expired access token using a valid refresh token. | `{ refreshToken: string }` | `{ accessToken: string, refreshToken?: string }` |
-| **POST** | `/logout` | Authenticated | Revoke the current session and invalidate the refresh token. | `{ refreshToken: string }` | `void` |
+| **POST** | `/api/auth/login` | None | Authenticate with email and password. | `LoginUserRequest { email: string, password: string }` | `{ accessToken: string, refreshToken: string, user: UserProfileDto }` |
+| **POST** | `/api/auth/google` | None | Authenticate with Google ID token. | `GoogleLoginRequest { idToken: string }` | `{ accessToken: string, refreshToken: string, user: UserProfileDto }` |
+| **POST** | `/api/auth/register` | None | Register a new customer account. | `RegisterUserRequest { email: string, password: string, fullName: string, phone: string, languagePreference?: string }` | `{ userId: Guid }` |
+| **GET** | `/api/auth/me` | Authenticated | Get current authenticated user's profile. | None | `UserProfileDto` |
+| **PUT** | `/api/auth/language` | Authenticated | Update user's preferred language code. | `UpdateLanguageRequest { language: string }` | `200 OK` |
+| **POST** | `/api/auth/refresh` | None | Refresh an expired access token using a refresh token. | `RefreshTokenRequest { refreshToken: string }` | `{ accessToken: string, refreshToken: string, user: UserProfileDto }` |
+| **POST** | `/api/auth/logout` | None | Revoke the active refresh token session. | `LogoutRequest { refreshToken: string }` | `200 OK` |
 
 #### Admin User Management (`/api/admin/users`)
 | Method | Path | Auth | Description | Input Type | Output Type |
-|--------|------|-------------|------------|-------------|
-| **GET** | `/` | AdminOnly | Get a paginated list of all users. | None (Query params `search?: string, airlineId?: string, roleId?: number, pageIndex: number, pageSize: number`) | `PagedResult<User> { items: User[], totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **POST** | `/` | AdminOnly | Create a new user account (any role). | `Partial<User>` | `User` |
-| **PUT** | `/{id}` | AdminOnly | Update user details. | `Partial<User>` | `User` |
-| **GET** | `/{id}` | AdminOnly | Get details of a specific user. | None | `User` |
-| **DELETE** | `/{id}` | AdminOnly | Soft-delete a user account. | None | `void` |
-| **PATCH** | `/{id}/status` | AdminOnly | Toggle user active status (`IsActive`). | `{ isActive: number }` | `void` |
-| **GET** | `/permissions` | AdminOnly | Get a paginated list of all permissions. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Permission> { items: Permission[] { id: string, code: string, name: string, description?: string, isActive?: boolean }, totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/admin/users` | AdminOnly | Get paginated list of all users. | Query params `search?: string, airlineId?: Guid, roleId?: int, pageNumber?: int, pageIndex?: int, pageSize?: int` | `PagedResult<UserDto>` |
+| **POST** | `/api/admin/users` | AdminOnly | Create a new user account. | `AdminUserRequest { email: string, fullName: string, phone?: string, roleId?: int, isActive?: bool, password?: string, airlineId?: Guid, languagePreference?: string }` | `{ id: Guid }` |
+| **GET** | `/api/admin/users/{id}` | AdminOnly | Get user details by ID. | Route param `id: Guid` | `UserDto` |
+| **PUT** | `/api/admin/users/{id}` | AdminOnly | Update user profile and role. | Route param `id: Guid`, `AdminUserRequest` | `200 OK` |
+| **DELETE** | `/api/admin/users/{id}` | AdminOnly | Soft delete a user account. | Route param `id: Guid` | `204 NoContent` |
+| **PATCH** | `/api/admin/users/{id}/status` | AdminOnly | Toggle user active status. | Route param `id: Guid`, `UpdateUserStatusRequest { isActive: int }` | `200 OK` |
+| **GET** | `/api/admin/users/permissions` | AdminOnly | Get paginated list of all permissions. | Query params `pageNumber?: int, pageIndex?: int, pageSize?: int` | `PagedResult<PermissionDto>` |
 
 #### Partner Staff Management (`/api/partner/staff`)
 | Method | Path | Auth | Description | Input Type | Output Type |
-|--------|------|-------------|------------|-------------|
-| **GET** | `/` | PartnerOnly | List staff members for the partner's airline. | None (Query params `pageIndex: number, pageSize: number`) | `PagedResult<Staff> { items: Staff[] { id: string, fullName: string, role?: string, roleId?: number, email: string, phone: string, isActive?: boolean, airlineId?: string, createdAt?: string }, totalCount: number, pageNumber: number, pageSize: number, totalPages: number, hasNextPage: boolean, hasPreviousPage: boolean }` |
-| **POST** | `/` | PartnerOnly | Create a new staff member for the partner's airline. | `Partial<Staff>` | `Staff` |
-| **PUT** | `/{id}` | PartnerOnly | Update staff member details. | `Partial<Staff>` | `Staff` |
-| **DELETE** | `/{id}` | PartnerOnly | Soft-delete a staff member. | None | `void` |
-| **PATCH** | `/{id}/status` | PartnerOnly | Toggle staff member active status. | `{ isActive: number }` | `void` |
-| **GET** | `/my-airline` | PartnerOrStaff | List all staff members belonging to the authenticated user's airline. | None | `{ items: Staff[] }` |
+|--------|------|------|-------------|------------|-------------|
+| **GET** | `/api/partner/staff` | PartnerOnly | List staff members belonging to partner's airline. | Query params `pageNumber?: int, pageIndex?: int, pageSize?: int` | `{ items: StaffDto[], totalCount: number }` |
+| **POST** | `/api/partner/staff` | PartnerOnly | Create a new staff member for partner's airline. | `PartnerStaffRequest { email: string, fullName: string, phone?: string, isActive?: bool, password?: string }` | `{ id: Guid }` |
+| **PUT** | `/api/partner/staff/{id}` | PartnerOnly | Update staff member details. | Route param `id: Guid`, `PartnerStaffRequest` | `200 OK` |
+| **DELETE** | `/api/partner/staff/{id}` | PartnerOnly | Delete a staff member from partner's airline. | Route param `id: Guid` | `204 NoContent` |
+| **PATCH** | `/api/partner/staff/{id}/status` | PartnerOnly | Toggle staff member active status. | Route param `id: Guid`, `UpdateUserStatusRequest { isActive: int }` | `200 OK` |
+| **GET** | `/api/partner/staff/my-airline` | PartnerOrStaff | List all members belonging to the current user's airline. | Query params `pageNumber?: int, pageIndex?: int, pageSize?: int` | `{ airlineId: Guid, items: StaffDto[], totalCount: number }` |
