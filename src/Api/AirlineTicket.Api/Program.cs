@@ -203,6 +203,7 @@ builder.Services.AddBuildingBlocksAuth();
 // Cross-module service implementations (reside in API host to avoid circular refs between modules)
 builder.Services.AddScoped<IFlightSeatReservation, AirlineTicket.Api.Services.FlightSeatReservation>();
 builder.Services.AddScoped<IStaffSalesReader, AirlineTicket.Api.Services.StaffSalesReader>();
+builder.Services.AddScoped<IGroupBookingRealtimeNotifier, GroupBookingRealtimeNotifier>();
 
 if (!string.IsNullOrEmpty(redisConn))
 {

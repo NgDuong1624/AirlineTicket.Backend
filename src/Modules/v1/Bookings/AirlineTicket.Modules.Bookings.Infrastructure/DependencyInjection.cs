@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<IRevenueRepository, RevenueRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IWebhookEventRepository, WebhookEventRepository>();
+        services.AddScoped<IGroupBookingRepository, GroupBookingRepository>();
 
         // Register HTTP clients and gateways
         services.AddHttpClient<StripePaymentGateway>();
@@ -50,6 +51,7 @@ public static class DependencyInjection
     {
         services.AddHostedService<CancelExpiredBookingsJob>();
         services.AddHostedService<BookingRefundProcessor>();
+        services.AddHostedService<GroupBookingExpirationWorker>();
         
         return services;
     }
