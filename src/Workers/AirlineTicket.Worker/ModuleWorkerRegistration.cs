@@ -69,6 +69,7 @@ public static class ModuleWorkerRegistration
         // Cross-module service implementations
         services.AddScoped<IFlightSeatReservation, FlightSeatReservation>();
         services.AddScoped<IStaffSalesReader, StaffSalesReader>();
+        services.AddScoped<IGroupBookingRealtimeNotifier, GroupBookingRealtimeNotifier>();
 
         // MediatR registration for services requiring ISender / IPublisher
         var applicationAssemblies = new Assembly[]
