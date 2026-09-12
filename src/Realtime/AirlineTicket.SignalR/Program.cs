@@ -157,6 +157,7 @@ app.MapHub<SupportChatHub>("/hubs/support");
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapHub<FareAlertHub>("/hubs/fare-alerts");
 app.MapHub<FlightTrackerHub>("/hubs/flight-tracker");
+app.MapHub<GroupBookingHub>("/hubs/group-booking");
 
 app.MapDefaultEndpoints();
 app.Run();
