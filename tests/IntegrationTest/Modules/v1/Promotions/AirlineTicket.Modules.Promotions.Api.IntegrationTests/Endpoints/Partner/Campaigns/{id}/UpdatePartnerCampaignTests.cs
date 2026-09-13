@@ -21,9 +21,11 @@ public class UpdatePartnerCampaignTests : BaseIntegrationTest
         // Arrange
         var airlineId = Guid.NewGuid();
         var request = new PartnerCampaignRequest(
-            Title: "Summer Mega Sale Updated",
+            TitleEn: "Summer Mega Sale Updated",
+            TitleVi: "Đại tiệc mùa hè đã cập nhật",
             BannerUrl: "https://banner.png",
-            Content: "Up to 60% discount",
+            ContentEn: "Up to 60% discount",
+            ContentVi: "Giảm giá tới 60%",
             StartDate: DateTime.UtcNow.AddDays(-1),
             EndDate: DateTime.UtcNow.AddDays(30),
             IsFeatured: true);
