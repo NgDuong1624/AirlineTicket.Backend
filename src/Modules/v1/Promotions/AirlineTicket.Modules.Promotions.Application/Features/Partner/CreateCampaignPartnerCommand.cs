@@ -9,9 +9,11 @@ using AirlineTicket.Modules.Promotions.Domain.Entities;
 namespace AirlineTicket.Modules.Promotions.Application.Features.Partner;
 
 public record CreateCampaignPartnerCommand(
-    string Title,
+    string TitleEn,
+    string TitleVi,
     string? BannerUrl,
-    string? Content,
+    string? ContentEn,
+    string? ContentVi,
     DateTime StartDate,
     DateTime EndDate,
     bool? IsFeatured,
@@ -19,22 +21,24 @@ public record CreateCampaignPartnerCommand(
 
 internal sealed class CreateCampaignPartnerCommandHandler : ICommandHandler<CreateCampaignPartnerCommand, Result<Guid>>
 {
-    private readonly IPromotionRepository _promotionRepository;
-    public CreateCampaignPartnerCommandHandler(IPromotionRepository promotionRepository) => _promotionRepository = promotionRepository;
+    private readonly IPromotionRepository promotionRepository;
+    public CreateCampaignPartnerCommandHandler(IPromotionRepository promotionRepository) => this.promotionRepository = promotionRepository;
 
     public async Task<Result<Guid>> Handle(CreateCampaignPartnerCommand request, CancellationToken cancellationToken)
     {
         var campaign = new Campaign
         {
-            Title = request.Title,
+            TitleEn = request.TitleEn,
+            TitleVi = request.TitleVi,
             BannerUrl = request.BannerUrl,
-            Content = request.Content,
+            ContentEn = request.ContentEn,
+            ContentVi = request.ContentVi,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             IsFeatured = request.IsFeatured ?? false,
             AirlineId = request.AirlineId
         };
-        var id = await _promotionRepository.CreateCampaignAsync(campaign, cancellationToken);
+        var id = await promotionRepository.CreateCampaignAsync(campaign, cancellationToken);
         return Result.Success(id);
     }
 }

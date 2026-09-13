@@ -20,9 +20,11 @@ public class AdminCreateCampaignTests : BaseIntegrationTest
     {
         // Arrange
         var request = new AdminCampaignRequest(
-            Title: "Autumn Holiday Special",
+            TitleEn: "Autumn Holiday Special",
+            TitleVi: "Kỳ nghỉ mùa thu đặc biệt",
             BannerUrl: "https://autumn.png",
-            Content: "Save up to 40%",
+            ContentEn: "Save up to 40%",
+            ContentVi: "Tiết kiệm tới 40%",
             StartDate: DateTime.UtcNow.AddDays(-1),
             EndDate: DateTime.UtcNow.AddDays(30),
             IsFeatured: true);

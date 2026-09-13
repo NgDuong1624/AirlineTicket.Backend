@@ -8,7 +8,15 @@ using AirlineTicket.Modules.Promotions.Domain.Entities;
 
 namespace AirlineTicket.Modules.Promotions.Application.Features.Admin;
 
-public record CreateCampaignAdminCommand(string Title, string? BannerUrl, string? Content, DateTime StartDate, DateTime EndDate, bool? IsFeatured) : ICommand<Result<Guid>>;
+public record CreateCampaignAdminCommand(
+    string TitleEn,
+    string TitleVi,
+    string? BannerUrl,
+    string? ContentEn,
+    string? ContentVi,
+    DateTime StartDate,
+    DateTime EndDate,
+    bool? IsFeatured) : ICommand<Result<Guid>>;
 
 internal sealed class CreateCampaignAdminCommandHandler : ICommandHandler<CreateCampaignAdminCommand, Result<Guid>>
 {
@@ -19,9 +27,11 @@ internal sealed class CreateCampaignAdminCommandHandler : ICommandHandler<Create
     {
         var campaign = new Campaign
         {
-            Title = request.Title,
+            TitleEn = request.TitleEn,
+            TitleVi = request.TitleVi,
             BannerUrl = request.BannerUrl,
-            Content = request.Content,
+            ContentEn = request.ContentEn,
+            ContentVi = request.ContentVi,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             IsFeatured = request.IsFeatured ?? false

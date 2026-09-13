@@ -10,7 +10,16 @@ using MediatR;
 
 namespace AirlineTicket.Modules.Promotions.Application.Features.Admin;
 
-public record UpdateCampaignAdminCommand(Guid Id, string Title, string? BannerUrl, string? Content, DateTime StartDate, DateTime EndDate, bool? IsFeatured) : ICommand<Result<Unit>>;
+public record UpdateCampaignAdminCommand(
+    Guid Id,
+    string TitleEn,
+    string TitleVi,
+    string? BannerUrl,
+    string? ContentEn,
+    string? ContentVi,
+    DateTime StartDate,
+    DateTime EndDate,
+    bool? IsFeatured) : ICommand<Result<Unit>>;
 
 internal sealed class UpdateCampaignAdminCommandHandler : ICommandHandler<UpdateCampaignAdminCommand, Result<Unit>>
 {
@@ -22,9 +31,11 @@ internal sealed class UpdateCampaignAdminCommandHandler : ICommandHandler<Update
         var campaign = new Campaign
         {
             Id = request.Id,
-            Title = request.Title,
+            TitleEn = request.TitleEn,
+            TitleVi = request.TitleVi,
             BannerUrl = request.BannerUrl,
-            Content = request.Content,
+            ContentEn = request.ContentEn,
+            ContentVi = request.ContentVi,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             IsFeatured = request.IsFeatured ?? false
