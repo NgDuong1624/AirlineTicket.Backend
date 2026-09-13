@@ -175,9 +175,11 @@ public class PartnerPromotionEndpoints : IEndpoint
                 if (!TryGetAirlineId(principal, out var airlineId)) return Forbidden();
 
                 var command = new CreateCampaignPartnerCommand(
-                    request.Title,
+                    request.TitleEn,
+                    request.TitleVi,
                     request.BannerUrl,
-                    request.Content,
+                    request.ContentEn,
+                    request.ContentVi,
                     request.StartDate,
                     request.EndDate,
                     request.IsFeatured,
@@ -207,9 +209,11 @@ public class PartnerPromotionEndpoints : IEndpoint
 
                 var command = new UpdateCampaignPartnerCommand(
                     id,
-                    request.Title,
+                    request.TitleEn,
+                    request.TitleVi,
                     request.BannerUrl,
-                    request.Content,
+                    request.ContentEn,
+                    request.ContentVi,
                     request.StartDate,
                     request.EndDate,
                     request.IsFeatured,
@@ -273,9 +277,11 @@ public sealed record PartnerCouponRequest(
     bool? IsActive);
 
 public sealed record PartnerCampaignRequest(
-    string Title,
+    string TitleEn,
+    string TitleVi,
     string? BannerUrl,
-    string? Content,
+    string? ContentEn,
+    string? ContentVi,
     DateTime StartDate,
     DateTime EndDate,
     bool? IsFeatured);

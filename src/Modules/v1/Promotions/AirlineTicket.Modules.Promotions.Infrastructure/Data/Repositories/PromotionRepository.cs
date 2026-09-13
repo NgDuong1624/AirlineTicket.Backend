@@ -46,9 +46,11 @@ public class PromotionRepository : IPromotionRepository
             .Select(c => new Campaign
             {
                 Id = c.Id,
-                Title = c.Title,
+                TitleEn = c.TitleEn,
+                TitleVi = c.TitleVi,
                 BannerUrl = c.BannerUrl,
-                Content = c.Content,
+                ContentEn = c.ContentEn,
+                ContentVi = c.ContentVi,
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
                 IsFeatured = c.IsFeatured,
@@ -61,9 +63,9 @@ public class PromotionRepository : IPromotionRepository
     public async Task<(List<Campaign> Items, int TotalCount)> GetAllCampaignsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
     {
         var query = _context.Campaigns.AsNoTracking();
-        
+
         var totalCount = await query.CountAsync(cancellationToken);
-        
+
         var items = await query
             .OrderByDescending(c => c.StartDate)
             .Skip((pageIndex - 1) * pageSize)
@@ -71,9 +73,11 @@ public class PromotionRepository : IPromotionRepository
             .Select(c => new Campaign
             {
                 Id = c.Id,
-                Title = c.Title,
+                TitleEn = c.TitleEn,
+                TitleVi = c.TitleVi,
                 BannerUrl = c.BannerUrl,
-                Content = c.Content,
+                ContentEn = c.ContentEn,
+                ContentVi = c.ContentVi,
                 StartDate = c.StartDate,
                 EndDate = c.EndDate,
                 IsFeatured = c.IsFeatured,
@@ -81,7 +85,7 @@ public class PromotionRepository : IPromotionRepository
                 AirlineId = c.AirlineId
             })
             .ToListAsync(cancellationToken);
-            
+
         return (items, totalCount);
     }
 
@@ -184,9 +188,11 @@ public class PromotionRepository : IPromotionRepository
         var existing = await _context.Campaigns.FirstOrDefaultAsync(c => c.Id == campaign.Id, cancellationToken);
         if (existing is null) return false;
 
-        existing.Title = campaign.Title;
+        existing.TitleEn = campaign.TitleEn;
+        existing.TitleVi = campaign.TitleVi;
         existing.BannerUrl = campaign.BannerUrl;
-        existing.Content = campaign.Content;
+        existing.ContentEn = campaign.ContentEn;
+        existing.ContentVi = campaign.ContentVi;
         existing.StartDate = campaign.StartDate;
         existing.EndDate = campaign.EndDate;
         existing.IsFeatured = campaign.IsFeatured;

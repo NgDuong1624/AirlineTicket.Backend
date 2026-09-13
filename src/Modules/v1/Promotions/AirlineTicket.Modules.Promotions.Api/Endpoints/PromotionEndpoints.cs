@@ -137,7 +137,7 @@ public class PromotionEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var command = new CreateCampaignAdminCommand(request.Title, request.BannerUrl, request.Content, request.StartDate, request.EndDate, request.IsFeatured);
+                var command = new CreateCampaignAdminCommand(request.TitleEn, request.TitleVi, request.BannerUrl, request.ContentEn, request.ContentVi, request.StartDate, request.EndDate, request.IsFeatured);
                 var result = await sender.Send(command, ct);
                 if (result.IsFailure)
                     return Results.BadRequest(result.Error);
@@ -158,7 +158,7 @@ public class PromotionEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var command = new UpdateCampaignAdminCommand(id, request.Title, request.BannerUrl, request.Content, request.StartDate, request.EndDate, request.IsFeatured);
+                var command = new UpdateCampaignAdminCommand(id, request.TitleEn, request.TitleVi, request.BannerUrl, request.ContentEn, request.ContentVi, request.StartDate, request.EndDate, request.IsFeatured);
                 var result = await sender.Send(command, ct);
                 if (result.IsFailure)
                     return Results.BadRequest(result.Error);
@@ -365,4 +365,4 @@ public class PromotionEndpoints : IEndpoint
 public record CreatePromotionRequest(string Name, string PromoCode, string DiscountType, decimal DiscountValue, int MaxUsage, DateTime StartDate, DateTime EndDate);
 public record UpdatePromotionRequest(string Name, decimal DiscountValue, DateTime EndDate);
 public record ApplyPromotionRequest(string PromoCode, Guid FlightId, decimal OriginalAmount);
-public record AdminCampaignRequest(string Title, string? BannerUrl, string? Content, DateTime StartDate, DateTime EndDate, bool? IsFeatured);
+public record AdminCampaignRequest(string TitleEn, string TitleVi, string? BannerUrl, string? ContentEn, string? ContentVi, DateTime StartDate, DateTime EndDate, bool? IsFeatured);

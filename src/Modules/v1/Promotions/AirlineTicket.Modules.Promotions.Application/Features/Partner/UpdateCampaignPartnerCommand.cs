@@ -12,9 +12,11 @@ namespace AirlineTicket.Modules.Promotions.Application.Features.Partner;
 
 public record UpdateCampaignPartnerCommand(
     Guid Id,
-    string Title,
+    string TitleEn,
+    string TitleVi,
     string? BannerUrl,
-    string? Content,
+    string? ContentEn,
+    string? ContentVi,
     DateTime StartDate,
     DateTime EndDate,
     bool? IsFeatured,
@@ -30,9 +32,11 @@ internal sealed class UpdateCampaignPartnerCommandHandler : ICommandHandler<Upda
         var campaign = new Campaign
         {
             Id = request.Id,
-            Title = request.Title,
+            TitleEn = request.TitleEn,
+            TitleVi = request.TitleVi,
             BannerUrl = request.BannerUrl,
-            Content = request.Content,
+            ContentEn = request.ContentEn,
+            ContentVi = request.ContentVi,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
             IsFeatured = request.IsFeatured ?? false,
