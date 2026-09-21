@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
@@ -175,8 +176,8 @@ public class PaymentEndpoints : IEndpoint
 
 public sealed record CheckoutRequest(
     Guid BookingId,
-    PaymentProvider Provider,
-    Currency Currency,
+    [property: JsonConverter(typeof(JsonStringEnumConverter))] PaymentProvider Provider,
+    [property: JsonConverter(typeof(JsonStringEnumConverter))] Currency Currency,
     string ReturnUrl,
     string CancelUrl
 );

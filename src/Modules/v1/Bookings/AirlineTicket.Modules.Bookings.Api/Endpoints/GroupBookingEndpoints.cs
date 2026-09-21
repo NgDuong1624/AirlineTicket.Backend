@@ -1,5 +1,6 @@
 using System;
 using System.Security.Claims;
+using System.Text.Json.Serialization;
 using System.Threading;
 using AirlineTicket.BuildingBlocks.Api.Endpoints;
 using AirlineTicket.BuildingBlocks.Api.Extensions;
@@ -41,7 +42,7 @@ public sealed record SelectSeatApiRequest(
 
 public sealed record InitiatePaymentApiRequest(
     Guid MemberId,
-    PaymentProvider Provider,
+    [property: JsonConverter(typeof(JsonStringEnumConverter))] PaymentProvider Provider,
     string ReturnUrl,
     string CancelUrl
 );
@@ -49,7 +50,7 @@ public sealed record InitiatePaymentApiRequest(
 public sealed record ConfirmPaymentApiRequest(
     Guid MemberId,
     string TransactionId,
-    PaymentProvider Provider,
+    [property: JsonConverter(typeof(JsonStringEnumConverter))] PaymentProvider Provider,
     decimal Amount
 );
 
