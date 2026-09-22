@@ -162,6 +162,45 @@ public class PaymentEndpoints : IEndpoint
             .WithName("MoMoWebhook")
             .WithSummary("MoMo IPN webhook callback")
             .AllowAnonymous();
+
+        // POST /api/payments/sandbox/complete — Complete a sandbox test payment
+        group.MapPost("/sandbox/complete", async (
+                [FromBody] SandboxCompleteRequest request,
+                [FromServices] IPaymentRepository paymentRepository,
+                [FromServices] IBookingRepository bookingRepository,
+                [FromServices] IMediator mediator,
+                CancellationToken ct) =>
+            {
+                var payment = await paymentRepository.GetByBookingIdAsync(request.BookingId, ct);
+                if (payment == null)
+                    return Results.NotFound(new { Message = "Payment not found for booking." });
+
+                payment.TransitionTo(
+                    request.Success ? PaymentTransactionStatus.Succeeded : PaymentTransactionStatus.Failed,
+                    DateTime.UtcNow,
+                    "{\"simulated\": true, \"sandbox\": true}",
+                    request.Success ? null : "Simulated payment failure"
+                );
+                await paymentRepository.UpdateAsync(payment, ct);
+
+                if (request.Success)
+                {
+                    var booking = await bookingRepository.GetByIdAsync(payment.BookingId, ct);
+                    if (booking != null)
+                    {
+                        booking.Status = "Confirmed";
+                        await bookingRepository.UpdateAsync(booking, ct);
+                        await mediator.Publish(new AirlineTicket.BuildingBlocks.Application.Events.BookingConfirmedEvent(booking.Id, "Sandbox"), ct);
+                    }
+                }
+
+                return Results.Ok(new { Success = true, Status = payment.Status.ToString() });
+            })
+            .WithName("SandboxCompletePayment")
+            .WithSummary("Complete a sandbox test payment")
+            .Produces(200)
+            .Produces(404)
+            .AllowAnonymous();
     }
 
     private static async Task<string> ReadRawBodyAsync(HttpRequest request)
@@ -181,3 +220,5 @@ public sealed record CheckoutRequest(
     string ReturnUrl,
     string CancelUrl
 );
+
+public sealed record SandboxCompleteRequest(Guid BookingId, bool Success = true);
