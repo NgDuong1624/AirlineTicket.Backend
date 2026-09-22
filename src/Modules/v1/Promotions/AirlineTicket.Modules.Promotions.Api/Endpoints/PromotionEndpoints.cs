@@ -137,7 +137,7 @@ public class PromotionEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var command = new CreateCampaignAdminCommand(request.TitleEn, request.TitleVi, request.BannerUrl, request.ContentEn, request.ContentVi, request.StartDate, request.EndDate, request.IsFeatured);
+                var command = new CreateCampaignAdminCommand(request.TitleEn, request.TitleVi, request.BannerUrl, request.ContentEn, request.ContentVi, request.StartDate, request.EndDate, request.IsFeatured, request.PromoCode);
                 var result = await sender.Send(command, ct);
                 if (result.IsFailure)
                     return Results.BadRequest(result.Error);
@@ -158,7 +158,7 @@ public class PromotionEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var command = new UpdateCampaignAdminCommand(id, request.TitleEn, request.TitleVi, request.BannerUrl, request.ContentEn, request.ContentVi, request.StartDate, request.EndDate, request.IsFeatured);
+                var command = new UpdateCampaignAdminCommand(id, request.TitleEn, request.TitleVi, request.BannerUrl, request.ContentEn, request.ContentVi, request.StartDate, request.EndDate, request.IsFeatured, request.PromoCode);
                 var result = await sender.Send(command, ct);
                 if (result.IsFailure)
                     return Results.BadRequest(result.Error);
@@ -204,7 +204,7 @@ public class PromotionEndpoints : IEndpoint
                 [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                var query = new GetActivePromotionsQuery();
+                var query = new GetActiveCouponsQuery();
                 var result = await sender.Send(query, ct);
                 if (result.IsFailure)
                     return Results.BadRequest(result.Error);
@@ -218,10 +218,15 @@ public class PromotionEndpoints : IEndpoint
 
         // GET /api/promotions/campaigns — Get campaigns
         publicGroup.MapGet("/campaigns", async (
+                [FromServices] ISender sender,
                 CancellationToken ct) =>
             {
-                // Return campaign list
-                return Results.Ok(new List<object>());
+                var query = new GetActiveCampaignsQuery();
+                var result = await sender.Send(query, ct);
+                if (result.IsFailure)
+                    return Results.BadRequest(result.Error);
+
+                return Results.Ok(result.Value);
             })
             .WithName("GetCampaigns")
             .WithSummary("Get campaigns")
@@ -365,4 +370,4 @@ public class PromotionEndpoints : IEndpoint
 public record CreatePromotionRequest(string Name, string PromoCode, string DiscountType, decimal DiscountValue, int MaxUsage, DateTime StartDate, DateTime EndDate);
 public record UpdatePromotionRequest(string Name, decimal DiscountValue, DateTime EndDate);
 public record ApplyPromotionRequest(string PromoCode, Guid FlightId, decimal OriginalAmount);
-public record AdminCampaignRequest(string TitleEn, string TitleVi, string? BannerUrl, string? ContentEn, string? ContentVi, DateTime StartDate, DateTime EndDate, bool? IsFeatured);
+public record AdminCampaignRequest(string TitleEn, string TitleVi, string? BannerUrl, string? ContentEn, string? ContentVi, DateTime StartDate, DateTime EndDate, bool? IsFeatured, string? PromoCode = null);

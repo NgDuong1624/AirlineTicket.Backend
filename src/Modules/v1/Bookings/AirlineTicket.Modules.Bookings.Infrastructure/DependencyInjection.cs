@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<IPaymentGateway, PayPalPaymentGateway>();
         services.AddScoped<IPaymentGateway, VNPayPaymentGateway>();
         services.AddScoped<IPaymentGateway, MoMoPaymentGateway>();
+        services.AddScoped<IPaymentGateway, SandboxPaymentGateway>();
 
         services.AddScoped<IPaymentGatewayFactory, PaymentGatewayFactory>();
 

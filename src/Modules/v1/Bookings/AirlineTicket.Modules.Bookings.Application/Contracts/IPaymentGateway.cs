@@ -20,7 +20,8 @@ public sealed record CreatePaymentResult(
     PaymentProvider Provider,
     string? PaymentUrl,
     string? ClientSecret,
-    string? OrderId
+    string? OrderId,
+    string? QrCodeUrl = null
 );
 
 public sealed record WebhookPayload(

@@ -204,6 +204,8 @@ builder.Services.AddBuildingBlocksAuth();
 builder.Services.AddScoped<IFlightSeatReservation, AirlineTicket.Api.Services.FlightSeatReservation>();
 builder.Services.AddScoped<IStaffSalesReader, AirlineTicket.Api.Services.StaffSalesReader>();
 builder.Services.AddScoped<IGroupBookingRealtimeNotifier, GroupBookingRealtimeNotifier>();
+builder.Services.AddScoped<AirlineTicket.Modules.Bookings.Application.Contracts.ICouponDiscountService, AirlineTicket.Api.Services.CouponDiscountService>();
+builder.Services.AddScoped<AirlineTicket.Modules.Promotions.Application.Contracts.IFlightAirlineLookup, AirlineTicket.Api.Services.FlightAirlineLookup>();
 
 if (!string.IsNullOrEmpty(redisConn))
 {

@@ -4,11 +4,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AirlineTicket.BuildingBlocks.Application.Events;
+using AirlineTicket.BuildingBlocks.Responses;
 using AirlineTicket.Modules.Bookings.Application.Contracts;
 using AirlineTicket.Modules.Flights.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Domain.Entities;
 using AirlineTicket.Modules.Notifications.Application.Features.Commands;
+using AirlineTicket.Modules.Promotions.Application.Contracts;
+using AirlineTicket.Modules.Promotions.Application.Features.Public;
 using AirlineTicket.Modules.Users.Application.Repositories;
 using AirlineTicket.Modules.Users.Domain.Enums;
 using MediatR;
@@ -324,5 +327,53 @@ public class FlightCreatedEventHandler : INotificationHandler<FlightCreatedEvent
             _logger.LogError(ex, "Failed to handle FlightCreatedEvent for FlightNumber={FlightNumber}", notification.FlightNumber);
             throw;
         }
+    }
+}
+
+public class CouponDiscountService : ICouponDiscountService
+{
+    private readonly IMediator _mediator;
+    private readonly IPromotionRepository _promotionRepository;
+
+    public CouponDiscountService(IMediator mediator, IPromotionRepository promotionRepository)
+    {
+        _mediator = mediator;
+        _promotionRepository = promotionRepository;
+    }
+
+    public async Task<Result<CouponDiscountResult>> ValidateAndCalculateDiscountAsync(
+        string couponCode,
+        Guid flightId,
+        decimal originalAmount,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await _mediator.Send(new ApplyPromotionCommand(couponCode, flightId, originalAmount), cancellationToken);
+        if (result.IsFailure)
+        {
+            return Result.Failure<CouponDiscountResult>(result.Error);
+        }
+
+        return Result.Success(new CouponDiscountResult(result.Value.DiscountAmount, result.Value.FinalAmount));
+    }
+
+    public async Task RecordCouponUsageAsync(string couponCode, CancellationToken cancellationToken = default)
+    {
+        await _promotionRepository.IncrementUsageAsync(couponCode, cancellationToken);
+    }
+}
+
+public class FlightAirlineLookup : IFlightAirlineLookup
+{
+    private readonly IFlightRepository _flightRepository;
+
+    public FlightAirlineLookup(IFlightRepository flightRepository)
+    {
+        _flightRepository = flightRepository;
+    }
+
+    public async Task<Guid?> GetFlightAirlineIdAsync(Guid flightId, CancellationToken cancellationToken = default)
+    {
+        var flight = await _flightRepository.GetByIdAsync(flightId, cancellationToken);
+        return flight?.AirlineId;
     }
 }

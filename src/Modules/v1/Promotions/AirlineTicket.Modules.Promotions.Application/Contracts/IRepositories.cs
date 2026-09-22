@@ -13,16 +13,26 @@ public class PromotionDto
     public string PromoCode { get; set; } = string.Empty;
     public string DiscountType { get; set; } = string.Empty;
     public decimal DiscountValue { get; set; }
+    public decimal? MinOrderValue { get; set; }
+    public decimal? MaxDiscountAmount { get; set; }
     public int? MaxUsage { get; set; }
     public int CurrentUsage { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+    public Guid? AirlineId { get; set; }
+}
+
+public interface IFlightAirlineLookup
+{
+    Task<Guid?> GetFlightAirlineIdAsync(Guid flightId, CancellationToken cancellationToken = default);
 }
 
 public interface IPromotionRepository
 {
     Task<PromotionDto?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
     Task<List<Campaign>> GetActiveCampaignsAsync(CancellationToken cancellationToken = default);
+    Task<List<Coupon>> GetActiveCouponsAsync(CancellationToken cancellationToken = default);
+    Task<bool> IncrementUsageAsync(string code, CancellationToken cancellationToken = default);
     Task<(List<Campaign> Items, int TotalCount)> GetAllCampaignsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<(List<Coupon> Items, int TotalCount)> GetAllCouponsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default);
     Task<Guid> CreateAsync(PromotionDto promotion, CancellationToken cancellationToken = default);

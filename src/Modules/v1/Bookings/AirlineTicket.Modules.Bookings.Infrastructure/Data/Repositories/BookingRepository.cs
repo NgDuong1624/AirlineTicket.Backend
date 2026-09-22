@@ -61,6 +61,8 @@ public class BookingRepository : IBookingRepository
                 Status = b.Status.ToString(),
                 ContactEmail = b.ContactEmail,
                 ContactPhone = b.ContactPhone,
+                CouponCode = b.CouponCode,
+                DiscountAmount = b.DiscountAmount,
                 CreatedAt = b.CreatedAt,
                 UpdatedAt = b.UpdatedAt
             })
@@ -88,6 +90,8 @@ public class BookingRepository : IBookingRepository
                 Status = b.Status.ToString(),
                 ContactEmail = b.ContactEmail,
                 ContactPhone = b.ContactPhone,
+                CouponCode = b.CouponCode,
+                DiscountAmount = b.DiscountAmount,
                 CreatedAt = b.CreatedAt,
                 UpdatedAt = b.UpdatedAt
             })
@@ -222,6 +226,8 @@ public class BookingRepository : IBookingRepository
             Status = ParseStatus(input.Status),
             ContactEmail = input.ContactEmail,
             ContactPhone = input.ContactPhone,
+            CouponCode = input.CouponCode,
+            DiscountAmount = input.DiscountAmount,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
