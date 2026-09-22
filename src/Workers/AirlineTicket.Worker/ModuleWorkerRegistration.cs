@@ -17,6 +17,7 @@ using AirlineTicket.Modules.Notifications.Application;
 using AirlineTicket.Modules.Notifications.Application.Contracts;
 using AirlineTicket.Modules.Notifications.Infrastructure;
 using AirlineTicket.Modules.Promotions.Application;
+using AirlineTicket.Modules.Promotions.Application.Contracts;
 using AirlineTicket.Modules.Promotions.Infrastructure;
 using AirlineTicket.Modules.Users.Application;
 using AirlineTicket.Modules.Users.Infrastructure;
@@ -70,6 +71,8 @@ public static class ModuleWorkerRegistration
         services.AddScoped<IFlightSeatReservation, FlightSeatReservation>();
         services.AddScoped<IStaffSalesReader, StaffSalesReader>();
         services.AddScoped<IGroupBookingRealtimeNotifier, GroupBookingRealtimeNotifier>();
+        services.AddScoped<ICouponDiscountService, CouponDiscountService>();
+        services.AddScoped<IFlightAirlineLookup, FlightAirlineLookup>();
 
         // MediatR registration for services requiring ISender / IPublisher
         var applicationAssemblies = new Assembly[]

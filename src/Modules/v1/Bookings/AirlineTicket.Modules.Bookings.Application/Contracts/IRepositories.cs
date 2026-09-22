@@ -15,6 +15,8 @@ public class BookingDto
     public string Status { get; set; } = "Pending";
     public string ContactEmail { get; set; } = string.Empty;
     public string ContactPhone { get; set; } = string.Empty;
+    public string? CouponCode { get; set; }
+    public decimal DiscountAmount { get; set; } = 0;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
@@ -74,6 +76,8 @@ public class NewBooking
     public string Status { get; set; } = "Pending";
     public string ContactEmail { get; set; } = string.Empty;
     public string ContactPhone { get; set; } = string.Empty;
+    public string? CouponCode { get; set; }
+    public decimal DiscountAmount { get; set; } = 0;
     public List<NewTicket> Tickets { get; set; } = new();
 }
 

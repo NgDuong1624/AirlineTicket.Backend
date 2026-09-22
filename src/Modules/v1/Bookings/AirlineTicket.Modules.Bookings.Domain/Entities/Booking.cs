@@ -14,6 +14,8 @@ public class Booking
     public BookingStatus Status { get; set; } = BookingStatus.Pending;
     public string ContactEmail { get; set; } = string.Empty;
     public string ContactPhone { get; set; } = string.Empty;
+    public string? CouponCode { get; set; }
+    public decimal DiscountAmount { get; set; } = 0;
     public string? SpecialRequests { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
