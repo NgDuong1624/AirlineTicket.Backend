@@ -26,5 +26,8 @@ public class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
 
         builder.Property(x => x.ContentVi)
             .HasMaxLength(2000);
+
+        builder.Property(x => x.PromoCode)
+            .HasMaxLength(50);
     }
 }

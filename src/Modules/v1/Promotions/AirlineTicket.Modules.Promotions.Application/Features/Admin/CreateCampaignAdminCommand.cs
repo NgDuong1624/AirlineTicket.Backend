@@ -16,7 +16,8 @@ public record CreateCampaignAdminCommand(
     string? ContentVi,
     DateTime StartDate,
     DateTime EndDate,
-    bool? IsFeatured) : ICommand<Result<Guid>>;
+    bool? IsFeatured,
+    string? PromoCode = null) : ICommand<Result<Guid>>;
 
 internal sealed class CreateCampaignAdminCommandHandler : ICommandHandler<CreateCampaignAdminCommand, Result<Guid>>
 {
@@ -34,7 +35,8 @@ internal sealed class CreateCampaignAdminCommandHandler : ICommandHandler<Create
             ContentVi = request.ContentVi,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            IsFeatured = request.IsFeatured ?? false
+            IsFeatured = request.IsFeatured ?? false,
+            PromoCode = request.PromoCode
         };
         var id = await _promotionRepository.CreateCampaignAsync(campaign, cancellationToken);
         return Result.Success(id);

@@ -22,17 +22,20 @@ public class PromotionRepository : IPromotionRepository
     {
         return await _context.Coupons
             .AsNoTracking()
-            .Where(c => c.Code == code && c.IsActive)
+            .Where(c => c.Code == code && c.IsActive && !c.IsDeleted)
             .Select(c => new PromotionDto
             {
                 Id = c.Id,
                 PromoCode = c.Code,
                 DiscountType = c.DiscountType.ToString(),
                 DiscountValue = c.DiscountValue,
+                MinOrderValue = c.MinOrderValue,
+                MaxDiscountAmount = c.MaxDiscountAmount,
                 MaxUsage = c.UsageLimit,
                 CurrentUsage = c.UsageCount,
                 StartDate = c.StartDate,
-                EndDate = c.EndDate
+                EndDate = c.EndDate,
+                AirlineId = c.AirlineId
             })
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -55,9 +58,29 @@ public class PromotionRepository : IPromotionRepository
                 EndDate = c.EndDate,
                 IsFeatured = c.IsFeatured,
                 IsDeleted = c.IsDeleted,
+                PromoCode = c.PromoCode,
                 AirlineId = c.AirlineId
             })
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task<List<Coupon>> GetActiveCouponsAsync(CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        return await _context.Coupons
+            .AsNoTracking()
+            .Where(c => c.IsActive && !c.IsDeleted && c.StartDate <= now && c.EndDate >= now && (c.UsageLimit == null || c.UsageCount < c.UsageLimit))
+            .OrderByDescending(c => c.StartDate)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> IncrementUsageAsync(string code, CancellationToken cancellationToken = default)
+    {
+        var coupon = await _context.Coupons.FirstOrDefaultAsync(c => c.Code == code && c.IsActive && !c.IsDeleted, cancellationToken);
+        if (coupon == null) return false;
+        coupon.UsageCount++;
+        await _context.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<(List<Campaign> Items, int TotalCount)> GetAllCampaignsAsync(int pageIndex, int pageSize, CancellationToken cancellationToken = default)
@@ -82,6 +105,7 @@ public class PromotionRepository : IPromotionRepository
                 EndDate = c.EndDate,
                 IsFeatured = c.IsFeatured,
                 IsDeleted = c.IsDeleted,
+                PromoCode = c.PromoCode,
                 AirlineId = c.AirlineId
             })
             .ToListAsync(cancellationToken);
@@ -196,6 +220,7 @@ public class PromotionRepository : IPromotionRepository
         existing.StartDate = campaign.StartDate;
         existing.EndDate = campaign.EndDate;
         existing.IsFeatured = campaign.IsFeatured;
+        existing.PromoCode = campaign.PromoCode;
         await _context.SaveChangesAsync(cancellationToken);
         return true;
     }

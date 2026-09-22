@@ -19,7 +19,8 @@ public record UpdateCampaignAdminCommand(
     string? ContentVi,
     DateTime StartDate,
     DateTime EndDate,
-    bool? IsFeatured) : ICommand<Result<Unit>>;
+    bool? IsFeatured,
+    string? PromoCode = null) : ICommand<Result<Unit>>;
 
 internal sealed class UpdateCampaignAdminCommandHandler : ICommandHandler<UpdateCampaignAdminCommand, Result<Unit>>
 {
@@ -38,7 +39,8 @@ internal sealed class UpdateCampaignAdminCommandHandler : ICommandHandler<Update
             ContentVi = request.ContentVi,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
-            IsFeatured = request.IsFeatured ?? false
+            IsFeatured = request.IsFeatured ?? false,
+            PromoCode = request.PromoCode
         };
         var updated = await _promotionRepository.UpdateCampaignAsync(campaign, cancellationToken);
         if (!updated)
